@@ -6,35 +6,230 @@
 library(haven)
 library(tidyverse)
 library(margins)
+library(pscl)
 
 
 # load data
-wk.data <- read_dta("data/WolfordKimReplication.dta")
+wk.data <- read_dta("data/WolfordKimReplication.dta") %>%
+             mutate(
+               denied_count = round(totpet * prdeny)
+             )
 promises.data <- read_dta("data/ReplicationData_ISQ_Promises.dta") %>%
                   select(ccode, year, statements_americas,
-                         us_intervene_amer, sample_cow,
+                         us_intervene_amer, 
+                         lag_latency_pilot, lag_rivalry_thompson,
+                         adv_signal_last3, log_distance,
+                         sample_cow,
                          sample_atop)
-latent.supp <- read.csv("data/Major Protege Dataset v1.1.csv")
-
+latent.supp <- read.csv("data/Major Protege Dataset v1.1.csv") %>%
+                mutate(
+                  lag_median = lag(median),
+                  change_median = median - lag_median,
+                  reduce_supp = ifelse(change_median < 0, 1, 0)
+                )
 
 
 ### US data 
 # generate US data and add Blankenship statements
-wk.data.us <- filter(wk.data, ccode1 == 2) %>%
-               rename(ccode = ccode2) %>%
-               left_join(promises.data) %>%
-                mutate(
-                  lag_statements = lag(statements_americas)
-                  )
-
 # US Allies only
 wk.data.us.ally <- filter(wk.data, ccode1 == 2) %>%
   rename(ccode = ccode2) %>%
   left_join(promises.data) %>%
   mutate(
-    lag_statements = lag(statements_americas)
+    lag_statements = lag(statements_americas),
+    nonzero_pet = ifelse(totpet > 0, 1, 0)
   ) %>%
-  filter(sample_atop == 1)
+  filter(sample_atop == 1) %>%
+  left_join(select(latent.supp, year, ccode2, 
+                   median, lag_median,
+                   change_median, reduce_supp) %>%
+              rename(ccode = ccode2))
+
+
+# plot statements over time
+
+# elections
+pres.elections <- seq(from = 1952, to = 2010, by = 4)
+
+# create promises
+promises.annual <- promises.data %>%
+                    group_by(year) %>%
+                    summarize(
+                      total_statements = sum(statements_americas, na.rm = TRUE),
+                      .groups = "keep"
+                    ) %>%
+                    ungroup() %>%
+                    mutate(
+                      lag_statements = lag(total_statements),
+                      election = ifelse(year %in% pres.elections, 1, 0),
+                      lag_election = lag(election),
+                      lead_election = lead(election),
+                      # presidential partisanship
+                      rep_pres = ifelse((year >= 1921 & year <= 1932) | # Harding, Coolidge, Hoover
+                                          (year >= 1953 & year <= 1960) | # Ike
+                                          (year >= 1969 & year <= 1976) | # Nixon/Ford
+                                          (year >= 1981 & year <= 1992) | # Reagan/Bush
+                                          (year >= 2001 & year <= 2008) | # HW Bush
+                                          (year >= 2017), # Trump
+                                        1, 0),
+                      change_pres = ifelse(rep_pres != lag(rep_pres), 1, 0)
+                    )
+
+# Create a vector of presidential administrations
+promises.annual$president <- rep(NA, times = nrow(promises.annual))
+promises.annual$president[promises.annual$year >= 1945 & promises.annual$year < 1953] <- "Truman"
+promises.annual$president[promises.annual$year >= 1953 & promises.annual$year < 1961] <- "Eisenhower"
+promises.annual$president[promises.annual$year >= 1961 & promises.annual$year < 1964] <- "Kennedy"
+promises.annual$president[promises.annual$year >= 1964 & promises.annual$year < 1969] <- "Johnson"
+promises.annual$president[promises.annual$year >= 1969 & promises.annual$year <= 1974] <- "Nixon"
+promises.annual$president[promises.annual$year > 1974 & promises.annual$year < 1977] <- "Ford"
+promises.annual$president[promises.annual$year >= 1977 & promises.annual$year < 1981] <- "Carter"
+promises.annual$president[promises.annual$year >= 1981 & promises.annual$year < 1989] <- "Reagan"
+promises.annual$president[promises.annual$year >= 1989 & promises.annual$year < 1993] <- "HW Bush"
+promises.annual$president[promises.annual$year >= 1993 & promises.annual$year < 2001] <- "Clinton"
+promises.annual$president[promises.annual$year >= 2001 & promises.annual$year < 2009] <- "W Bush"
+promises.annual$president[promises.annual$year >= 2009 & promises.annual$year < 2017] <- "Obama"
+promises.annual$president[promises.annual$year >= 2017] <- "Trump"
+
+
+
+# plot statements over time
+ggplot(promises.annual, aes(x = year, y = total_statements,
+                            color=factor(president), 
+                            group = 1)) +
+  geom_vline(xintercept = as.numeric(pres.elections), linetype=4) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+
+
+# model statements as a function of elections
+# poisson
+statements.elect <- glm(total_statements ~ lag_statements +
+                          lag_election +
+                          lead_election +
+                          rep_pres + change_pres,
+                        data = promises.annual,
+                        family = "poisson")
+summary(statements.elect)
+
+# negative binomial
+statements.elect.nb <- MASS::glm.nb(total_statements ~ lag_statements +
+                                      lag_election +
+                                      lead_election +
+                                      rep_pres + change_pres,
+                        data = promises.annual)
+summary(statements.elect.nb)
+
+
+## look at AD petitions and denials over time now
+petition.annual <- wk.data.us.ally %>%
+                   group_by(year) %>%
+                   summarize(
+                     total_pet = sum(totpet, na.rm = TRUE),
+                     avg_deny = mean(prdeny, na.rm = TRUE),
+                     total_denied = sum(denied_count, na.rm = TRUE)
+                   ) %>%
+                 left_join(promises.annual) %>%
+                 ungroup() %>%
+                filter(!is.nan(avg_deny)) %>%
+                mutate(
+                  lag_petitions = lag(total_pet),
+                  lag_denied = lag(total_denied),
+                  lag_avg_deny = lag(avg_deny)
+                )
+
+# plot 
+ggplot(petition.annual, aes(x = year, y = avg_deny,
+                            color=factor(president), 
+                            group = 1)) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+
+
+# plot total petitions
+ggplot(petition.annual, aes(x = year, y = total_pet,
+                            color=factor(president), 
+                            group = 1)) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+
+
+# model total petitions
+# ols
+petitions.elect.ols <- lm(total_pet ~ lag_petitions +
+                         lag_election +
+                         lead_election +
+                         rep_pres + change_pres,
+                       data = petition.annual)
+summary(petitions.elect.ols)
+
+
+# poisson
+petitions.elect <- glm(total_pet ~ lag_petitions +
+                          lag_election +
+                          lead_election +
+                          rep_pres + change_pres,
+                        data = petition.annual,
+                        family = "poisson")
+summary(petitions.elect)
+
+
+# negative binomial
+petitions.elect.nb <- MASS::glm.nb(total_pet ~ lag_petitions +
+                                      lag_election +
+                                      lead_election +
+                                      rep_pres + change_pres,
+                                    data = petition.annual)
+summary(petitions.elect.nb)
+
+
+
+# model total denied
+# plot total denied
+ggplot(petition.annual, aes(x = year, y = total_denied,
+                            color=factor(president), 
+                            group = 1)) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+
+# poisson
+denied.elect <- glm(total_denied ~ total_pet +
+                         lag_denied +
+                         lag_election +
+                         lead_election +
+                          lag_statements +
+                         rep_pres + change_pres,
+                       data = petition.annual,
+                       family = "poisson")
+summary(denied.elect)
+
+
+# negative binomial
+denied.elect.nb <- MASS::glm.nb(total_denied ~ total_pet +
+                                  lag_denied +
+                                  lag_election +
+                                  lead_election +
+                                  lag_statements +
+                                  rep_pres + change_pres,
+                                data = petition.annual)
+summary(denied.elect.nb)
+
+
+# avg denied: binomial
+# poisson
+denied.elect.avg <- glm(avg_deny ~ total_pet +
+                      lag_avg_deny +
+                      lag_election +
+                      lead_election +
+                      lag_statements +
+                      rep_pres + change_pres,
+                    data = petition.annual,
+                    family = binomial(link = "logit"))
+summary(denied.elect.avg)
 
 
 # replicate wolford and Kim's results
@@ -48,7 +243,25 @@ wk.def.deny <- glm(prdeny ~ Llngdprat + Lcow_def2 +
     data = wk.data,
    family = binomial(link = "logit"))
 summary(wk.def.deny)
-# delete all no petition observations- really a two-stage model w/ selection
+
+
+# same thing, but w/o the ratio
+# total petitions vs percentage denied
+ggplot(wk.data, aes(x = totpet, y = prdeny)) + geom_jitter(alpha = .5)
+# Poisson model 
+wk.def.deny.nr <- glm(denied_count ~ Llngdprat + Lcow_def2 +
+                     Llngdprat:Lcow_def2 +
+                      totpet +
+                     Llngdppc1 + Llngdppc2 + 
+                     Lpolity1 + Lpolity2 + Ladcap2 + 
+                     Lbothmem + Llnimpdep1 + Llnexpdep1 +
+                     Lcow_imr,
+                    family = "poisson",
+                   data = wk.data)
+summary(wk.def.deny.nr)
+
+# delete all no petition observations- adjust for IMR of non-zero(approx heckman)
+# Ideal is a two-stage model w/ selection
 # problem w/ two-stage is that one needs an instrument
 
 
@@ -56,27 +269,64 @@ summary(wk.def.deny)
 
 ### US analysis
 
+
 # number of petitions
-us.all.pet <- MASS::glm.nb(totpet ~ Llngdprat + 
-                             lag_statements +
-                             Llngdprat:lag_statements +
-                             Llngdppc1 + Llngdppc2 + 
-                             Lpolity2 + Ladcap2 +
-                             Llnimpdep1 + Llnexpdep1 +
-                             Lcow_imr,
-                           data = wk.data.us.ally)
+us.all.pet <- zeroinfl(totpet ~ Llngdprat + 
+                      lag_statements +
+                      lag_latency_pilot + lag_rivalry_thompson +
+                      adv_signal_last3 + log_distance +
+                      Llngdprat:lag_statements +
+                      Llngdppc1 + Llngdppc2 + 
+                      Lpolity2 + Ladcap2 +
+                      Llnimpdep1 + Llnexpdep1,
+                      dist = "negbin",
+                      data = wk.data.us.ally)
 summary(us.all.pet)
+# us.pet.marg <- cplot(us.all.pet, 
+#       x = "Llngdprat", dx = "lag_statements", 
+#       what = "effect",
+#       rug = TRUE,
+#       draw = TRUE)
+
+# model zero petitions 
+wk.data.us.comp <- wk.data.us.ally %>%
+                     select(
+                       nonzero_pet, totpet, prdeny, denied_count,
+                       Llngdprat, lag_statements,
+                       lag_latency_pilot, lag_rivalry_thompson,
+                         adv_signal_last3, log_distance,
+                         Llngdppc1, Llngdppc2, 
+                         Lpolity2, Ladcap2, Lbothmem,
+                         Llnimpdep1, Llnexpdep1
+                     ) %>%
+                  drop_na(!c(prdeny, denied_count))
+
+us.nz.pet <- glm(nonzero_pet ~  Llngdprat + 
+                     lag_statements +
+                     Llngdprat:lag_statements +
+                   lag_latency_pilot + lag_rivalry_thompson +
+                   adv_signal_last3 + log_distance +
+      Llngdppc1 + Llngdppc2 + 
+      Lpolity2 + Ladcap2 +
+    Llnimpdep1 + Llnexpdep1,
+    data = wk.data.us.comp,
+    family = binomial(link = "probit"))
+summary(us.nz.pet)
+
+wk.data.us.comp$imr_nzpet <- sampleSelection::invMillsRatio(us.nz.pet, all = FALSE)$IMR1
 
 
 # US model of petition denial
 us.all.deny <- glm(prdeny ~ Llngdprat + 
                      lag_statements +
                      Llngdprat:lag_statements +
+                     lag_latency_pilot + lag_rivalry_thompson +
+                     adv_signal_last3 + log_distance +
                      Llngdppc1 + Llngdppc2 + 
                       Lpolity2 + Ladcap2 +
                      Llnimpdep1 + Llnexpdep1 +
-                     Lcow_imr,
-                   data = wk.data.us.ally,
+                     imr_nzpet,
+                   data = wk.data.us.comp,
                    family = binomial(link = "logit"))
 summary(us.all.deny)
 
@@ -86,22 +336,83 @@ us.deny.marg <- cplot(us.all.deny,
                       what = "effect",
                       rug = TRUE,
                       draw = TRUE)
+abline(h = 0)
 us.deny.marg
 
+# US model of petition denial: no ratio
+wk.data.us.comp.count <- filter(wk.data.us.comp, !is.na(denied_count))
+table(wk.data.us.comp.count$denied_count)
+
+# try negative binomial 
+us.all.deny.nb <- MASS::glm.nb(denied_count ~ Llngdprat + 
+                        lag_statements +
+                        Llngdprat:lag_statements +
+                        totpet +
+                        lag_latency_pilot + lag_rivalry_thompson +
+                        adv_signal_last3 + log_distance +
+                        Llngdppc1 + Llngdppc2 + 
+                        Lpolity2 + Ladcap2 +
+                        Llnimpdep1 + Llnexpdep1 +
+                        imr_nzpet,
+                        init.theta = 50,
+                        control=glm.control(maxit=2500, trace = FALSE),
+                      data = wk.data.us.comp.count)
+summary(us.all.deny.nb)
+
+# had to really massage it to get any results, looks under dispersed enough
+# for Poisson
+us.all.deny.nr <- glm(denied_count ~ Llngdprat + 
+                     lag_statements +
+                     Llngdprat:lag_statements +
+                     totpet +
+                     lag_latency_pilot + lag_rivalry_thompson +
+                     adv_signal_last3 + log_distance +
+                     Llngdppc1 + Llngdppc2 + 
+                     Lpolity2 + Ladcap2 +
+                     Llnimpdep1 + Llnexpdep1 +
+                     imr_nzpet,
+                     family = "poisson",
+                   data = wk.data.us.comp.count)
+summary(us.all.deny.nr)
+
+
+# margins
+cplot(us.all.deny.nr, 
+        x = "Llngdprat", dx = "lag_statements", 
+        what = "effect",
+        rug = TRUE,
+       draw = TRUE)
+abline(h = 0)
 
 
 
 ### Latent Support
 wk.data.supp <- wk.data %>%
                   filter(ccode1 != 1) %>%
-                 left_join(latent.supp) %>%
-              filter(Lcow_def2 == 1)
+                 left_join(latent.supp) 
 
-# replicate models: hold alliance in support
+# replicate models:
+
+# peitions and median support: nothing doing
+wk.supp.pet <- zeroinfl(totpet ~ Llngdprat + lag_median +
+                      Llngdprat:lag_median +
+                      Llngdppc1 + Llngdppc2 + 
+                      Lpolity2 + Ladcap2 
+                    + Lbothmem + Llnimpdep1 + Llnexpdep1,
+                    dist = "negbin",
+                    data = wk.data.supp)
+summary(wk.supp.pet)
+wk.pet.marg <- cplot(wk.supp.pet, 
+      x = "Llngdprat", dx = "median", 
+      what = "effect",
+      rug = TRUE,
+      draw = TRUE)
+abline(h = 0)
+
 
 # denial and median support: nothing doing
-wk.supp.deny <- glm(prdeny ~ Llngdprat + median +
-                     Llngdprat:median +
+wk.supp.deny <- glm(prdeny ~ Llngdprat + lag_median +
+                     Llngdprat:lag_median +
                      Llngdppc1 + Llngdppc2 + 
                      Lpolity2 + Ladcap2 
                    + Lbothmem + Llnimpdep1 + Llnexpdep1 +
