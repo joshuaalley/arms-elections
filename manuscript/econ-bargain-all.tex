@@ -1,0 +1,355 @@
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{graphicx, rotating, booktabs} 
+\usepackage{times} 
+\usepackage{fbb} 
+\usepackage{natbib} 
+\usepackage{indentfirst} 
+\usepackage{setspace}
+\usepackage{grffile} 
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage[export]{adjustbox}
+\usepackage[most]{tcolorbox}
+\usepackage{verbatimbox}
+\usepackage{lscape}
+\usepackage{afterpage}
+\usepackage{amsmath}
+\usepackage[labelfont={bf},textfont=it,labelsep=period]{caption}
+ \usepackage{multirow} 
+\setcitestyle{aysep{}}
+\usepackage{dcolumn}
+
+\hypersetup{
+  colorlinks = true,
+  urlcolor = blue,
+  linkcolor = black,
+  citecolor = black,
+  pdfauthor = {Joshua Alley},
+  pdfkeywords = {},
+  pdftitle = {},
+  pdfsubject = {},
+  pdfpagemode = UseNone,
+%  pdffitwindow = true
+%  pdfcenterwindow = true
+}
+
+
+
+\singlespace
+\title{\textbf{Economic Bargaining in Alliances}}
+\author{
+Joshua Alley\\
+Postdoctoral Research Associate\\
+Democratic Statecraft Lab\\
+University of Virginia 
+}
+ 
+\date{\today}
+
+\bibliographystyle{apsr}
+
+\usepackage{sectsty}
+\sectionfont{\Large}
+\subsectionfont{\noindent\large\textit}
+\subsubsectionfont{\normalsize}
+
+\makeatletter
+\renewcommand\tiny{\@setfontsize\tiny{9}{10}}
+\makeatother
+
+
+\begin{document}
+
+\maketitle 
+
+\begin{abstract}
+How do security alliances affect economic bargaining between countries?
+Can military alliance leaders leverage their preponderant security role to extract economic concessions from junior partners?
+Some argue that powerful states can manipulate the extent of their security commitments to coerce economic changes. 
+Others believe that large states place too much value of security ties to exert economic leverage.  
+I argue that junior alliance members will only make economic concessions to support committed allied leaders at risk of losing office. 
+I test these claims with...
+I find that...
+Implications...
+\end{abstract} 
+
+
+\newpage 
+\doublespace 
+
+
+\section{Introduction}
+
+%In 2018, a former Obama administration official argued that ``"Trump is trying to conflate his issues over trade and his beef with Europe and the EU with NATO, and he's using our military strength to do that.''\footnote{\url{https://www.usatoday.com/story/news/politics/2018/07/11/donald-trump-complains-trade-europe-nato-summit/774495002/}}
+In 2019, when Donald Trump argued that ``It's not right to be taken advantage of on NATO and also then to be taken advantage of on trade, and that's what happens,'' he was not the first or last U.S. policymaker to highlight perceived problematic economic concessions to U.S. allies.
+Then Secretary of the Treasury John Connally claimed in a 1971 speech that the United States ``had the right to expect more equitable trading arrangements'' with its allies (quoted in \citep[pg 175]{Sayle2019}).
+%\footnote{See also: \url{https://www.fpri.org/article/2019/04/the-blue-chip-and-the-little-blue-bird-change-and-continuity-in-nato-policy-from-nixon-to-trump/} and \url{https://history.state.gov/historicaldocuments/frus1969-76v03/d155}}
+More recently, some leading congressmen criticized the Biden administration's decision to waive sanctions on the Nord Stream 2 gas pipeline between Russia and Germany.\footnote{\url{https://www.bbc.com/news/world-us-canada-57180674}}
+
+
+These examples reflect a general question of how international military alliances affect economic bargaining between members. 
+Can large alliance leaders leverage their preponderant security role to coerce economic concessions from their junior partners? 
+There are two schools of thought on economic bargaining in asymmetric alliances. 
+One argues that because leading states prioritize geopolitical aims, they have limited economic leverage \citep{Drezner2013, WolfordKim2017}.
+Another perspective argues that threatening to manipulate security commitments encourages economic concessions \citep[pg. 122]{Oatley2015}. 
+
+
+I argue that the economic leverage of large alliance members depends on potential leadership changes and past efforts to reassure allies.
+New leaders often face reassurance demands from allies who are concerned with their commitment. 
+Whether leaders make reassurance efforts such as public statements and tolerating trade competition determines their subsequent leverage when they seek economic concessions to support their efforts to remain in office. 
+Economic concessions to allies disadvantage domestic constituencies, which encourages leaders to manipulate allied economic policies to retain power.
+Small allies will be more likely to make economic concessions if they believe that concessions will help a committed leader retain power without endangering their own tenure in office.  
+Thus, leaders who have previously demonstrated commitment to an alliance are more likely to secure economic concessions, but those concessions will often be temporary and targeted, rather than structural.
+Senior allies thus have little economic leverage, unless potential leadership change encourages their partners to make economic concessions as temporary expedients that bolster their long-run security. 
+
+
+% economic and seucrity ties 
+This argument addresses three salient issues in international relations theory and practice. 
+First, it speaks to debates about the connection between economic and security ties \citep{Mastanduno2009, Poast2019}. 
+Whether economic linkages drive security ties \citep{BiglaiserDeRouen2007, Fordham2010, Kimball2010}, security concerns encourage economic linkages \citep{Gowa1995, Li2003, LongLeeds2006, GowaMansfield2004}, or the relationship goes in both directions \citep{BiglaiserDeRouen2009, KinneBunte2018} is disputed. 
+
+
+% coercion
+Second, this paper provides new insight into coercive demands by bridging economic and security bargaining.
+When and why coercion succeeds is an important question \citep{Sechser2010, Sechser2018, Cebuletal2021}.  
+Most studies of coercion examine either security threats (e.g. \citep{HorowitzReiter2001, Sechser2011}) or economic sanctions (e.g. \citep{Marinov2005, Allen2008, Escriba-FolchWright2010}).
+This study explores whether threats to reduce security commitment provide economic leverage. 
+In particular, it explores issue linkage as part of alliance management, building on previous work that considers alliance formation \citep{Poast2012} and credibility \citep{Davis2008, Poast2013}. 
+
+
+% policy
+Finally, my argument and findings can inform policy. 
+Whether trade concessions are the price of security alliances has important implications for how policymakers bargain with allies. 
+If threats to reduce security commitments does not lead to economic concessions, then they create negative security consequences without corresponding economic gains for either party. 
+
+
+\section{Argument}
+
+
+Whether large alliance members can coerce economic change in smaller allies also adds a new dimension to our understanding of coercion. 
+Classic studies of coercion with security threats often focus on security outcomes in a crisis bargaining framework \citep{Sechser2011, Cebuletal2021}. 
+Other studies of economic coercion through sanctions considers political \citep{Marinov2005, Bapatetal2016} and economic aims. 
+This study examines how security threats shape economic ties. 
+Prior scholarship on gunboat diplomacy and trade is the most closely related work in prior scholarship. 
+\autoref{tab:sec-econ-coerce} summarizes the place of this work in studies of coercion.
+
+
+
+\begin{table}[hbt!]
+\begin{center}
+\begin{tabular}{| p{0.2\linewidth} | p{0.4\linewidth} | p{0.4\linewidth} | }
+\hline
+              &   Security Threat & Economic Threat \\
+\hline                  
+Security Demand  & Crisis Bargaining &  Sanctions for Political Change \\
+Economic Demand  & \textbf{Economic Bargaining Between Allies}, Gunboat Diplomacy  &  Sanctions for Political Change  \\     
+\hline                          
+\end{tabular}
+\caption{Potential threats and aims in coercive bargaining.}
+\label{tab:sec-econ-coerce}
+\end{center} 
+\end{table}
+
+
+% basic asymm alliance framework
+This argument considers economic bargaining in asymmetric alliances. 
+In alliances between large and small states, the large state protects its junior partner in exchange for foreign policy concessions \citep{Morrow1991}.
+As part of this bargain, alliance leaders often tolerate economic protectionism by allies \citep{Mastanduno1998, WolfordKim2017}. 
+
+
+Military alliances are connected to economic cooperation.
+Conflict and economic integration are inseparable (see for example, \citep{GartzkeLi2003, Chen2021}).
+Many alliances also include explicit or implicit linkages to economic cooperation \citep{LongLeeds2006, Davis2008, Poast2012}. 
+
+
+In a similar vein, there are two competing perspectives on the relative bargaining leverage of large and small members in asymmetric alliances.
+One argues that to prioritize international influence and geopolitical concerns, large states tolerate economic protectionism and inefficiencies by allies, leaving them little economic leverage \citep{Drezner2013, WolfordKim2017}. 
+Another view claims that threats to reduce commitment can coerce economic concessions from junior alliance partners \citep{Oatley2015}.  
+
+
+% overview
+I argue that the relationship between security from alliances and economic bargaining depends on leadership cycles in the large alliance partner.  
+Only leaders that have established a reputation for cooperation with allies can leverage their security commitments for economic concessions. 
+Those concessions are often temporary rather than structural, as allies attempt to support a friendly leader without endangering their own security in office. 
+
+
+% actors 
+There are four key actors in this argument. 
+First, a leader in the large alliance member seeks geopolitical influence and a favorable balance of economic relations. 
+A leader in the small alliance member seeks security from external threat and a favorable economic balance.
+Both sets of leaders are office-seeking, and depend on domestic support to stay in power.
+Domestic actors in both states can gain or lose from changes in economic ties between the allied states. 
+
+
+% issue- must keep domestic actors happy to retain power
+Leaders in the small and large alliance members must retain adequate domestic support to continue in office. 
+Assuming incomplete trade openness, some domestic sectors in both states are protected from foreign trade competition by tariff or non-tariff barriers. 
+The large state has greater market power in international trade. 
+
+
+% distributional consequences
+Economic barriers have distributional consequences for domestic interests in large and small alliance members.
+Keeping out exports increases the income of protected sectors in the junior alliance member that would otherwise have to compete with exports from the large state.
+Concessions to a large ally would reduce their income, which would likely reduce their support for the incumbent leader, as trade cleavages shape domestic political coalitions \citep{Rogowski1987, Hiscox2001}. 
+
+
+% response: lean on allies for concessions, especially when there's a risk of losing office
+At the same time, liberalization would benefit large allied exporters by increasing their market share, which creates a domestic political motive for large states to renegotiate the balance of economic and security relations in an alliance. 
+Economic concessions could benefit domestic interests, large alliance member leaders could place economic pressure on their allies to bolster their political position. 
+Leaders will thus be especially inclined to seek a more favorable alliance arrangement when they risk losing office through an election or some other leadership challenge. 
+
+
+% exact threat 
+Threatening to reconsider their security commitments to smaller partners is one way for large state economic leaders can seek economic concessions.
+At bottom, these threats are motivated by electoral considerations--- a sense that allied economic policies affect prosperity and leadership competition. 
+Given leadership competition, these demands contain an implicit threat that failing to concede might endanger security cooperation by empowering a less committed leader.
+
+
+% allied incentives to concede- want to keep security, must keep their interests happy too
+% new leader might be similar, but less certainty. 
+When the large state leader makes a security threat for economic concessions, they create a dilemma for small alliance members. 
+Reduced or altered security commitments endanger small state security, but economic concessions threaten a leader's hold on office by harming domestic interests. 
+Small state leaders thus weigh the likely security benefits of conceding with the domestic political consequences of economic concessions.
+
+
+% only concede if enough prior res: cooperative reputation
+The leaders of a small alliance member will only make economic concessions if they believe that supporting the efforts of the large alliance leader to retain power offers sufficient security benefits. 
+Economic concessions thus depend on the large state leader's reputation for cooperation. 
+If the large state leader has demonstrated strong commitment to the alliance before making economic demands, then adjusting economic relations to help them retain power is worthwhile, as it promotes future security cooperation. 
+The leadership challenger in the large state might be less committed, and small state leaders would prefer a known favorable partner to the uncertainty of a leadership change, given the high stakes of changes in alliance commitments.
+
+
+% prior res establishes rep for restraint too: cebul et al
+In addition to establishing that concessions will bolster long-run security by helping a friendly leader remain in office, a prior cooperative reputation establishes a necessary reputation for restraint. 
+Committing to not renege and follow through on a threat regardless of cooperation is essential in coercive bargaining \citep{Cebuletal2021}. 
+If a leader has previously demonstrated commitment to the alliance, it reduces the perceived risk that they will demand further concessions, or reduce security commitment regardless.
+This decreases the likelihood of small states attempting to establish a reputation for resolve to ward off future challenges, which makes coercive failure more likely \citep{Sechser2010, Sechser2018}. 
+
+
+% Indicators: prior tolerance of allied protectionism, statements
+In economic bargaining between allies, reputations for commitment adhere to leaders, who have substantial influence on foreign and economic policy \citep{Renshonetal2018}.
+Statements of reassurance and commitment to an alliance are one salient way for leaders to establish a cooperative reputation \citep{Blankenship2020}.
+Prior tolerance for allied protectionism and deference to allied economic interests is another indicator of cooperation by large state leaders.
+Bearing the costs of allied economic actions is a costly signal of commitment to an alliance because it has economic consequences. 
+Thus, leaders who tolerate allied trade protection and make more statements of reassurance early in their tenure will establish a cooperative reputation that encourages junior allies to make economic concessions when they face leadership challenges.
+
+
+% don't concede too much, however
+Even when a leader has a cooperative reputation, domestic concerns constrain allied economic concessions \citep{Davis2008}. 
+Reducing protection for domestic industries exposes a leader to domestic political pressure. 
+Taking down trade barriers is also hard to reverse, especially when states are part of international organizations.
+Structural changes increase the risk of a small state leader losing office.  
+The result is that small states will make temporary concessions to help cooperative leaders remain in office, while avoiding structural changes. 
+Symbolic, temporary and targeted measures can give a large state incumbent a competitive boost without antagonizing domestic interests. 
+Large states can therefore only leverage their preponderant security role in specific and limited ways.
+
+
+% Govt purchases to address BoP and trade deficit. 
+Government purchases are the most likely concession by small allies. 
+These purchases can address large allied concerns with trade deficits and the balance of payments without reducing trade protection for domestic interests. 
+For example, \citep{Bergeretal2013} find that CIA interventions increased U.S. exports to targeted countries via government purchases.
+
+
+% Might even be targeted by region. 
+Moreover, purchases can address the political competition concerns of large state leaders.
+Perhaps small states could target their purchases in crucial electoral districts to bolster a cooperative democratic leader, for instance. 
+In autocracies, purchases could favor members of the leaders' winning coalition, whether by geography or sector.
+
+
+% explains a couple recent things- illustrative
+% why'd Biden concede on Nord stream 2? 
+Several recent interactions between the United States and its allies help illustrate the argument. 
+First, the Biden administration's controversial decision to waive sanctions and allow completion of the Nord Stream 2 gas pipeline between Germany and Russia is likely part of the Biden administration's efforts to reassure European allies. 
+In addition to allowing this concession to German economic concerns, Biden sought to wind down many of Trump's European trade disputes while talking up the U.S. commitment to NATO and the EU.\footnote{\url{https://www.aljazeera.com/economy/2021/6/15/eu-and-us-call-truce-in-trump-era-trade-war}}
+
+
+% why did Trump usually fail to get substantial economic concessions from allies? 
+The argument also explains why U.S. allies rarely conceded Donald Trump's trade demands. 
+Trump's prior rhetorical attacks on NATO and other U.S. alliances gave allies few incentives help him win re-election. 
+Economic concessions might have aided Trump's re-election campaign, just as Chinese tariffs on soy reduced Republican's vote share in the 2018 election \citep{ChyzhUrbatsch2021}. 
+Moreover, Trump sought fundamental alterations to trade policy such as reduced barriers to U.S. agricultural products that might have endangered allied leaders' political survival \citep{HeeParkJensen2007}.
+
+
+\subsection{Implications}
+
+This argument has several testable implications. 
+First is that economic pressure from larger allies will be more likely when the leader faces replacement through election or some other competition. 
+Given pressure to deliver for domestic interests to remain in office, leaders will be more likely to make economic demands of allies when there is a high chance they will be replaced. 
+These demands are especially likely to cover issues with distributional consequences like trade and the balance of payments.
+
+
+\begin{quote}
+\textsc{Economic Demands Hypothesis: As the likelihood of a change in leadership increases, leaders of large alliance members will make more economic demands of allies.}
+\end{quote}
+
+
+The second hypothesis concerns whether junior partners make economic concessions. 
+Junior partners will be more likely to make economic concessions to their allies when the leader facing replacement has demonstrated prior commitment to the alliance. 
+Otherwise, junior alliance members may take a chance on elections empowering a more supportive leader. 
+Past indicators of commitment include statements of reassurance \citep{Blankenship2020} and trade concessions \citep{WolfordKim2017}.
+
+
+\begin{quote}
+\textsc{Economic Concession Hypothesis: When the leader of a large alliance member might be replaced, junior allies will be more likely to make economic concessions as the number of prior statements of reassurance and trade concessions by that leader increases.}
+\end{quote}
+
+The third hypothesis covers the most likely type of concession.
+Because structural changes such as tariff reductions could endanger a junior state leader's hold on power, government purchases are the most likely type of concession.
+Purchases also directly address trade imbalances and are straightforward for junior alliance members to target in support of a friendly large state leader.
+
+\begin{quote}
+\textsc{Government Purchases Hypothesis: When the leader of a large alliance member might be replaced, junior allies will increase government purchases of allied exports as the number of prior statements of reassurance and trade concessions by that leader increases.}
+\end{quote}
+
+
+% Elections as natural test domain?
+
+
+
+The fourth hypothesis deals with targeted concessions.
+If allies want to support a friendly leader, they may target their economic concessions to crucial areas.
+In the U.S. context, one potential implication is that exports from swing states to U.S. allies will increase in the year before and year of elections as the incumbent's reputation for alliance commitment increases.
+
+\begin{quote}
+\textsc{Swing States Hypothesis: In the year before and year of presidential elections, exports from swing states to U.S. allies will increases as the number of prior statements of reassurance and trade concessions by the incumbent President increases.}
+\end{quote}
+
+
+
+\subsection{Objections and Alternative Explanations}
+
+
+Before proceeding to how I test these hypotheses, I consider several potential objections and alternatives to the argument. 
+These include whether committed leaders can make credible economic demands, the role of external threat, and... 
+
+
+% objection- why not dismiss threats/demands by committed leaders as incredible? 
+% stand to benefit from helping them
+First, why do junior partners to concede economic demands to committed leaders? 
+While government purchases are less consequential than tariff changes, spending funds on U.S. exports still imposes opportunity costs.
+I expect that purchases are worthwhile to support the security benefits of a committed allied leader. 
+Conceding purchases greater security in expectation. 
+
+
+% threat: increases sec demand, but makes it harder to walk away for large partner
+% Cold War should make that fairly clear. 
+Another objection is that increased external threat might make junior alliance partners more receptive to economic demands from their patron.
+Conceding to ensure protection might be worthwhile, in short.
+Though this is plausible, it ignores the incentives of the large partner, who also has more to lose from weakening an alliance if the threat to junior partners is greater. 
+Cold War dynamics illustrate this issue.
+Although the United States initially tolerated and even encouraged European and Japanese protectionism to ensure that allies could rebuild their economies and military capabilities, later efforts to negotiate more favorable trade terms led to substantial resistance from the U.S. security establishment who feared that U.S. economic nationalism would increase Soviet influence \citep{Mastanduno1998}.
+Threat amplifies the pressures on both parties in the alliance, albeit on different margins.
+
+
+
+
+
+
+\singlespace
+ 
+\bibliography{../../MasterBibliography} 
+
+
+\end{document}
