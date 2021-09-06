@@ -31,15 +31,13 @@ latent.supp <- read.csv("data/Major Protege Dataset v1.1.csv") %>%
 
 ### US data 
 # generate US data and add Blankenship statements
-# US Allies only
-wk.data.us.ally <- filter(wk.data, ccode1 == 2) %>%
+wk.data.us <- filter(wk.data, ccode1 == 2) %>%
   rename(ccode = ccode2) %>%
   left_join(promises.data) %>%
   mutate(
     lag_statements = lag(statements_americas),
     nonzero_pet = ifelse(totpet > 0, 1, 0)
   ) %>%
-  filter(sample_atop == 1) %>%
   left_join(select(latent.supp, year, ccode2, 
                    median, lag_median,
                    change_median, reduce_supp) %>%
@@ -49,7 +47,7 @@ wk.data.us.ally <- filter(wk.data, ccode1 == 2) %>%
 # plot statements over time
 
 # elections
-pres.elections <- seq(from = 1952, to = 2010, by = 4)
+pres.elections <- seq(from = 1952, to = 2020, by = 4)
 
 # create promises
 promises.annual <- promises.data %>%
@@ -91,14 +89,39 @@ promises.annual$president[promises.annual$year >= 2001 & promises.annual$year < 
 promises.annual$president[promises.annual$year >= 2009 & promises.annual$year < 2017] <- "Obama"
 promises.annual$president[promises.annual$year >= 2017] <- "Trump"
 
+# time to election
+promises.annual$time_to_elec <- rep(seq(from = 3, to = 0, by = -1),
+                                    length.out = nrow(promises.annual))
+
+
+# add to country data
+wk.data.us <- left_join(wk.data.us,
+                              select(promises.annual,
+                                     year, election,
+                                     lag_election, lead_election,
+                                     rep_pres, change_pres,
+                                     president))
+
+wk.data.us.ally <- filter(wk.data.us, sample_atop == 1)
+
+
+# plot promises by country
+ggplot(wk.data.us.ally, aes(x = year, y = statements_americas,
+                            color = factor(change_pres),
+                            group = 1)) +
+  facet_wrap(~ partneriso3,
+             scales = "free_y") +
+  geom_point() +
+  geom_line() +
+  theme_bw()
 
 
 # plot statements over time
 ggplot(promises.annual, aes(x = year, y = total_statements,
-                            color=factor(president), 
+                            shape = factor(change_pres),
+                            color = president,
                             group = 1)) +
-  geom_vline(xintercept = as.numeric(pres.elections), linetype=4) +
-  geom_point() +
+  geom_point(size = 3) +
   geom_line() +
   theme_bw()
 
@@ -106,7 +129,7 @@ ggplot(promises.annual, aes(x = year, y = total_statements,
 # model statements as a function of elections
 # poisson
 statements.elect <- glm(total_statements ~ lag_statements +
-                          lag_election +
+                          lag_election + election +
                           lead_election +
                           rep_pres + change_pres,
                         data = promises.annual,
@@ -115,7 +138,7 @@ summary(statements.elect)
 
 # negative binomial
 statements.elect.nb <- MASS::glm.nb(total_statements ~ lag_statements +
-                                      lag_election +
+                                      lag_election + election +
                                       lead_election +
                                       rep_pres + change_pres,
                         data = promises.annual)
@@ -160,7 +183,7 @@ ggplot(petition.annual, aes(x = year, y = total_pet,
 # model total petitions
 # ols
 petitions.elect.ols <- lm(total_pet ~ lag_petitions +
-                         lag_election +
+                         lag_election + election +
                          lead_election +
                          rep_pres + change_pres,
                        data = petition.annual)
@@ -169,7 +192,7 @@ summary(petitions.elect.ols)
 
 # poisson
 petitions.elect <- glm(total_pet ~ lag_petitions +
-                          lag_election +
+                          lag_election + election +
                           lead_election +
                           rep_pres + change_pres,
                         data = petition.annual,
@@ -199,7 +222,7 @@ ggplot(petition.annual, aes(x = year, y = total_denied,
 # poisson
 denied.elect <- glm(total_denied ~ total_pet +
                          lag_denied +
-                         lag_election +
+                         lag_election + election +
                          lead_election +
                           lag_statements +
                          rep_pres + change_pres,
@@ -208,22 +231,11 @@ denied.elect <- glm(total_denied ~ total_pet +
 summary(denied.elect)
 
 
-# negative binomial
-denied.elect.nb <- MASS::glm.nb(total_denied ~ total_pet +
-                                  lag_denied +
-                                  lag_election +
-                                  lead_election +
-                                  lag_statements +
-                                  rep_pres + change_pres,
-                                data = petition.annual)
-summary(denied.elect.nb)
-
-
 # avg denied: binomial
 # poisson
 denied.elect.avg <- glm(avg_deny ~ total_pet +
                       lag_avg_deny +
-                      lag_election +
+                      lag_election + election +
                       lead_election +
                       lag_statements +
                       rep_pres + change_pres,
@@ -269,16 +281,32 @@ summary(wk.def.deny.nr)
 
 ### US analysis
 
+# number of petitions
+us.pet <- zeroinfl(totpet ~ Llngdprat + 
+                     lead_election + election + lag_election +
+                     change_pres + rep_pres +
+                         lag_statements +
+                         lag_latency_pilot + lag_rivalry_thompson +
+                         adv_signal_last3 + log_distance +
+                         Llngdprat:lag_statements +
+                         Llngdppc1 + Llngdppc2 + 
+                         Lpolity2 + Ladcap2 +
+                         Llnimpdep1 + Llnexpdep1,
+                       dist = "negbin",
+                       data = wk.data.us)
+summary(us.pet)
 
 # number of petitions
 us.all.pet <- zeroinfl(totpet ~ Llngdprat + 
-                      lag_statements +
-                      lag_latency_pilot + lag_rivalry_thompson +
-                      adv_signal_last3 + log_distance +
-                      Llngdprat:lag_statements +
-                      Llngdppc1 + Llngdppc2 + 
-                      Lpolity2 + Ladcap2 +
-                      Llnimpdep1 + Llnexpdep1,
+                         lead_election + election + lag_election +
+                         #change_pres + #rep_pres +
+                         lag_statements +
+                         lag_latency_pilot + lag_rivalry_thompson +
+                         adv_signal_last3 + log_distance +
+                         Llngdprat:lag_statements +
+                         Llngdppc1 + Llngdppc2 + 
+                         Lpolity2 + Ladcap2 +
+                         Llnimpdep1 + Llnexpdep1,
                       dist = "negbin",
                       data = wk.data.us.ally)
 summary(us.all.pet)
@@ -293,6 +321,8 @@ wk.data.us.comp <- wk.data.us.ally %>%
                      select(
                        nonzero_pet, totpet, prdeny, denied_count,
                        Llngdprat, lag_statements,
+                       lag_election, election, lead_election,
+                       change_pres, rep_pres,
                        lag_latency_pilot, lag_rivalry_thompson,
                          adv_signal_last3, log_distance,
                          Llngdppc1, Llngdppc2, 
@@ -302,7 +332,8 @@ wk.data.us.comp <- wk.data.us.ally %>%
                   drop_na(!c(prdeny, denied_count))
 
 us.nz.pet <- glm(nonzero_pet ~  Llngdprat + 
-                     lag_statements +
+                   lag_election + election + lead_election +
+                     lag_statements + change_pres + rep_pres +
                      Llngdprat:lag_statements +
                    lag_latency_pilot + lag_rivalry_thompson +
                    adv_signal_last3 + log_distance +
@@ -320,6 +351,8 @@ wk.data.us.comp$imr_nzpet <- sampleSelection::invMillsRatio(us.nz.pet, all = FAL
 us.all.deny <- glm(prdeny ~ Llngdprat + 
                      lag_statements +
                      Llngdprat:lag_statements +
+                     lag_election + election + lead_election + 
+                     change_pres + rep_pres +
                      lag_latency_pilot + lag_rivalry_thompson +
                      adv_signal_last3 + log_distance +
                      Llngdppc1 + Llngdppc2 + 
@@ -345,15 +378,16 @@ table(wk.data.us.comp.count$denied_count)
 
 # try negative binomial 
 us.all.deny.nb <- MASS::glm.nb(denied_count ~ Llngdprat + 
-                        lag_statements +
-                        Llngdprat:lag_statements +
-                        totpet +
-                        lag_latency_pilot + lag_rivalry_thompson +
-                        adv_signal_last3 + log_distance +
-                        Llngdppc1 + Llngdppc2 + 
-                        Lpolity2 + Ladcap2 +
-                        Llnimpdep1 + Llnexpdep1 +
-                        imr_nzpet,
+                                 lag_statements +
+                                 Llngdprat:lag_statements +
+                                 lag_election + election + lead_election + 
+                                 change_pres + rep_pres +
+                                 lag_latency_pilot + lag_rivalry_thompson +
+                                 adv_signal_last3 + log_distance +
+                                 Llngdppc1 + Llngdppc2 + 
+                                 Lpolity2 + Ladcap2 +
+                                 Llnimpdep1 + Llnexpdep1 +
+                                 imr_nzpet,
                         init.theta = 50,
                         control=glm.control(maxit=2500, trace = FALSE),
                       data = wk.data.us.comp.count)
@@ -361,16 +395,17 @@ summary(us.all.deny.nb)
 
 # had to really massage it to get any results, looks under dispersed enough
 # for Poisson
-us.all.deny.nr <- glm(denied_count ~ Llngdprat + 
-                     lag_statements +
-                     Llngdprat:lag_statements +
-                     totpet +
-                     lag_latency_pilot + lag_rivalry_thompson +
-                     adv_signal_last3 + log_distance +
-                     Llngdppc1 + Llngdppc2 + 
-                     Lpolity2 + Ladcap2 +
-                     Llnimpdep1 + Llnexpdep1 +
-                     imr_nzpet,
+us.all.deny.nr <- glm(denied_count ~Llngdprat + 
+                        lag_statements +
+                        Llngdprat:lag_statements +
+                        lag_election + election + lead_election + 
+                        change_pres + rep_pres +
+                        lag_latency_pilot + lag_rivalry_thompson +
+                        adv_signal_last3 + log_distance +
+                        Llngdppc1 + Llngdppc2 + 
+                        Lpolity2 + Ladcap2 +
+                        Llnimpdep1 + Llnexpdep1 +
+                        imr_nzpet,
                      family = "poisson",
                    data = wk.data.us.comp.count)
 summary(us.all.deny.nr)
