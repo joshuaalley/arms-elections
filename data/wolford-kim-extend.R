@@ -2,13 +2,6 @@
 # Wolford and Kim 2017 Replication for US
 
 
-# load packages
-library(haven)
-library(tidyverse)
-library(margins)
-library(pscl)
-
-
 # load data
 wk.data <- read_dta("data/WolfordKimReplication.dta") %>%
              mutate(
@@ -24,8 +17,7 @@ promises.data <- read_dta("data/ReplicationData_ISQ_Promises.dta") %>%
 latent.supp <- read.csv("data/Major Protege Dataset v1.1.csv") %>%
                 mutate(
                   lag_median = lag(median),
-                  change_median = median - lag_median,
-                  reduce_supp = ifelse(change_median < 0, 1, 0)
+                  change_median = median - lag_median
                 )
 
 
@@ -40,7 +32,7 @@ wk.data.us <- filter(wk.data, ccode1 == 2) %>%
   ) %>%
   left_join(select(latent.supp, year, ccode2, 
                    median, lag_median,
-                   change_median, reduce_supp) %>%
+                   change_median) %>%
               rename(ccode = ccode2))
 
 

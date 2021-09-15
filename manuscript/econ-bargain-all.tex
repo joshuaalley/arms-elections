@@ -38,7 +38,7 @@
 
 
 \singlespace
-\title{\textbf{Economic Bargaining in Alliances}}
+\title{\textbf{Economic Bargaining in Asymmetric Alliances}}
 \author{
 Joshua Alley\\
 Postdoctoral Research Associate\\
@@ -68,10 +68,11 @@ University of Virginia
 Can military alliance leaders leverage their preponderant security role to extract economic concessions from junior partners?
 Some argue that powerful states can manipulate the extent of their security commitments to coerce economic changes. 
 Others believe that large states place too much value of security ties to exert economic leverage.  
-I argue that junior alliance members will only make economic concessions to support committed allied leaders when those leaders might lose office. 
-I test these claims with an analysis of exports from major powers to their proteges. 
-I find that...
-Implications...
+I argue that junior alliance members will only make temporary economic concessions to support committed allied leaders' tenure in office. 
+I test these claims with a analyses of exports from democratic major powers to their proteges and U.S. exports to allies. 
+I find that prior leader signals of commitment increase exports to allied states during election years. 
+An analysis of exports from U.S. states shows that exports from swing states to allies increase more than exports from other states. 
+These results suggest that leaders can leverage security ties for temporary economic and political gain by encouraging allies to back their efforts to remain in office, but doing so requires consistent commitment signals. 
 \end{abstract} 
 
 
@@ -240,7 +241,7 @@ In economic bargaining between allies, reputations for commitment adhere to lead
 Statements of reassurance and commitment to an alliance are one salient way for leaders to establish a cooperative reputation \citep{Blankenship2020}.
 Prior tolerance for allied protectionism and deference to allied economic interests is another indicator of cooperation by large state leaders.
 Bearing the costs of allied economic actions is a costly signal of commitment to an alliance because it has economic consequences. 
-Thus, leaders who tolerate allied trade protection and make more statements of reassurance early in their tenure will establish a cooperative reputation that encourages junior allies to make economic concessions when they face leadership challenges.
+Thus, leaders who support allies early in their tenure establish a cooperative reputation that encourages junior allies to make economic concessions when they face leadership challenges.
 
 
 % don't concede too much, however
@@ -279,7 +280,9 @@ Economic concessions might have aided Trump's re-election campaign, just as Chin
 Moreover, Trump sought fundamental alterations to trade policy such as reduced barriers to U.S. agricultural products that might have endangered allied leaders' political survival \citep{HeeParkJensen2007}.
 
 
+
 \subsection{Implications}
+
 
 
 This argument has several testable implications, especially for democratic alliance leaders.
@@ -305,7 +308,7 @@ Past indicators of commitment include statements of reassurance \citep{Blankensh
 
 
 \begin{quote}
-\textsc{Economic Concession Hypothesis: When the leader of a large alliance member might be replaced, imports from junior allies will increase as the number of prior reassurance statements by that leader increases.}
+\textsc{Economic Concession Hypothesis: When the leader of a large alliance member might be replaced, imports from junior allies will increase as prior commitment signals by that leader increase.}
 \end{quote}
 
 
@@ -340,25 +343,116 @@ Conceding to ensure protection might be worthwhile, in short.
 Though this is plausible, it ignores the incentives of the large partner, who also has more to lose from weakening an alliance if the threat to junior partners is greater. 
 Cold War dynamics illustrate this issue.
 Although the United States initially tolerated and even encouraged European and Japanese protectionism to ensure that allies could rebuild their economies and military capabilities, later efforts to negotiate more favorable trade terms led to substantial resistance from the U.S. security establishment who feared that U.S. economic nationalism would increase Soviet influence \citep{Mastanduno1998}.
-Threat adds pressure on both parties in the alliance, albeit on different margins.
+Threats place pressure on both alliance parties, albeit on different margins.
 
 
 In the following, I describe how I test each of these hypotheses. 
-In the first analysis, I provide evidence that economic demands are more likely around elections.
-The second analysis establishes that prior reassurance statements by the incumbent president increase U.S. exports to allied states in election years. 
-In the last analysis, I show that increased U.S. exports to allies in election years are the result of  
-
-
-\section{Economic Demands by Large Allies}
-
-
-
-\section{Election Year Exports}
+In the first analysis, I establish that more committed leaders of major powers receive greater exports from their allies in election years. 
+The second analysis shows that increasing U.S. exports to allied states in election years are concentrated in swing states, which suggests allied concessions concentrate in key electoral constituencies.
 
 
 
 
-\section{Swing States and Exports to Allies}
+\section{Economic Demands by Large Allies (Placeholder for H1)}
+
+
+
+
+\section{Democratic Major Power Exports to Allies}
+
+To test the economic concession hypothesis, I analyze exports from major powers to their allies. 
+I expect that when an election could replace leaders who have made more prior signals of commitment to their alliance partners, exports from that state to allies will increase. 
+In non-election years, signals of support will reduce economic leverage over allies.
+This implies a positive interaction term between leader support and election year variables, and a null or negative constituent term on the leader signals of support measure.
+
+
+The outcome of interest is the log of annual exports from democratic major powers to their proteges. 
+This dyadic dataset includes the United Kingdom, France and the United States and their allies from 1950 to 2012.\footnote{The analysis stops in 2012 due to limits on the major power support measure. I classify France and the UK as junior partners of the United States.}
+I draw on exports and imports data from \citep{Barbierietal2009td}.\footnote{Dyadic data from the \textit{peacesciencer} \textsf{R} package \citep{peacesciencer-package}.}
+
+
+I measure leader commitment to each of these states' allies using the latent measure of \citet{McManusNieman2019}.
+Because reputations adhere to leaders, I measure commitment as the moving average of support across the leader's tenure between, using elections data from the National Elections across Democracy and Autocracy (NELDA) dataset \citep{HydeMarinov2012} to identify election years.
+I then interact the moving average of protege support with a dummy indicator of election years. 
+
+
+In addition to the interaction of elections and leader support for allies, I include a series of control variables that may be correlated with alliances and exports. 
+The most important control is the lagged log of exports to address temporal autocorrelation in trade ties.
+I also adjust for lagged imports, minimum and capital distance between the two states, the GDP of both states \citep{Andersetal2020}, democracy \citep{Marquez2016}, the presence of a militarized interstate dispute \citep{Gibleretal2016} shared IGO membership \citep{Pevehouseetal2020}, lagged or lead election years, and whether an incumbent leader is running. 
+
+
+
+Dyadic data is clustered, which can generate misleading regression estimates.
+Because major power elections affect multiple dyads, I employ the cluster--robust sandwich estimator of \citep{Aronowetal2015}.
+I draw similar conclusions about the conditional relationship between 
+
+
+I also undertake several robustness checks of the baseline model specification.
+The first includes dyad fixed effects in models of changes in exports as a robustness check.\footnote{Fixed effects in dynamic models lead to biased estimates \citep{Nickell1981}.}
+I also model dyadic trade balances, transformed with an inverse hyperbolic sine to reduce the impact of positive and negative outliers.
+Both these alternative approaches produce similar inferences.
+
+
+\subsection{Results}
+
+I find that as prior signals of support by a major power leader increase, their exports to allies in election years also increase. 
+\autoref{fig:mp-model-coefs} presents the coefficient estimates from the three primary model specifications.
+As expected, the interaction between the rolling average of leader's support signals and elections is positive across all three model specifications.
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{../figures/mp-model-coefs.png}
+	\caption{Coefficient estimates from gravity models of exports from democratic major powers to their junior allies, 1950 to 2012. The first model models annual major power exports and includes a lagged dependent variable. The second model regresses changes in exports on the explanatory variables. The third model examines changes and includes dyadic fixed effects. The fourth model assesses annual trade balances, transformed with an inverse hyperbolic sine. Points mark the coefficient estimate and error bars summarize the 95\% confidence interval.}
+	\label{fig:mp-model-coefs}
+\end{figure}
+
+
+The mean leader support constituent term is more mixed.
+In years without an election, the association between increasing support signals and exports cannot be differentiated from zero in any of the models and the sign of the estimate shifts with the modeling approach.
+Because the election constituent term reflects the impact of an election in years when average leader support is zero and the latent support measure is never equal to zero, that term does not have a similarly straightforward interpretation. 
+
+
+% control variables show other suggestive evidence of a cycle
+Some of the other estimates in \autoref{fig:mp-model-coefs} suggest an electoral cycle in major power exports to their allies.
+Exports fall in the year after an election, as the lagged election coefficient suggests.
+Exports increase in the year before an election, however. 
+Thus, major power exports to allies likely reflect temporary concessions, rather than structural changes.
+
+
+% marginal effects
+The sign and confidence intervals of the interaction terms are inadequate evidence of a conditional relationship \citep{BramborClarkGolder2006}, so I plot marginal effects in \autoref{fig:me-plots-mp}.
+This figure presents the estimated marginal effects of increasing average support from a leader in election and non-election years.
+In election years, greater prior support from the incumbent leader is positively correlated with major power exports to allies. 
+Both the level and annual change in exports are higher for committed leaders in election years.
+Outside of election years, the association between prior support and exports could be positive, negative or zero.
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{../figures/me-plots-mp.png}
+	\caption{Estimated marginal effect of average signals of support by the incumbent leader on exports from democratic major powers to their junior allies, 1950 to 2012. The first model models annual major power exports and includes a lagged dependent variable. The second model regresses changes in exports on the explanatory variables. The third model examines changes and includes dyadic fixed effects. The fourth model assesses annual trade balances, transformed with an inverse hyperbolic sine. Points mark the coefficient estimate and error bars summarize the 95\% confidence interval.}
+	\label{fig:me-plots-mp}
+\end{figure}
+
+
+% improved trade balance
+A more positive trade balance follows from allied increases in exports during election years.
+Prior signals of support move the trade balance between major powers and their allies in favor of the larger partner during election years, but have no clear impact otherwise.
+This is especially salient because leaders often pressure allies for a more favorable trade balance.
+
+
+These results are consistent with the economic concessions hypothesis. 
+When leaders have previously demonstrated commitment to their allies, those allies increase their imports in election years.
+In the next analysis, I show that at the least in the U.S. context, these increases in exports are concentrated in electorally competitive states.
+
+
+
+
+\section{Swing States and U.S. Exports to Allies in Election Years}
+
+
+\subsection{Results}
 
 
 
