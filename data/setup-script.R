@@ -17,6 +17,9 @@ library(wesanderson)
 library(dyadRobust)
 library(modelsummary)
 library(gridExtra)
+library(lubridate)
+library(MCMCpack)
+library(doBy)
 
 
 # set seed
@@ -39,3 +42,5 @@ conflict_prefer("Position", "ggplot2")
 conflict_prefer("rcond", "Matrix")
 conflict_prefer("ar", "brms")
 conflict_prefer("marginal_effects", "brms")
+conflict_prefer("year", "lubridate")
+conflict_prefer("month", "lubridate")
