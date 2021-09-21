@@ -2,11 +2,6 @@
 ### Major Powers
 ### McManus and Nieman
 
-library(MCMCpack)
-library(doBy)
-set.seed(5)
-
-
 ## UK signal
 d <- read.csv("data/revise-latent-supp/Individual Signals Dataset.csv", header=TRUE)
 row.names(d) <- d$ctry_yr
@@ -132,7 +127,7 @@ phi.uk <- as.data.frame(phi.uk)
 phi.uk$year <- as.numeric(gsub(".*?([0-9]+).*", "\\1", rownames(phi.uk)))
 phi.uk$country <- gsub('[[:digit:]]+', '', rownames(phi.uk))
 phi.uk$country <- gsub(".", "", phi.uk$country, fixed = TRUE)
-phi.uk$ccode1 <- 220
+phi.uk$ccode1 <- 200
 
 # Save lambda/psi as one .csv file and save country ideal points as another .csv file
 #write.csv(lambda,file="data/revise-latent-supp/lambda_uk.csv")

@@ -1,164 +1,299 @@
 # Joshua Alley
 # Analysis of exports from US to allies around elections 
 
-# use peacesciener package
-library(tidyverse)
-library(peacesciencer)
-library(brms)
-library(systemfit)
-library(cspp)
-library(countrycode)
-library(wesanderson)
-
-
-# generate dyad-year data
-dyadic.trade <- create_dyadyears(system = "cow",
-                                 mry = TRUE, 
-                                 directed = FALSE) %>%
-                 add_minimum_distance() %>%
-                 add_capital_distance() %>%
-                 add_cow_trade() %>%
-                 add_sdp_gdp() %>%
-                 add_gml_mids() %>%
-                 add_democracy() %>%
-                 add_atop_alliance() %>%
-                 add_igos()
-# flow1 is imports to ccode1 from ccode2
-# flow2 is vice-versa- imports by ccode2 from ccode1
-
 
 # get us exports
-us.trade <- filter(dyadic.trade, 
-                   ccode1 == 2 & year >= 1946) %>%
+us.trade.ally <- filter(dyadic.mp.ally, 
+                   ccode == 2) %>%
+            ungroup() %>%
             rename(
-              us_imports = flow1,
-              us_exports = flow2,
+              us_imports = IPTOT_o,
+              us_exports = XPTOT_o,
+              us.code = ccode,
               ccode = ccode2
             ) %>%
             left_join(promises.data) %>%
-            left_join(promises.annual) %>%
             mutate(
-              lag_statements = lag(statements_americas),
-              ln_exports = log(us_exports + 1),
-              ln_imports = log(us_imports + 1),
+              lag_us_exports = lag(us_exports),
+              lag_us_imports = lag(us_imports),
+              change_us_exports = us_exports - lag_us_exports,
+              change_us_imports = us_imports - lag_us_imports,
+              ln_trade = log(FLOW + 1),
+              lag_ln_trade = lag(ln_trade),
+              change_us_trade = (FLOW - lag(FLOW)) / 1000000000,
+              ln_exports = log(us_exports), 
+              ln_imports = log(us_imports), 
               lag_ln_exports = lag(ln_exports),
               lag_ln_imports = lag(ln_imports),
-              change_ln_exports = ln_exports - lag_ln_exports,
-              trade_balance = us_exports - us_imports,
-              ihs_trade_balance = asinh(trade_balance),
-              lag_ihs_trade_balance = lag(ihs_trade_balance)
             ) %>%
+            left_join(select(promises.annual, year, 
+                      president, time_to_elec)) %>%
             group_by(president, ccode) %>%
-            drop_na(lag_statements) %>% # messes w/ cumulative sum
-            mutate(total_pres_statements =
-                     cumsum(statements_americas),
-                   ln_total_statements = log(total_pres_statements + 1)) %>%
-            ungroup()
-
-# allies only
-us.trade.ally <- filter(us.trade, atop_defense == 1)
+            mutate(
+             # running mean stat
+              total_statements = rollapply(statements_americas, 2, sum,
+                               align ='right', fill = 0),
+              ln_total_statements = log(total_statements + 1)
+             )
+us.trade.ally$dyad.id <- group_indices(us.trade.ally, us.code, ccode) 
 
 # look at the raw data
-ggplot(us.trade, aes(x = us_exports)) + geom_histogram()
-ggplot(us.trade, aes(x = ln_exports)) + geom_histogram()
-# allied states
+ggplot(us.trade.ally, aes(x = ln_trade)) + geom_histogram()
+ggplot(us.trade.ally, aes(x = change_us_trade)) + geom_histogram()
 ggplot(us.trade.ally, aes(x = us_exports)) + geom_histogram()
 ggplot(us.trade.ally, aes(x = ln_exports)) + geom_histogram()
 
-# statements
-ggplot(us.trade.ally, aes(x = total_pres_statements)) + geom_histogram()
-ggplot(us.trade.ally, aes(x = ln_total_statements)) + geom_histogram()
+ggplot(us.trade.ally, aes(x = year,
+                          y = us_exports)) + 
+  facet_wrap(~ ccode) +
+  geom_line()
 
-ggplot(us.trade, aes(x = us.imports)) + geom_histogram()
+ggplot(us.trade, aes(x = us_imports)) + geom_histogram()
 ggplot(us.trade, aes(x = ln_imports)) + geom_histogram()
 
 # look at raw by election
 ggplot(us.trade.ally, aes(x = factor(time_to_elec), y = ln_exports,
-                          color = ln_total_statements)) +
+                          color = mean_leader_supp)) +
     geom_jitter() +
   scale_color_gradientn(
     colours = wes_palette("Zissou1", 100, type = "continuous")) 
 
 # look at trade balance by election
 ggplot(us.trade.ally, aes(x = factor(time_to_elec), y = trade_balance,
-                          color = ln_total_statements)) +
+                          color = mean_leader_supp)) +
   geom_jitter()  +
   scale_color_gradientn(
     colours = wes_palette("Zissou1", 100, type = "continuous")) 
 
-ggplot(us.trade.ally, aes(x = factor(time_to_elec), y = ihs_trade_balance,
-                          color = ln_total_statements)) +
-  geom_jitter() +
-  scale_color_gradientn(
-    colours = wes_palette("Zissou1", 100, type = "continuous")) 
+
+# ols w/o any dyad corrections: US trade changes
+us.trade.all <- rlm(change_us_trade ~
+                       time_to_elec*mean_leader_supp +
+                       incumbent +
+                       lag_latency_pilot + lag_rivalry_thompson +
+                       adv_signal_last3 + xm_qudsest2 + 
+                       gmlmidongoing + dyadigos +
+                       change_gdp_o + change_gdp_d + Distw +
+                       Comlang + Contig + Evercol,
+                     data = us.trade.ally,
+                     maxit = 40)
+summary(us.trade.all)
+
+me.supp.trade <- plot_cme(us.trade.all,
+                    effect = "mean_leader_supp",
+                    condition = "time_to_elec") +
+                  geom_hline(yintercept = 0) +
+                  labs(
+                    x = "Time to Election",
+                    y = "Marginal Effect of Avg. Leader Support",
+                    title = "Annual Change in Total Trade"
+                  )
+me.supp.trade
 
 
 # ols w/o any dyad corrections: US exports
-us.exports.all <- lm(ln_exports ~ lag_ln_exports + lag_ln_imports +
-                       time_to_elec + time_to_elec:ln_total_statements +
-                        ln_total_statements + change_pres +
+us.exports.all <- rlm(us_exports ~ lag_us_exports + lag_us_imports +
+                        time_to_elec*mean_leader_supp +
+                        incumbent +
                         lag_latency_pilot + lag_rivalry_thompson +
                         adv_signal_last3 + xm_qudsest2 + 
-                         wbgdp2011est1 + wbgdp2011est2 +
-                       mindist + capdist + gmlmidongoing + dyadigos,
+                        gmlmidongoing + dyadigos +
+                       change_gdp_o + change_gdp_d + Distw +
+                       Comlang + Contig + Evercol,
+                      maxit = 40,
                        data = us.trade.ally)
 summary(us.exports.all)
 
+me.supp.exports <- plot_cme(us.exports.all,
+                           effect = "mean_leader_supp",
+                           condition = "time_to_elec") +
+                    geom_hline(yintercept = 0) +
+                    labs(
+                      x = "Time to Election",
+                      y = "Marginal Effect of Avg. Leader Support",
+                      title = "US Exports to Allies"
+                    )
+me.supp.exports
 
-# ols w/o any dyad corrections: US imports
-us.imports.all <- lm(ln_imports ~ lag_ln_exports + lag_ln_imports +
-                       time_to_elec + time_to_elec:ln_total_statements +
-                       ln_total_statements + change_pres +
+
+# rlm w/o any dyad corrections: change in US exports
+us.exports.ch <- rlm(change_us_exports ~ 
+                        time_to_elec*mean_leader_supp +
+                       incumbent +
+                        lag_latency_pilot + lag_rivalry_thompson +
+                        adv_signal_last3 + xm_qudsest2 + 
+                        gmlmidongoing + dyadigos +
+                        change_gdp_o + change_gdp_d + Distw +
+                        Comlang + Contig + Evercol,
+                      maxit = 40,
+                      data = us.trade.ally)
+summary(us.exports.ch)
+
+
+me.supp.change <- plot_cme(us.exports.ch,
+                           effect = "mean_leader_supp",
+                           condition = "time_to_elec") +
+                   geom_hline(yintercept = 0) +                    
+                   labs(
+                     x = "Time to Election",
+                     y = "Marginal Effect of Avg. Leader Support",
+                     title = "Change in US Exports"
+                    )
+me.supp.change
+
+
+# ols w/o any dyad corrections: change in US exports w/ fixed effects
+us.exports.ch.fe <- lm(change_us_exports ~ 
+                       time_to_elec*mean_leader_supp +
+                         incumbent +
                        lag_latency_pilot + lag_rivalry_thompson +
                        adv_signal_last3 + xm_qudsest2 + 
-                       wbgdp2011est1 + wbgdp2011est2 +
-                       mindist + capdist + gmlmidongoing + dyadigos,
+                       gmlmidongoing + dyadigos +
+                       change_gdp_o + change_gdp_d +
+                       factor(ccode),
+                     data = us.trade.ally)
+summary(us.exports.ch.fe)
+
+me.supp.change.fe <- plot_cme(us.exports.ch.fe,
+                           effect = "mean_leader_supp",
+                           condition = "time_to_elec") +
+                      geom_hline(yintercept = 0) +
+                      labs(
+                        x = "Time to Election",
+                        y = "Marginal Effect of Avg. Leader Support",
+                          title = "Change in US Exports (OLS & FE)"
+                         )
+me.supp.change.fe
+
+
+
+# ols w/o any dyad corrections: US imports
+us.imports.all <- rlm(change_us_imports ~ 
+                       time_to_elec*mean_leader_supp +
+                        incumbent +
+                       lag_latency_pilot + lag_rivalry_thompson +
+                       adv_signal_last3 + xm_qudsest2 + 
+                       gmlmidongoing + dyadigos +
+                       change_gdp_o + change_gdp_d + Distw +
+                       Comlang + Contig + Evercol,
                      data = us.trade.ally)
 summary(us.imports.all)
 
+me.supp.imports <- plot_cme(us.imports.all,
+                     effect = "mean_leader_supp",
+                     condition = "time_to_elec") +
+                    geom_hline(yintercept = 0) +
+                    labs(
+                      x = "Time to Election",
+                      y = "Marginal Effect of Avg. Leader Support",
+                      title = "Change in US Imports"
+                       )
+me.supp.imports
+
 
 # SUR exports and imports
-trade.sur <- systemfit(list(
-  ln_exports ~ lag_ln_exports +
-    time_to_elec + time_to_elec:ln_total_statements +
-    ln_total_statements + change_pres +
+us.trade.sur <- systemfit(list(
+  change_us_exports ~ 
+    time_to_elec*mean_leader_supp +
+    incumbent +
     lag_latency_pilot + lag_rivalry_thompson +
     adv_signal_last3 + xm_qudsest2 + 
-    wbgdp2011est1 + wbgdp2011est2 +
-    mindist + capdist + gmlmidongoing + dyadigos,
-  ln_imports ~ lag_ln_imports +
-    time_to_elec + time_to_elec:ln_total_statements +
-    ln_total_statements + change_pres +
+    gmlmidongoing + dyadigos +
+    GDP_o + GDP_d + Distw +
+    Comlang + Contig + Evercol,
+  change_us_imports ~ 
+    time_to_elec* mean_leader_supp +
+    incumbent +
     lag_latency_pilot + lag_rivalry_thompson +
     adv_signal_last3 + xm_qudsest2 + 
-    wbgdp2011est1 + wbgdp2011est2 +
-    mindist + capdist + gmlmidongoing + dyadigos),
+    gmlmidongoing + dyadigos +
+    GDP_o + GDP_d + Distw +
+    Comlang + Contig + Evercol),
   data = us.trade.ally
 )
 # residual correlations are weaker than expected
-summary(trade.sur)
+summary(us.trade.sur)
 
 
 # trade balance
-us.balance.all <- lm(ihs_trade_balance ~ lag_ihs_trade_balance +
-                       time_to_elec + time_to_elec:ln_total_statements +
-                       ln_total_statements + change_pres +
+us.balance.all <- rlm(trade_balance ~ lag_trade_balance +
+                       time_to_elec*mean_leader_supp +
+                        incumbent +
                        lag_latency_pilot + lag_rivalry_thompson +
                        adv_signal_last3 + xm_qudsest2 + 
-                       wbgdp2011est1 + wbgdp2011est2 +
-                       mindist + capdist + gmlmidongoing + dyadigos,
+                       gmlmidongoing + dyadigos +
+                       change_gdp_o + change_gdp_d + Distw +
+                       Comlang + Contig + Evercol,
                      data = us.trade.ally)
 summary(us.balance.all)
 
+plot_cme(us.balance.all,
+         effect = "mean_leader_supp",
+         condition = "time_to_elec") +
+  geom_hline(yintercept = 0)
 
-# quick brms model
-bf.exports.all <- brmsformula(ln_exports ~ lag_ln_exports + lag_ln_imports +
-                                time_to_elec + time_to_elec:ln_total_statements +
-                                ln_total_statements + change_pres +
+
+
+
+### plot key coefficient estimates
+# nice names for plotting
+coef.names.map.us = c("lag_us_exports" = "Lag Exports",
+                   "lag_us_imports" = "Lag Imports",
+                   "mean_leader_supp" = "Avg Leader Support",
+                   "time_to_elec" = "Years to Election",
+                   "time_to_elec:mean_leader_supp" = "Years to Election x Avg Leader Support",
+                   "incumbent" = "Incumbent",
+                   "xm_qudsest2" = "Allied Democracy",
+                   "GDP_o" = "US GDP",
+                   "change_gdp_o" = "Change US GDP",
+                   "GDP_d" = "Ally GDP",
+                   "change_gdp_d" = "Change Ally GDP",
+                   "Distw" = "Pop. Weighted Distance)",
+                   "Contig" = "Contiguous",
+                   "Comlang" = "Common Language",
+                   "Evercol" = "Former Colony",
+                   "gmlmidongoing" = "Ongoing MID",
+                   "dyadigos" = "Shared IGOs",
+                   "lag_latency_pilot" = "Lag Ally Latency",
+                   "lag_rivalry_thompson" = "Lag Rivalry",
+                   "adv_signal_last3" = "Prior Adversary Signal")
+
+us.model.list <- list(us.trade.all, us.exports.all,
+                      us.exports.ch, us.exports.ch.fe, 
+                      us.imports.all)
+names(us.model.list) <- c("Total Trade", "US Exports",
+                          "Change US Exports", 
+                          "Change US Exports (FE)",
+                          "Change US Imports")
+
+modelplot(us.model.list,
+          coef_map = coef.names.map,
+          coef_omit = c("ccode"))
+ggsave("figures/us-model-coefs.png", height = 8, width = 8)
+
+
+# marginal effects
+grid.arrange(me.supp.trade, me.supp.exports,
+             me.supp.change, me.supp.change.fe,
+             me.supp.imports,
+             nrow = 2)
+us.me.plots <- arrangeGrob(me.supp.trade, me.supp.exports,
+                me.supp.change, me.supp.change.fe,
+                me.supp.imports,
+                nrow = 2)
+ggsave("figures/me-plots-us.png", us.me.plots,
+       height = 7, width = 9)
+
+
+
+
+# brms model of exports as dyadic clustering does not work
+bf.exports.all <- brmsformula(change_us_exports ~ 
+                                time_to_elec*mean_leader_supp +
                                 lag_latency_pilot + lag_rivalry_thompson +
-                                adv_signal_last3 + xm_qudsest2 + 
-                                wbgdp2011est1 + wbgdp2011est2 +
-                                mindist + gmlmidongoing + dyadigos +
+                                adv_signal_last3 + xm_qudsest2 +  dyadigos +
+                                change_gdp_o + change_gdp_d + Distw +
+                                Comlang + Contig + Evercol +
                                 (1 | ccode) + (1 | year),
                               center = TRUE) +
                                 student()
@@ -179,63 +314,23 @@ brm.ally.exports <- brm(bf.exports.all,
                       control = list(max_treedepth = 20))
 summary(brm.ally.exports, prob = .9)
 mcmc_plot(brm.ally.exports, "hist_by_chain", pars = "sigma")
-mcmc_plot(brm.ally.exports, "intervals", pars = "b",
+mcmc_plot(brm.ally.exports, "intervals", pars = "b_",
           prob = .9)
 mcmc_plot(brm.ally.exports, "intervals", 
-          pars = c("b_ln_total_statements",
+          pars = c("b_mean_leader_supp",
                    "b_time_to_elec",
-                   "b_time_to_elec:ln_total_statements"),
+                   "b_time_to_elec:mean_leader_supp"),
           prob = .9)
 
-
-### exports by state 
-
-# load exports data by state
-state.exports <- read.csv("data/state-exports-country.csv")
-# remove commas and measure in billions
-state.exports$value <- as.numeric(gsub(",","", state.exports$value)) / 1000000
-
-# remove unknown state
-state.exports <- filter(state.exports, state != "Unknown") 
-
-# state exports ccode
-state.exports$ccode <- countrycode(origin = "country.name",
-                                   sourcevar = state.exports$destination,
-                                   destination = "cown")
-
-# add state level info
-state.exports.dyad <-  left_join(state.exports,
-                        (create_dyadyears(system = "cow",
-                                          mry = TRUE, 
-                                          directed = FALSE) %>%
-                          add_cow_mids() %>%
-                          add_atop_alliance() %>%
-                          add_igos() %>%
-                          rename(
-                            ccode = ccode2
-                          ) %>%
-                        filter(ccode1 == 2 & year >= 1946) %>%   
-                        select(ccode, year,
-                               cowmidongoing, xm_qudsest2,
-                               atop_defense, dyadigos))
-                      )
-# bring in PWT data
-
-
-# state data from CSPP 
-cspp.data <- get_cspp_data(vars =
-            c("minwage", "foreign_born",
-              "poptotal", "ogdp", # total industry GDP
-              "labfree", "econfree", "regfree", # labor, econ, regulation freedoms
-              "atotspt", # total state and local spending
-              "fairtrade", "rep_unified", "s_diffs", "h_diffs"
-              ),
-  years = seq(2002, 2019))
-
-# add to dataframe
-state.exports.ally <- left_join(state.exports, cspp.data) %>%
-                       filter(atop_defense == 1)
-state.exports$dyadid <- group_indices(state.exports, state, destination) 
-
-
+# conditional effects
+plot(conditional_effects(brm.ally.exports,
+                         effects = "mean_leader_supp:time_to_elec",
+                         int_conditions = list(time_to_elec = 
+                                       seq(from = 0, to = 3, by = 1)),
+                         method = "posterior_epred",
+                         prob = .9,
+                         surface = TRUE,
+                         theme = "bw"),
+     ask = FALSE)
+plot(conditional_effects(brm.ally.exports), ask = FALSE)
 

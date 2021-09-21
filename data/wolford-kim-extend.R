@@ -14,11 +14,6 @@ promises.data <- read_dta("data/ReplicationData_ISQ_Promises.dta") %>%
                          adv_signal_last3, log_distance,
                          sample_cow,
                          sample_atop)
-latent.supp <- read.csv("data/Major Protege Dataset v1.1.csv") %>%
-                mutate(
-                  lag_median = lag(median),
-                  change_median = median - lag_median
-                )
 
 
 ### US data 
