@@ -21,6 +21,7 @@ us.trade.ally <- filter(dyadic.mp.ally,
               ln_trade = log(FLOW + 1),
               lag_ln_trade = lag(ln_trade),
               change_us_trade = (FLOW - lag(FLOW)) / 1000000000,
+              ihs_change_trade = asinh(change_us_trade),
               ln_exports = log(us_exports), 
               ln_imports = log(us_imports), 
               lag_ln_exports = lag(ln_exports),
@@ -54,16 +55,19 @@ ggplot(us.trade, aes(x = ln_imports)) + geom_histogram()
 # look at raw by election
 ggplot(us.trade.ally, aes(x = factor(time_to_elec), y = ln_exports,
                           color = mean_leader_supp)) +
-    geom_jitter() +
+  geom_boxplot() +
+    geom_jitter(alpha = .5) +
   scale_color_gradientn(
     colours = wes_palette("Zissou1", 100, type = "continuous")) 
 
 # look at trade balance by election
 ggplot(us.trade.ally, aes(x = factor(time_to_elec), y = trade_balance,
                           color = mean_leader_supp)) +
+  geom_boxplot() +
   geom_jitter()  +
   scale_color_gradientn(
-    colours = wes_palette("Zissou1", 100, type = "continuous")) 
+    colours = wes_palette("Zissou1", 100, type = "continuous")
+    ) 
 
 
 # ols w/o any dyad corrections: US trade changes
@@ -129,7 +133,18 @@ us.exports.ch <- rlm(change_us_exports ~
                       data = us.trade.ally)
 summary(us.exports.ch)
 
+# flip it- time to election
+plot_cme(us.exports.ch,
+         effect = "time_to_elec",
+         condition = "mean_leader_supp") +
+  geom_hline(yintercept = 0) +                    
+  labs(
+    y = "Marginal Effect of Time to Election",
+    x = "Avg. Leader Support",
+    title = "Change in US Exports"
+  )
 
+# most relevant
 me.supp.change <- plot_cme(us.exports.ch,
                            effect = "mean_leader_supp",
                            condition = "time_to_elec") +
@@ -143,7 +158,7 @@ me.supp.change
 
 
 # ols w/o any dyad corrections: change in US exports w/ fixed effects
-us.exports.ch.fe <- lm(change_us_exports ~ 
+us.exports.ch.fe <- robustbase::lmrob(change_us_exports ~ 
                        time_to_elec*mean_leader_supp +
                          incumbent +
                        lag_latency_pilot + lag_rivalry_thompson +
@@ -151,6 +166,10 @@ us.exports.ch.fe <- lm(change_us_exports ~
                        gmlmidongoing + dyadigos +
                        change_gdp_o + change_gdp_d +
                        factor(ccode),
+                       fast.s.large.n = Inf,
+                       trace.lev = 4,
+                       setting = "KS2014",
+                       singular.ok = TRUE,
                      data = us.trade.ally)
 summary(us.exports.ch.fe)
 
@@ -199,7 +218,7 @@ us.trade.sur <- systemfit(list(
     lag_latency_pilot + lag_rivalry_thompson +
     adv_signal_last3 + xm_qudsest2 + 
     gmlmidongoing + dyadigos +
-    GDP_o + GDP_d + Distw +
+    change_gdp_o + change_gdp_d + Distw +
     Comlang + Contig + Evercol,
   change_us_imports ~ 
     time_to_elec* mean_leader_supp +
@@ -207,11 +226,11 @@ us.trade.sur <- systemfit(list(
     lag_latency_pilot + lag_rivalry_thompson +
     adv_signal_last3 + xm_qudsest2 + 
     gmlmidongoing + dyadigos +
-    GDP_o + GDP_d + Distw +
+    change_gdp_o + change_gdp_d + Distw +
     Comlang + Contig + Evercol),
   data = us.trade.ally
 )
-# residual correlations are weaker than expected
+# residual correlations are very strong
 summary(us.trade.sur)
 
 
@@ -237,8 +256,7 @@ plot_cme(us.balance.all,
 
 ### plot key coefficient estimates
 # nice names for plotting
-coef.names.map.us = c("lag_us_exports" = "Lag Exports",
-                   "lag_us_imports" = "Lag Imports",
+coef.names.map.us = c(
                    "mean_leader_supp" = "Avg Leader Support",
                    "time_to_elec" = "Years to Election",
                    "time_to_elec:mean_leader_supp" = "Years to Election x Avg Leader Support",
@@ -248,7 +266,7 @@ coef.names.map.us = c("lag_us_exports" = "Lag Exports",
                    "change_gdp_o" = "Change US GDP",
                    "GDP_d" = "Ally GDP",
                    "change_gdp_d" = "Change Ally GDP",
-                   "Distw" = "Pop. Weighted Distance)",
+                   "Distw" = "Pop. Weighted Distance",
                    "Contig" = "Contiguous",
                    "Comlang" = "Common Language",
                    "Evercol" = "Former Colony",
@@ -256,34 +274,54 @@ coef.names.map.us = c("lag_us_exports" = "Lag Exports",
                    "dyadigos" = "Shared IGOs",
                    "lag_latency_pilot" = "Lag Ally Latency",
                    "lag_rivalry_thompson" = "Lag Rivalry",
-                   "adv_signal_last3" = "Prior Adversary Signal")
+                   "adv_signal_last3" = "Prior Adversary Signal",
+                   "lag_us_exports" = "Lag Exports",
+                   "lag_us_imports" = "Lag Imports")
 
 us.model.list <- list(us.trade.all, us.exports.all,
-                      us.exports.ch, us.exports.ch.fe, 
+                      us.exports.ch,
                       us.imports.all)
-names(us.model.list) <- c("Total Trade", "US Exports",
+names(us.model.list) <- c("Change US Trade",
+                          "US Exports",
                           "Change US Exports", 
-                          "Change US Exports (FE)",
                           "Change US Imports")
 
-modelplot(us.model.list,
-          coef_map = coef.names.map,
-          coef_omit = c("ccode"))
-ggsave("figures/us-model-coefs.png", height = 8, width = 8)
+
+modelsummary(us.model.list,
+             "figures/us-model-coefs.tex",
+          statistic = c("({conf.low}, {conf.high})"),
+          coef_map = coef.names.map.us,
+          coef_omit = c("ccode"),
+          gof_map = list(
+            list("raw" = "nobs", "clean" = "N", "fmt" = 0)))
 
 
 # marginal effects
 grid.arrange(me.supp.trade, me.supp.exports,
-             me.supp.change, me.supp.change.fe,
+             me.supp.change, 
              me.supp.imports,
              nrow = 2)
-us.me.plots <- arrangeGrob(me.supp.trade, me.supp.exports,
-                me.supp.change, me.supp.change.fe,
+us.me.plots <- arrangeGrob(me.supp.exports,
+                me.supp.change,
                 me.supp.imports,
                 nrow = 2)
 ggsave("figures/me-plots-us.png", us.me.plots,
        height = 7, width = 9)
 
+
+
+# complete data and rescaled 
+brm.us.exports <- select(ungroup(us.trade.ally),
+                              ccode, year, change_us_exports, 
+                                time_to_elec, mean_leader_supp,
+                                lag_latency_pilot, lag_rivalry_thompson,
+                                adv_signal_last3, xm_qudsest2,  dyadigos,
+                                change_gdp_o, change_gdp_d, Distw,
+                                Comlang, Contig, Evercol)
+# rescale IVs by 2sd 
+brm.us.exports[, 5:16] <- lapply(brm.us.exports[, 5:16],
+                                          function(x)
+                                            arm::rescale(x, binary.inputs = "0/1"))
 
 
 
@@ -306,12 +344,14 @@ exports.priors <- c(
 
 # fit the model
 brm.ally.exports <- brm(bf.exports.all, 
-                     data = us.trade.ally,
+                     data = brm.us.exports,
                      prior = exports.priors,
                      iter = 2000, warmup = 1000,
                      chains = 4, cores = 4,
+                     threads = 2,
                      backend = "cmdstanr",
-                      control = list(max_treedepth = 20))
+                     control = list(
+                     max_treedepth = 20))
 summary(brm.ally.exports, prob = .9)
 mcmc_plot(brm.ally.exports, "hist_by_chain", pars = "sigma")
 mcmc_plot(brm.ally.exports, "intervals", pars = "b_",
@@ -334,3 +374,16 @@ plot(conditional_effects(brm.ally.exports,
      ask = FALSE)
 plot(conditional_effects(brm.ally.exports), ask = FALSE)
 
+
+
+# export us trade to iso3c codes
+unique(countrycode(us.trade.ally$ccode, origin = "cown", destination = "iso3c"))
+
+# add to text file 
+# define text file
+us.iso3c <- file("data/us-ally-iso3c.txt")
+# write blocks to text
+writeLines(unlist(unique(countrycode(us.trade.ally$ccode, origin = "cown", destination = "iso3c"))),
+           con = us.iso3c,
+           sep = ";")
+close(us.iso3c)

@@ -444,7 +444,7 @@ This implies a positive constituent term on the leader support variable, as this
 
 The outcome of interest is annual exports from democratic major powers to their proteges. 
 The first model includes a lagged dependent variable, but I also model changes in exports as a robustness check due to strong high autocorrelation in exports.
-This dyadic dataset includes the United States and its allies from 1950 to 2012.\footnote{The analysis stops in 2012 due to limits on the major power support measure.}
+This dyadic dataset includes the United States and its allies from 1950 to 2010.\footnote{The analysis stops in 2010 due to limits on the major power support measure.}
 I draw on exports and imports data from CEPII \citep{FouquinHugot2016}.
 
 
@@ -478,22 +478,17 @@ This adjusts for the diffusion of electoral timing in the United States across m
 
 
 As prior signals of support by U.S. presidents increase, their exports to allies in election years also increase. 
-\autoref{fig:us-model-coefs} presents the coefficient estimates from the three primary model specifications.
+\autoref{tab:us-model-coefs} presents the coefficient estimates from the three primary model specifications.
 As expected, the mean leader support constituent term is positive, which implies that leaders who have signaled more support to allies export more to allies in election years. 
 Moreover, the interaction between the rolling average of leader's support signals and elections is negative across all four model specifications.
 The constituent term on time to election is harder to interpret, because it reflects the impact of election timing when average leader support is zero and the latent support measure is never equal to zero. 
 
 
-\begin{figure}[htpb]
-	\centering
-		\includegraphics[width=0.95\textwidth]{../figures/us-model-coefs.png}
-	\caption{Coefficient estimates from gravity models of exports from democratic major powers to their junior allies, 1950 to 2012. The first model models annual major power exports and includes a lagged dependent variable. The second model regresses changes in exports on the explanatory variables. The third model examines changes and includes dyadic fixed effects. The fourth model assesses annual trade balances, transformed with an inverse hyperbolic sine. Points mark the coefficient estimate and error bars summarize the 95\% confidence interval.}
-	\label{fig:us-model-coefs}
-\end{figure}
+\input{../figures/us-model-coefs.tex}
 
 
 % control variables show other suggestive evidence of a cycle
-Some of the other estimates in \autoref{fig:us-model-coefs} suggest an electoral cycle in U.S. trade with allies.
+Some of the other estimates in \autoref{tab:us-model-coefs} suggest an electoral cycle in U.S. trade with allies.
 Imports respond in similar ways to exports, which perhaps indicates efforts to increase domestic consumption.
 Increased U.S. government spending or other liberalizing policies could increase imports \citep{Oatley2015}.
 
@@ -514,7 +509,7 @@ Without electoral pressure, credible commitment efforts reduce economic leverage
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{../figures/me-plots-us.png}
-	\caption{Estimated marginal effect of average signals of support by the incumbent leader on exports from democratic major powers to their junior allies, 1950 to 2012. The first model models annual major power exports and includes a lagged dependent variable. The second model regresses changes in exports on the explanatory variables. The third model examines changes and includes dyadic fixed effects. The fourth model assesses changes in imports. Points mark the coefficient estimate and error bars summarize the 95\% confidence interval.}
+	\caption{Estimated marginal effect of average signals of support by the incumbent leader on exports from the United States to allied states, 1950 to 2010. The first model models annual major power exports and includes a lagged dependent variable. The second model regresses changes in exports on the explanatory variables. The third model examines changes and includes dyadic fixed effects. The fourth model assesses changes in imports. Points mark the coefficient estimate and error bars summarize the 95\% confidence interval.}
 	\label{fig:me-plots-us}
 \end{figure}
 
@@ -550,7 +545,7 @@ The second measure captures a state's pivot proximity in the election results.
 The pivot state is the state that, after ranking states by the vote share of the winner, gives them 270 electoral votes \citep{Wright2009}.
 Keeping the same ordering, states are then close or far from the pivot. 
 Pivot proximity thus encompasses vote share and electoral college considerations. 
-Low pivot proximity scores implies a state was closer to providing the winning margin and was thus more important, while high proximity distance implies a state was unlikely to put the winning candidate over the top.\footnote{To maximize the number of elections in this analysis, I do not examine the conditioning effect of prior leader support, as the latent support measure only runs through 2012.} 
+Low pivot proximity scores implies a state was closer to providing the winning margin and was thus more important, while high proximity distance implies a state was unlikely to put the winning candidate over the top.\footnote{To maximize the number of elections in this analysis, I do not examine the conditioning effect of prior leader support, as the latent support measure only runs through 2010.} 
 
 
 Because smaller pivot proximity and vote differences imply greater competition, I expect that the interaction of U.S. alliance and these variables will be negative. 
@@ -593,7 +588,7 @@ Increasing GDP in the state of origin and international destination both increas
 Trump's reelection in 2020 is associated with far lower exports than other elections due to the Covid-19 pandemic. 
 
 
-To present the interactions more fully, \autoref{fig:me-all-state} presents the estimated marginal effect of an alliance on exports across the range of electoral competition. 
+To show the interactions, \autoref{fig:me-all-state} presents the estimated marginal effect of an alliance on exports across the range of electoral competition. 
 As prior election vote differences or proximity to the electoral pivot increase and electoral competition falls, allied states still import more than other states, but they import less, relative to more competitive states. 
 This implies that allies have a slight preference for swing state exports during election years. 
 
@@ -616,9 +611,62 @@ As I show in the appendix, these interactions, as well as the conditional relati
 \section{Allied Tariffs} 
 
 
+The final analysis scrutinizes the claim that allies will be less likely to make structural trade concessions. 
+I test this claim by modeling allied tariffs on U.S. goods with the same approach for testing the impact of prior leader support and elections. 
+I find little evidence that increasing leader support reduces average allied tariffs or maximum tariff rates, even as proximity to elections increases. when tariffs are weighted by import volume. 
 
 
+These models use tariff data from United Nations Conference on Trade and Development (UNCTAD)'s Trade Analysis and information systems (TRAINS) database. 
+The tariff data starts in 1988 and limited temporal coverage in some control variables means that the analysis stops in 2010.\footnote{I include the European Union in the analysis because the EU is a key U.S. trade partner. I use with the average of presidential support in each year as the key independent variable.}
+I analyze two outcome measures; average tariffs weighted by import volume and logged maximum tariffs. 
+As in the analyses of exports and imports, I employ robust m-estimation with Tukey's biweight function because tariffs have substantial outliers.
 
+
+% justify outcome measures
+I use weighted average and maximum tariff rates to measure structural changes in allied trade policy because these measures capture crucial areas of domestic political competition.
+Goods with greater U.S. exports are more salient to domestic industries. 
+Maximum tariff rates likely reflect areas of particular political concern.
+
+
+% summarize results
+\autoref{tab:tariff-model-coefs} presents the estimates from robust regression models of weighted average allied tariffs and maximum tariff rates. 
+There is less evidence that prior leader support reduces allied tariffs in the interaction coefficients. 
+The average leader support constituent term is negative for weighted tariffs, but it is of small magnitude and uncertain direction.
+Greater prior leader support increases maximum allied tariffs even in election years, however.
+As is the case in other models, the years to election constituent term does not have a direct interpretation.
+Both interaction terms are positive, though the direction of the maximum tariff interaction is unclear. 
+
+% add table of coefficient estimates 
+\input{../figures/tariff-model-coefs.tex}
+
+
+\autoref{fig:tariff-me} presents how election proximity modifies the impact of leader support on allied tariff rates.
+In election years, greater leader support has a substantively small but uncertain association with weighted average allied tariffs. 
+The impact of support rises as time to an election increases, however. 
+Early in presidential terms, signals of support for allies are associated with increased tariffs. 
+Allies may avoid antagonizing friendly leaders with tariff increases around election years, but there is little evidence that they make structural trade changes.
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{../figures/tariff-me.png}
+	\caption{Estimated marginal effect of of a two standard deviation increase in average signals of support by the incumbent leader on allied tariffs on U.S. exports, 1988 to 2010. The first model addresses each ally's annual average tariff on U.S. exports, weighted by import volume. The second model examines the log maximum tariff rate.}
+	\label{fig:tariff-me}
+\end{figure}
+
+
+Maximum tariffs respond to commitment signals, and this relationship does not fluctuate with U.S. electoral cycles.
+When leaders reassure their allies at any point in their tenure, allied states increase their maximum tariff on U.S. goods.
+Thus, allies take advantage of greater confidence in U.S. commitment to increase protection for crucial domestic interests.
+
+
+Therefore, the balance of evidence suggests that allied states do not reduce their tariffs to help supportive leaders win election.
+Allied trade concessions are temporary, rather than structural.
+Commitment signaling is more likely to increase allied trade barriers.
+Reduced commitment might lower allied tariffs, albeit at the cost of allied trade support in election years.
+
+
+\newpage
 \singlespace
  
 \bibliography{../../MasterBibliography} 
