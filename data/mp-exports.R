@@ -158,17 +158,36 @@ dyadic.mp.ally <- dyadic.trade.major %>%
                             lag_atop_defense = lag(atop_defense),
                             lag_xm_qudsest2 = lag(xm_qudsest2)
                          ) %>% 
-                            group_by(ccode, ccode2, leader) %>%
+                            ungroup() %>%
                            mutate(
-                            # running mean support
-                            mean_leader_supp = rollapply(median, 2, mean,
-                                                align ='right', fill = lag_median)
+                             # prior support and changes
+                            prior_leader_supp = ifelse(leader != lag(leader),
+                                                        lag_median, NA)
                             ) %>%
+                        fill(prior_leader_supp, 
+                          .direction = "down") %>% 
+                        mutate(
+                          change_leader_supp = median - prior_leader_supp
+                          ) %>%
+                        group_by(ccode, ccode2, leader) %>%
+                        mutate(
+                           # running mean support
+                             mean_leader_supp = rollapply(median, 2, mean,
+                                 align ='right', fill = lag_median),
+                           # running sum of changes
+                           total_change_supp = rollapply(change_leader_supp, 
+                                        2, sum,
+                                        align ='right', 
+                                        fill = lag(change_leader_supp))
+                             ) %>% 
                         select(ccode, ccode2, year, electionid, leader, mean_leader_supp,
+                               lag_median, prior_leader_supp, change_leader_supp, 
+                               total_change_supp,
                           everything()) 
                         # w/ original measure, add: 
                         # filter(atop_defense == 1 &
                         #    (ccode == 2 | ccode == 200 | ccode == 220))
+
 
 # dyad id
 dyadic.mp.ally$dyad.id <- group_indices(dyadic.mp.ally, ccode, ccode2) 
@@ -215,7 +234,7 @@ dyadic.mp.ally %>% select(XPTOT_o, lag_exports, IPTOT_o,
 # complete cases of dyad data
 dyad.mp.comp <- function(data){
   out <- data %>% drop_na(XPTOT_o, lag_exports, lag_imports,
-    election, mean_leader_supp,
+    election, change_leader_supp,
     lag_election, lead_election, incumbent,
     xm_qudsest2,  gmlmidongoing, dyadigos,
     GDP_o, GDP_d, Distw,
@@ -225,7 +244,7 @@ dyad.mp.comp <- function(data){
 
 # model w/o transformation
 mp.exports.all <- lm(XPTOT_o ~ lag_exports + lag_imports +
-                       election*mean_leader_supp +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                        xm_qudsest2 +  gmlmidongoing + dyadigos +
                        GDP_o + GDP_d + Distw +
@@ -236,7 +255,7 @@ summary(mp.exports.all)
 
 # model w/o transformation: robust
 mp.exports.rlm <- rlm(XPTOT_o ~ lag_exports + lag_imports +
-                       election*mean_leader_supp +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                        xm_qudsest2 +  gmlmidongoing + dyadigos +
                         GDP_o + GDP_d + Distw +
@@ -249,7 +268,7 @@ qqline(mp.exports.all$residuals)
 
 # correct se: add rlm weights to OLS
 mp.exports.dr <- dyadRobust(lm(XPTOT_o ~ lag_exports + lag_imports +
-                                 election*mean_leader_supp +
+                                 election*change_leader_supp +
                                  lag_election + lead_election + incumbent +
                                  xm_qudsest2 +  gmlmidongoing + dyadigos +
                                  GDP_o + GDP_d + Distw +
@@ -261,8 +280,8 @@ mp.exports.dr <- dyadRobust(lm(XPTOT_o ~ lag_exports + lag_imports +
                             egoid = "ccode",
                             alterid = "ccode2")
 # model in logs
-mp.exports.ln <- lm(ln_exports ~ lag_ln_exports + lag_ln_imports +
-                       election*mean_leader_supp +
+mp.exports.ln <- rlm(ln_exports ~ lag_ln_exports + lag_ln_imports +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                        xm_qudsest2 +  gmlmidongoing + dyadigos +
                        ln_gdp_o + ln_gdp_d + ln_distw +
@@ -276,7 +295,7 @@ qqline(mp.exports.ln$residuals)
 ### given skewness, box-cox it
 # box-cox exports
 bc.exports <- boxcox(XPTOT_o ~ lag_exports + lag_imports +
-                       election*mean_leader_supp +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                        xm_qudsest2 +  gmlmidongoing + dyadigos +
                        GDP_o + GDP_d + Distw +
@@ -287,7 +306,7 @@ lambda.ex <- bc.exports$x[which.max(bc.exports$y)]
 
 # box-cox imports
 bc.imports <- boxcox(IPTOT_o ~ lag_exports + lag_imports +
-                       election*mean_leader_supp +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                        xm_qudsest2 +  gmlmidongoing + dyadigos +
                        GDP_o + GDP_d + Distw +
@@ -314,7 +333,7 @@ dyadic.mp.ally <- dyadic.mp.ally %>%
 # model w/ bc transformed exports
 mp.exports.bc <- rlm( bc_exports ~ 
                       lag_exports + lag_imports +
-                      election*mean_leader_supp +
+                      election*change_leader_supp +
                       lag_election + lead_election + incumbent +
                       xm_qudsest2 +  gmlmidongoing + dyadigos +
                        GDP_o + GDP_d + Distw +
@@ -331,7 +350,7 @@ qqline(mp.exports.bc$residuals)
 # nickell bias here- long T helps, but T=N at best
 mp.exports.fe <- lm(XPTOT_o ~ 
                       lag_exports + lag_imports +
-                      election*mean_leader_supp +
+                      election*change_leader_supp +
                       lag_election + lead_election + incumbent +
                       xm_qudsest2 +  gmlmidongoing + dyadigos +
                       ln_gdp_o + ln_gdp_d + ln_distw +
@@ -345,18 +364,18 @@ summary(mp.exports.fe)
 # complete cases of dyad data
 dyad.mp.comp.ch <- function(data){
   out <- data %>% drop_na(change_exports,
-                          election, mean_leader_supp,
+                          election, change_leader_supp,
                           lag_election, lead_election, incumbent,
                           xm_qudsest2,  gmlmidongoing, dyadigos,
                           change_gdp_o, change_gdp_d, Distw,
                           Comlang, Contig, Evercol)
 }
 
-mp.chexports.all <- rlm(change_exports ~ 
-                        election*mean_leader_supp +
-                        lag_election + lead_election + incumbent +
-                         xm_qudsest2 +  gmlmidongoing + dyadigos +
-                         change_gdp_o + change_gdp_d + Distw +
+mp.chexports.all <- rlm(change_ln_exports ~ 
+                          election*change_leader_supp +
+                          lag_election + lead_election + incumbent +
+                          xm_qudsest2 +  gmlmidongoing + dyadigos +
+                          change_gdp_o + change_gdp_d + + Distw +
                          Comlang + Contig + Evercol,
                       data = dyad.mp.comp.ch(dyadic.mp.ally))
 summary(mp.chexports.all)
@@ -366,11 +385,11 @@ plot(mp.chexports.all$residuals, mp.chexports.all$w)
 
 
 # robust se
-mp.chexports.dr <- dyadRobust(lm(change_exports ~ 
-                                   election*mean_leader_supp +
+mp.chexports.dr <- dyadRobust(lm(change_ln_exports ~ 
+                                   election*change_leader_supp +
                                    lag_election + lead_election + incumbent +
                                    xm_qudsest2 +  gmlmidongoing + dyadigos +
-                                   change_gdp_o + change_gdp_d + Distw +
+                                   change_gdp_o + change_gdp_d + + Distw +
                                    Comlang + Contig + Evercol,
                                  weights = mp.chexports.all$w,
                                  data = dyad.mp.comp.ch(dyadic.mp.ally)),
@@ -381,19 +400,20 @@ mp.chexports.dr <- dyadRobust(lm(change_exports ~
 
 
 # changes w/ FE 
-mp.chexports.fe <- lm(change_exports ~ 
-                          election*mean_leader_supp +
+mp.chexports.fe <- lm(change_ln_exports ~ 
+                          election*change_leader_supp +
                         lag_election + lead_election + incumbent +
                         xm_qudsest2 +  gmlmidongoing + dyadigos +
                         change_gdp_o + change_gdp_d +
                         + factor(dyad.id),
-                        data = dyadic.mp.ally)
+                      weights = mp.chexports.all$w,
+                        data = dyad.mp.comp.ch(dyadic.mp.ally))
 summary(mp.chexports.fe)
 
 
 # robust se
 mp.chexports.fe.dr <- dyadRobust(mp.chexports.fe,
-                               dat = dyadic.mp.ally,
+                               dat = dyad.mp.comp.ch(dyadic.mp.ally),
                                dyadid = "dyad.id",
                                egoid = "ccode",
                                alterid = "ccode2")
@@ -401,7 +421,7 @@ mp.chexports.fe.dr <- dyadRobust(mp.chexports.fe,
 
 # changes w/ IHS: induces major left skew
 mp.chexports.all.ihs <- rlm(ihs_change_exports ~ 
-                          election*mean_leader_supp +
+                          election*change_leader_supp +
                           lag_election + lead_election + incumbent +
                           xm_qudsest2 +  gmlmidongoing + dyadigos +
                           change_gdp_o + change_gdp_d + Distw +
@@ -419,7 +439,7 @@ ggplot(dyadic.mp.ally, aes(x = ln_imports)) + geom_histogram()
 ggplot(dyadic.mp.ally, aes(x = bc_imports)) + geom_histogram()
 
 mp.imports.all <- rlm(IPTOT_o ~ lag_imports +
-                       election*mean_leader_supp +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                        xm_qudsest2 +  gmlmidongoing + dyadigos +
                        GDP_o + GDP_d + Distw +
@@ -430,7 +450,7 @@ summary(mp.imports.all)
 
 # correct se
 mp.imports.dr <- dyadRobust(lm(IPTOT_o ~ lag_imports +
-                                 election*mean_leader_supp +
+                                 election*change_leader_supp +
                                  lag_election + lead_election + incumbent +
                                  xm_qudsest2 +  gmlmidongoing + dyadigos +
                                  GDP_o + GDP_d + Distw +
@@ -446,7 +466,7 @@ mp.imports.dr <- dyadRobust(lm(IPTOT_o ~ lag_imports +
 # model w/ transformed imports
 mp.imports.bc <- rlm(bc_imports ~ 
                        lag_exports + lag_imports +
-                       election*mean_leader_supp +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                        xm_qudsest2 +  gmlmidongoing + dyadigos +
                        GDP_o + GDP_d + Distw +
@@ -458,14 +478,14 @@ qqnorm(mp.imports.bc$residuals)
 
 # SUR exports and imports
 mp.trade.sur <- systemfit(list(
-  change_exports ~ 
-    election*mean_leader_supp +
+  change_ln_exports ~ 
+    election*change_leader_supp +
     lag_election + lead_election + incumbent +
     xm_qudsest2 +  gmlmidongoing + dyadigos +
     change_gdp_o + change_gdp_d + Distw +
     Comlang + Contig + Evercol,
-  change_imports ~ 
-    election*mean_leader_supp +
+  change_ln_imports ~ 
+    election*change_leader_supp +
     lag_election + lead_election + incumbent +
     xm_qudsest2 +  gmlmidongoing + dyadigos +
     change_gdp_o + change_gdp_d + Distw +
@@ -480,7 +500,7 @@ summary(mp.trade.sur)
 ggplot(dyadic.mp.ally, aes(x = trade_balance)) + geom_histogram()
 
 mp.balance.all <- rlm(trade_balance ~ lag_trade_balance +
-                       election*mean_leader_supp +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                        xm_qudsest2 +  gmlmidongoing + dyadigos +
                         change_gdp_o + change_gdp_d + Distw +
@@ -493,7 +513,7 @@ qqline(mp.balance.all$residuals)
 
 # robust se
 mp.balance.dr <- dyadRobust(lm(trade_balance ~ lag_trade_balance +
-                                 election*mean_leader_supp +
+                                 election*change_leader_supp +
                                  lag_election + lead_election + incumbent +
                                  xm_qudsest2 +  gmlmidongoing + dyadigos +
                                  change_gdp_o + change_gdp_d + Distw +
@@ -507,7 +527,7 @@ mp.balance.dr <- dyadRobust(lm(trade_balance ~ lag_trade_balance +
 
 # trade balance w/ FE: need changes
 mp.balance.all.fe <- lm(change_trade_balance ~
-                       election*mean_leader_supp +
+                       election*change_leader_supp +
                        lag_election + lead_election + incumbent +
                          xm_qudsest2 +  gmlmidongoing + dyadigos +
                          change_gdp_o + change_gdp_d +
@@ -527,22 +547,13 @@ mp.balance.dr.fe <- dyadRobust(mp.balance.all.fe,
 ### present results ###
 # create dataframe with model results- all cluster robust SE
 
-# function to tidy dr lists
-dr.clean <- function(est){
-data.clean <- cbind.data.frame(est$bhat, est$sehat)
-colnames(data.clean) <- c("coef", "se")
-data.clean$variable <- rownames(data.clean)
-data.clean$model <-  deparse(substitute(est))
-data.clean
-}
-
 # create a dataframe w/ coefficient estimates
 mp.est <- bind_rows(
      dr.clean(mp.exports.dr),
      dr.clean(mp.imports.dr),
      dr.clean(mp.chexports.dr),
      dr.clean(mp.chexports.fe.dr),
-     #dr.clean(mp.balance.dr),
+     dr.clean(mp.balance.dr),
      dr.clean(mp.balance.dr.fe)
   ) %>% # cut FE and intercept terms
   filter(str_detect(variable, "dyad.id", negate = T)) %>%
@@ -553,8 +564,8 @@ coef.names.map = c("lag_exports" = "Lag Exports",
                    "lag_imports" = "Lag Imports",
                    "lag_trade_balance" = "Lag Trade Balance",
                    "election" = "Election",
-                   "mean_leader_supp" = "Avg Leader Support", 
-                   "election:mean_leader_supp" = "Election x Avg Leader Support",
+                   "change_leader_supp" = "Change Leader Support", 
+                   "election:change_leader_supp" = "Election x Change Leader Support",
                    "lag_election" = "Lag Election",
                    "lead_election" = "Lead Election", 
                    "incumbent" = "Incumbent",
@@ -573,7 +584,7 @@ coef.names.map = c("lag_exports" = "Lag Exports",
                    "lag_rivalry_thompson" = "Lag Rivalry",
                    "adv_signal_last3" = "Prior Adversary Signal",
                    "time_to_elec" = "Years to Election",
-                   "time_to_elec:mean_leader_supp" = "Years to Election x Avg Leader Support")
+                   "time_to_elec:change_leader_supp" = "Years to Election x Change Leader Support")
 mp.est$variable <- coef.names.map[mp.est$variable]
 
 # model names
@@ -603,12 +614,12 @@ ggplot(mp.est, aes(y = factor(variable, ordered = T,
   labs(x = "Estimate",
        y = "Term",
        color = "Model")
-ggsave("figures/mp-model-coefs.png", height = 6, width = 8)
+#ggsave("figures/mp-model-coefs.png", height = 6, width = 8)
 
 # interaction terms only
 ggplot(filter(mp.est, variable == "Election" | 
-                variable == "Avg Leader Support" |
-                variable == "Election x Avg Leader Support"),
+                variable == "Change Leader Support" |
+                variable == "Election x Change Leader Support"),
         aes(y = variable, x = coef,
            group = model,
            color = model)) +
@@ -631,34 +642,34 @@ ggplot(filter(mp.est, variable == "Election" |
 # level of exports 
 me.leader.supp <- marginaleffects(mp.exports.rlm,
                 vcov = mp.exports.dr$Vhat,
-                variables = "mean_leader_supp",
+                variables = "change_leader_supp",
                 newdata = typical(election = c(0, 1)))
 # level of imports
 me.imports.supp <- marginaleffects(mp.imports.all,
                                   vcov = mp.imports.dr$Vhat,
-                                  variables = "mean_leader_supp",
+                                  variables = "change_leader_supp",
                                   newdata = typical(election = c(0, 1)))
 # changes in exports
 me.ch.exports <- marginaleffects(mp.chexports.all,
                                  vcov = mp.chexports.dr$Vhat,
-                                 variables = "mean_leader_supp",
+                                 variables = "change_leader_supp",
                                  newdata = typical(election = c(0, 1)))
 
 # changes in exports w/ fixed effects
 me.chfe.exports <- marginaleffects(mp.chexports.fe,
                                  vcov = mp.chexports.fe.dr$Vhat,
-                                 variables = "mean_leader_supp",
+                                 variables = "change_leader_supp",
                                  newdata = typical(election = c(0, 1)))
 
 # trade balance
 me.balance <- marginaleffects(mp.balance.all,
                                    vcov = mp.balance.dr$Vhat,
-                                   variables = "mean_leader_supp",
+                                   variables = "change_leader_supp",
                                    newdata = typical(election = c(0, 1)))
 # trade balance w/ fixed effects
 me.balance.fe <- marginaleffects(mp.balance.all.fe,
                               vcov = mp.balance.dr.fe$Vhat,
-                              variables = "mean_leader_supp",
+                              variables = "change_leader_supp",
                               newdata = typical(election = c(0, 1)))
 
 plot.me <- function(model, label){
@@ -696,10 +707,12 @@ plot.balance.fe
 
 
 # combine 
-grid.arrange(plot.me.ex, plot.me.imp, plot.ch.ex, 
-             plot.balance.fe, nrow = 2)
-me.plots.mp <- arrangeGrob(plot.me.ex, plot.me.imp, plot.balance, 
-                           plot.balance.fe, nrow = 2)
+grid.arrange(plot.balance, plot.balance.fe,
+             plot.me.imp, plot.me.ex,
+             nrow = 2)
+me.plots.mp <- arrangeGrob(plot.balance, plot.balance.fe,
+                           plot.me.imp, plot.me.ex,
+                           nrow = 2)
 ggsave("figures/me-plots-mp.png", me.plots.mp, height = 8, width = 10)
 
 

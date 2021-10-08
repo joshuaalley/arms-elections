@@ -61,21 +61,8 @@ promises.annual <- promises.data %>%
                     )
 
 # Create a vector of presidential administrations
-promises.annual$president <- rep(NA, times = nrow(promises.annual))
-promises.annual$president[promises.annual$year >= 1945 & promises.annual$year < 1953] <- "Truman"
-promises.annual$president[promises.annual$year >= 1953 & promises.annual$year < 1961] <- "Eisenhower"
-promises.annual$president[promises.annual$year >= 1961 & promises.annual$year < 1964] <- "Kennedy"
-promises.annual$president[promises.annual$year >= 1964 & promises.annual$year < 1969] <- "Johnson"
-promises.annual$president[promises.annual$year >= 1969 & promises.annual$year <= 1974] <- "Nixon"
-promises.annual$president[promises.annual$year > 1974 & promises.annual$year < 1977] <- "Ford"
-promises.annual$president[promises.annual$year >= 1977 & promises.annual$year < 1981] <- "Carter"
-promises.annual$president[promises.annual$year >= 1981 & promises.annual$year < 1989] <- "Reagan"
-promises.annual$president[promises.annual$year >= 1989 & promises.annual$year < 1993] <- "HW Bush"
-promises.annual$president[promises.annual$year >= 1993 & promises.annual$year < 2001] <- "Clinton"
-promises.annual$president[promises.annual$year >= 2001 & promises.annual$year < 2009] <- "W Bush"
-promises.annual$president[promises.annual$year >= 2009 & promises.annual$year < 2017] <- "Obama"
-promises.annual$president[promises.annual$year >= 2017] <- "Trump"
-
+promises.annual$president <- pres.full(promises.annual)
+  
 # time to election
 promises.annual$time_to_elec <- rep(seq(from = 3, to = 0, by = -1),
                                     length.out = nrow(promises.annual))

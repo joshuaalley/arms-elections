@@ -66,14 +66,15 @@ University of Virginia
 
 \begin{abstract}
 Can military alliance leaders leverage their preponderant security role to extract economic concessions from junior partners?
-Some argue that powerful states can manipulate the extent of their security commitments to coerce economic changes. 
+Some argue that powerful states can manipulate their security commitments to coerce economic changes. 
 Others believe that large states value security ties too much to exert economic leverage.  
 I argue that large states usually have limited alliance leverage, but junior alliance members will make temporary economic concessions to support committed allied leaders' tenure in office.
-When a large state leader has signaled substantial alliance commitment, small alliance members will help them boost the economy to win elections.  
-I test these claims with analyses of U.S. exports to allied states. 
+When a patron state leader has signaled substantial alliance commitment, alliance proteges help them boost the economy during leadership competitions.  
+I test these claims with analyses of U.S. trade with allied states. 
 I find that prior leader signals of commitment increase exports to allied states during election years. 
-A subsequent examination of election-year exports from U.S. states shows that exports from swing states to allies increase more than exports from other states. 
-These results suggest that leaders can employ security commitment for temporary economic and political gain as allies to back their efforts to remain in office.
+A subsequent examination of election-year exports from U.S. states shows that increased trade with allies concentrates in swing states. 
+Finally, I find that these trade concessions are temporary, as allies do not adjust their tariff policies in response to changing leader commitment or electoral cycles. 
+These results suggest that leaders can employ security commitment for temporary economic and political gain as allies facilitate political business cycles. 
 \end{abstract} 
 
 
@@ -369,7 +370,7 @@ Past indicators of commitment include statements of reassurance \citep{Blankensh
 
 
 \begin{quote}
-\textsc{Economic Concession Hypothesis: When the leader of a large alliance member might be replaced, imports from junior allies will increase as prior commitment signals by that leader increase.}
+\textsc{Economic Concession Hypothesis: When the leader of a large alliance member might be replaced, the trade balance with junior allies will increase as prior commitment signals by that leader increase.}
 \end{quote}
 
 
@@ -436,8 +437,7 @@ The second analysis shows that increasing U.S. exports to allied states in elect
 \section{US Exports to Allies}
 
 To test the economic concession hypothesis, I analyze U.S. exports to allied states. 
-I expect that when an election could replace leaders who have made more prior signals of commitment to their alliance partners, exports to allies will increase. 
-This holds 
+I expect that when an election could replace leaders who have made more prior signals of commitment to their alliance partners, the trade balance will be more favorable to the patron state.
 In non-election years, signals of support will reduce economic leverage over allies.
 This implies a positive constituent term on the leader support variable, as this capture the impact of prior support when time to an election is zero, and a negative interaction between leader signals of support and time to the election.
 
@@ -449,24 +449,24 @@ I draw on exports and imports data from CEPII \citep{FouquinHugot2016}.
 
 
 I measure leader commitment to each of these states' allies using the latent measure of \citet{McManusNieman2019}, which I refit to allied states. 
-Because reputations adhere to leaders, I measure commitment as the moving average of support across the leader's tenure, 
+Because reputations adhere to leaders, I measure commitment as the change in support across the leader's tenure, relative to the prior leader. 
 I then employ elections data from the National Elections across Democracy and Autocracy (NELDA) dataset \citep{HydeMarinov2012} to identify election year and interact the moving average of protege support with a indicator of time to the next election.
 Years to next election range from zero to three. 
 
 
 In addition to the interaction of time to elections and leader support for allies, I include a series of control variables that may be correlated with alliances and exports. 
-The most important control is the lagged log of exports to address temporal autocorrelation in trade ties.
-I also adjust for lagged imports, population-weighted distance, contiguity, common language, former colonial ties, the GDP of both states \citep{FouquinHugot2016}, democracy \citep{Marquez2016}, the presence of a militarized interstate dispute \citep{Gibleretal2016} shared IGO membership \citep{Pevehouseetal2020} and whether an incumbent leader is running.\footnote{Some dyadic data from the \textit{peacesciencer} \textsf{R} package \citep{peacesciencer-package}.}
+The most important control is the lagged trade balance to address temporal autocorrelation in trade ties.
+I also adjust for population-weighted distance, contiguity, common language, former colonial ties, changes in the GDP of both states \citep{FouquinHugot2016}, democracy \citep{Marquez2016}, the presence of a militarized interstate dispute \citep{Gibleretal2016} shared IGO membership \citep{Pevehouseetal2020} and whether an incumbent leader is running.\footnote{Some dyadic data from the \textit{peacesciencer} \textsf{R} package \citep{peacesciencer-package}.}
 
 
-Some trade flows are unusually large or small. 
+Some trade balances are unusually positive or negative. 
 This creates heavy-tailed residuals, so I employ a robust regression estimator; M-estimation with Tukey's biweight function \citep{RaineyBaissa2020}.
 Robust regression places less weight on unusual observations. 
 
 
 Dyadic data is also clustered, which can generate misleading regression estimates.
 I adjust for this in two ways. 
-First, I model changes in exports with dyad fixed effects in OLS models of changes in exports.\footnote{Fixed effects in dynamic models lead to biased estimates \citep{Nickell1981}.}
+First, I model include partner fixed effects in a model of annual trade balance.\footnote{Fixed effects in dynamic models lead to biased estimates \citep{Nickell1981}.}
 Fixed effects estimate within-country changes in exports as leader signals of support shift.
 Second, I employ a Bayesian model with varying intercepts for partner countries and years. 
 This adjusts for the diffusion of electoral timing in the United States across multiple patron-protege dyads.
@@ -479,45 +479,49 @@ This adjusts for the diffusion of electoral timing in the United States across m
 
 As prior signals of support by U.S. presidents increase, their exports to allies in election years also increase. 
 \autoref{tab:us-model-coefs} presents the coefficient estimates from the three primary model specifications.
-As expected, the mean leader support constituent term is positive, which implies that leaders who have signaled more support to allies export more to allies in election years. 
-Moreover, the interaction between the rolling average of leader's support signals and elections is negative across all four model specifications.
+As expected, the mean leader support constituent term is positive, which implies that leaders who have signaled more support to allies run a more positive trade balance in election years. 
+Moreover, the interaction between the change in leader's support signals and elections is negative in both trade balance models.
 The constituent term on time to election is harder to interpret, because it reflects the impact of election timing when average leader support is zero and the latent support measure is never equal to zero. 
 
 
+\begin{table}
+  \resizebox{.95\textwidth}{!}{
+\centering
 \input{../figures/us-model-coefs.tex}
+}
+\caption{Coefficient estimates from gravity models of exports from democratic major powers to their junior allies, 1950 to 2012. The first model addresses U.S. trade balances. The second models U.S. trade balances with allies with fixed effects for each partner country. The third model regresses annual trade changes on the explanatory variables. The fourth model examines changes in U.S. imports and exports from allies. 95\% confidence intervals in parentheses.}
+\label{tab:us-model-coefs}
+\end{table}
 
-
-% control variables show other suggestive evidence of a cycle
-Some of the other estimates in \autoref{tab:us-model-coefs} suggest an electoral cycle in U.S. trade with allies.
-Imports respond in similar ways to exports, which perhaps indicates efforts to increase domestic consumption.
-Increased U.S. government spending or other liberalizing policies could increase imports \citep{Oatley2015}.
 
 
 % marginal effects
 The sign and confidence intervals of the interaction terms are inadequate evidence of a conditional relationship \citep{BramborClarkGolder2006}, so I plot marginal effects in \autoref{fig:me-plots-us}.
 This figure presents the estimated marginal effects of increasing average support from a leader over the range of years to an election.
-In election years, greater prior support from the incumbent leader is positively correlated with major power exports to allies. 
-Both the level and annual change in exports are higher for committed leaders in election years.
+In election years, greater prior support from the incumbent leader is positively correlated with trade balances. 
+Both the level and annual change in trade balances are higher for committed leaders in election years.
+This relationship also holds in models of trade balance changes with partner fixed effects.
 
 
 % time to election
-As time to an election increases, leader support is more likely to reduce U.S. exports to allies. 
-This is consistent with the claim that increased exports are a temporary concession to support committed leaders.
+As time to an election increases, leader support is more likely to reduce the U.S. trade balance with allies. 
+This is consistent with the claim that allies make temporary concessions to support committed leaders.
 Without electoral pressure, credible commitment efforts reduce economic leverage.
 
 
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{../figures/me-plots-us.png}
-	\caption{Estimated marginal effect of average signals of support by the incumbent leader on exports from the United States to allied states, 1950 to 2010. The first model models annual major power exports and includes a lagged dependent variable. The second model regresses changes in exports on the explanatory variables. The third model examines changes and includes dyadic fixed effects. The fourth model assesses changes in imports. Points mark the coefficient estimate and error bars summarize the 95\% confidence interval.}
+	\caption{Estimated marginal effect of changes in signals of support by the incumbent leader trade between the United States and allied states, 1950 to 2010. The first model models annual major power exports and includes a lagged dependent variable. The second model regresses changes in exports on the explanatory variables. The third model examines changes and includes dyadic fixed effects. The fourth model assesses changes in imports. Points mark the coefficient estimate and error bars summarize the 95\% confidence interval.}
 	\label{fig:me-plots-us}
 \end{figure}
 
 
-% fixed effects
-Inferences about changes in exports are far more uncertain with OLS and country fixed effects. 
-This reflects the inefficiency of OLS compared to robust regression for this outcome and lost degrees of freedom from the fixed effects and within-country analysis. 
-Even with more uncertain estimates, the same inferences hold. 
+% control variables show other suggestive evidence of a cycle
+Some of the other estimates in \autoref{tab:us-model-coefs} and \autoref{fig:me-plots-us} suggest an electoral cycle in U.S. trade with allies.
+Overall trade, including both imports and exports, is higher when leaders offer more support early in their tenure.
+Improved trade balances in election years are the result of larger decreases in imports than exports, though both trade flows are lower in election years.
+Negative trade balances from leader support reflect greater increases in U.S. imports than U.S. exports. 
 
 
 % improved trade balance
@@ -637,7 +641,12 @@ As is the case in other models, the years to election constituent term does not 
 Both interaction terms are positive, though the direction of the maximum tariff interaction is unclear. 
 
 % add table of coefficient estimates 
+\begin{table}
+\centering
 \input{../figures/tariff-model-coefs.tex}
+	\caption{Coefficient estimates from models of allied tariffs on US exports, 1988 to 2010. The first model addresses each ally's annual average tariff on U.S. exports, weighted by import volume. The second model addresses the log maximum tariff rate. 95\% confidence intervals in parentheses.}
+	\label{tab:tariff-model-coefs}
+\end{table}
 
 
 \autoref{fig:tariff-me} presents how election proximity modifies the impact of leader support on allied tariff rates.
