@@ -2,54 +2,6 @@
 # Analysis of exports from US to allies around elections 
 
 
-# get us exports
-us.trade.ally <- filter(dyadic.mp.ally, 
-                   ccode == 2) %>%
-            ungroup() %>%
-            rename(
-              us_imports = IPTOT_o,
-              us_exports = XPTOT_o,
-              us.code = ccode,
-              ccode = ccode2
-            ) %>%
-            left_join(promises.data) %>%
-            mutate(
-              lag_us_exports = lag(us_exports),
-              lag_us_imports = lag(us_imports),
-              change_us_exports = us_exports - lag_us_exports,
-              change_us_imports = us_imports - lag_us_imports,
-              growth_us_exports = change_us_exports / lag_us_exports,
-              growth_us_imports = change_us_imports / lag_us_imports,
-              lag_us_trade = lag(FLOW) / 1000000000, 
-              ln_us_trade = log((FLOW / 1000000000) + 1),
-              lag_ln_trade = lag(ln_us_trade),
-              change_us_trade = (FLOW - lag(FLOW)) / 1000000000,
-              change_lnus_trade = ln_us_trade - lag_ln_trade,
-              ihs_change_trade = asinh(change_us_trade),
-              growth_us_trade = change_us_trade / lag_us_trade, 
-              ln_us_exports = log(us_exports), 
-              ln_us_imports = log(us_imports), 
-              lag_ln_exports = lag(ln_exports),
-              lag_ln_imports = lag(ln_imports),
-              change_lnus_exports = ln_us_exports - lag_ln_exports,
-              change_lnus_imports = ln_us_imports - lag_ln_imports,
-            ) %>%
-            left_join(select(promises.annual, year, 
-                      president, time_to_elec)) %>%
-            group_by(president, ccode) %>%
-            mutate(
-             # running mean stat
-              total_statements = rollapply(statements_americas, 2, sum,
-                               align ='right', fill = 0),
-              ln_total_statements = log(total_statements + 1)
-             )
-us.trade.ally$dyad.id <- group_indices(us.trade.ally, us.code, ccode) 
-
-# fix INF values- small states w/ no trade in lagged year
-us.trade.ally$growth_us_trade[us.trade.ally$growth_us_trade == Inf] <- 1
-us.trade.ally$growth_us_exports[us.trade.ally$growth_us_exports == Inf] <- 1
-us.trade.ally$growth_us_imports[us.trade.ally$growth_us_imports == Inf] <- 1
-
 # look at the raw data
 ggplot(us.trade.ally, aes(x = ln_us_trade)) + geom_histogram()
 ggplot(us.trade.ally, aes(x = change_lnus_trade)) + geom_histogram()
@@ -436,7 +388,7 @@ ggsave("figures/me-plots-us.png", us.me.plots,
 
 
 # complete data and rescaled 
-brm.us.exports <- select(ungroup(us.trade.ally.comp),
+brm.us.balance <- select(ungroup(us.trade.ally.comp),
                               ccode, year, trade_balance, 
                                 time_to_elec, change_leader_supp,
                                 lag_latency_pilot, lag_rivalry_thompson,
@@ -444,52 +396,52 @@ brm.us.exports <- select(ungroup(us.trade.ally.comp),
                                 change_gdp_o, change_gdp_d, Distw,
                                 Comlang, Contig, Evercol)
 # rescale IVs by 2sd 
-brm.us.exports[, 5:16] <- lapply(brm.us.exports[, 5:16],
+brm.us.balance[, 5:16] <- lapply(brm.us.balance[, 5:16],
                                           function(x)
                                             arm::rescale(x, binary.inputs = "0/1"))
 
 
 
-# brms model of exports as dyadic clustering does not work
-bf.exports.all <- brmsformula(trade_balance ~ 
+# brms model of balance as dyadic clustering does not work
+bf.balance.all <- brmsformula(trade_balance ~ 
                                 time_to_elec*change_leader_supp +
                                 lag_latency_pilot + lag_rivalry_thompson +
                                 adv_signal_last3 + xm_qudsest2 +  dyadigos +
                                 change_gdp_o + change_gdp_d + Distw +
                                 Comlang + Contig + Evercol +
                                 (1 | ccode) + (1 | year),
-                              center = TRUE) +
+                              center = FALSE) +
                                 student()
-exports.priors <- c(
-                   set_prior("normal(0, .5)", class = "b"),
-                   set_prior("normal(0, 1)", class = "Intercept"),
-                   set_prior("normal(0, 1)", class = "sigma"),
-                   set_prior("normal(0, 1)", class = "sd")
+balance.priors <- c(
+                   set_prior("normal(0, .25)", class = "b"),
+                   #set_prior("normal(0, .5)", class = "Intercept"),
+                   set_prior("normal(0, .5)", class = "sigma"),
+                   set_prior("normal(0, .5)", class = "sd")
 ) 
 
 # fit the model
-brm.ally.exports <- brm(bf.exports.all, 
-                     data = brm.us.exports,
-                     prior = exports.priors,
+brm.ally.balance <- brm(bf.balance.all, 
+                     data = brm.us.balance,
+                     prior = balance.priors,
                      iter = 2000, warmup = 1000,
                      chains = 4, cores = 4,
                      threads = 2,
                      backend = "cmdstanr",
                      control = list(
                      max_treedepth = 20))
-summary(brm.ally.exports, prob = .9)
-mcmc_plot(brm.ally.exports, "hist_by_chain", pars = "sigma")
-mcmc_plot(brm.ally.exports, "intervals", pars = "b_",
+summary(brm.ally.balance, prob = .9)
+mcmc_plot(brm.ally.balance, "hist_by_chain", pars = "sigma")
+mcmc_plot(brm.ally.balance, "intervals", pars = "b_",
           prob = .9)
-mcmc_plot(brm.ally.exports, "intervals", 
+mcmc_plot(brm.ally.balance, "intervals", 
           pars = c("b_mean_leader_supp",
                    "b_time_to_elec",
                    "b_time_to_elec:mean_leader_supp"),
           prob = .9)
 
 # conditional effects
-plot(conditional_effects(brm.ally.exports,
-                         effects = "mean_leader_supp:time_to_elec",
+plot(conditional_effects(brm.ally.balance,
+                         effects = "change_leader_supp:time_to_elec",
                          int_conditions = list(time_to_elec = 
                                        seq(from = 0, to = 3, by = 1)),
                          method = "posterior_epred",
@@ -497,7 +449,7 @@ plot(conditional_effects(brm.ally.exports,
                          surface = TRUE,
                          theme = "bw"),
      ask = FALSE)
-plot(conditional_effects(brm.ally.exports), ask = FALSE)
+plot(conditional_effects(brm.ally.balance), ask = FALSE)
 
 
 

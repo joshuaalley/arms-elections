@@ -27,7 +27,7 @@ eu.support <- filter(us.trade.ally,
                          ) %>%
               group_by(year) %>%
                 summarize(
-                  mean_leader_supp = mean(mean_leader_supp, na.rm = TRUE),
+                  change_leader_supp = mean(change_leader_supp, na.rm = TRUE),
                   incumbent = max(incumbent),
                   change_gdp_d = sum(change_gdp_d, na.rm = TRUE),
                   change_gdp_o = max(change_gdp_o, na.rm = TRUE),
@@ -61,7 +61,7 @@ eu.support <- filter(us.trade.ally,
 # join w/ support data 
 tariffs.all <- left_join(select(ungroup(us.trade.ally),
                                 ccode, year,
-                                time_to_elec, mean_leader_supp,
+                                time_to_elec, change_leader_supp,
                                   incumbent,
                                   lag_latency_pilot, lag_rivalry_thompson,
                                   adv_signal_last3, xm_qudsest2, 
@@ -86,7 +86,7 @@ summary(tariffs.all$year)
 # rlm w/o any dyad corrections: avg allied tariff
 us.tariff.all <- rlm(avg_tariff ~ 
                         lag_avg_tariff +
-                        time_to_elec*mean_leader_supp +
+                        time_to_elec*change_leader_supp +
                         incumbent +
                         lag_latency_pilot + lag_rivalry_thompson +
                         adv_signal_last3 + xm_qudsest2 + 
@@ -97,7 +97,7 @@ us.tariff.all <- rlm(avg_tariff ~
 summary(us.tariff.all)
 
 plot_cme(us.tariff.all,
-         effect = "mean_leader_supp",
+         effect = "change_leader_supp",
          condition = "time_to_elec") +
   geom_hline(yintercept = 0) +
   labs(
@@ -112,7 +112,7 @@ plot_cme(us.tariff.all,
 # Weighted average tariff: Average tariffs, weighted by value of imports
 us.wtariff.all <- rlm(wavg_tariff ~ 
                        #lag_wavg_tariff +
-                       time_to_elec*mean_leader_supp +
+                       time_to_elec*change_leader_supp +
                        incumbent +
                        lag_latency_pilot + lag_rivalry_thompson +
                        adv_signal_last3 + xm_qudsest2 + 
@@ -123,7 +123,7 @@ us.wtariff.all <- rlm(wavg_tariff ~
 summary(us.wtariff.all)
 
 all.wtariff <- plot_cme(us.wtariff.all,
-                   effect = "mean_leader_supp",
+                   effect = "change_leader_supp",
                    condition = "time_to_elec") +
                geom_hline(yintercept = 0) +
                labs(
@@ -134,7 +134,7 @@ all.wtariff
 
 # switch interaction in ME plot
 plot_cme(us.wtariff.all,
-         condition = "mean_leader_supp",
+         condition = "change_leader_supp",
          effect = "time_to_elec") +
   geom_hline(yintercept = 0) +
   labs(
@@ -149,7 +149,7 @@ summary(tariffs.all$min_tariff)
 # rlm w/o dyad corrections: max tariffs
 us.maxtariff.all <- rlm(log_max_tariff ~ 
                         #lag_log_max_tariff +
-                        time_to_elec*mean_leader_supp +
+                        time_to_elec*change_leader_supp +
                         incumbent +
                         lag_latency_pilot + lag_rivalry_thompson +
                         adv_signal_last3 + xm_qudsest2 + 
@@ -160,7 +160,7 @@ us.maxtariff.all <- rlm(log_max_tariff ~
 summary(us.maxtariff.all)
 
 all.maxtariff <- plot_cme(us.maxtariff.all,
-                        effect = "mean_leader_supp",
+                        effect = "change_leader_supp",
                         condition = "time_to_elec") +
   geom_hline(yintercept = 0) +
   labs(
