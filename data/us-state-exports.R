@@ -41,6 +41,11 @@ state.exports.dyad <-  left_join(state.exports,
                                                ccode, year,
                                                mean_leader_supp, time_to_elec,
                                                ln_total_statements))
+# fix ATOP alliance 0s 
+state.exports.dyad$atop_defense[state.exports.dyad$year == 2019] <- NA
+state.exports.dyad$atop_defense[state.exports.dyad$year == 2020] <- NA
+state.exports.dyad <- fill(state.exports.dyad, atop_defense, .direction = "down")
+
 
 
 # bring in PWT data
@@ -240,15 +245,6 @@ state.exports.dyad <- state.exports.dyad %>%
   mutate(
   lag_diff_vote = lag(diff_vote_share))
 
-
-# add alliance variable to 2020 
-state.exports.dyad$lag_atop_defense[state.exports.dyad$year == 2020 &
-                                      lag(state.exports.dyad$year) == 2019 &
-                                      state.exports.dyad$lag_atop_defense == 0] <- 1
-
-state.exports.dyad$atop_defense[state.exports.dyad$year == 2020 &
-                                  lag(state.exports.dyad$year) == 2019 &
-                                  state.exports.dyad$atop_defense == 0] <- 1
 
 # check duplicates
 state.exports.dyad$duplicates <- duplicated(state.exports.dyad)
@@ -562,7 +558,7 @@ ggsave("figures/me-all-state.png", me.all.state,
 # state only- can't use dyad or destination b/c perfectly collinear w/ alliance dummy
 state.exports.fe <- lm(
   change_ln_exports ~ 
-    lag_atop_defense*lag_diff_vote + 
+    atop_defense*lag_diff_vote + 
     reelection_bush + reelection_obama +
     reelection_trump + 
     lag_poptotal + lag_ln_ngdp +
@@ -579,7 +575,7 @@ plot_cme(state.exports.fe,
 # proximity
 state.exports.fe.prox <- lm(
   change_ln_exports ~ 
-    lag_atop_defense*pivot_prox + 
+    atop_defense*pivot_prox + 
     reelection_bush + reelection_obama +
     reelection_trump + 
     lag_poptotal + lag_ln_ngdp +

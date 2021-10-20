@@ -3,48 +3,12 @@
 
 
 
-# elections
-pres.elections <- seq(from = 1952, to = 2020, by = 4)
-
-# load Blankenship promises data
-promises.data <- read_dta("data/ReplicationData_ISQ_Promises.dta") %>%
-  select(ccode, year, statements_americas,
-         us_intervene_amer, 
-         lag_latency_pilot, lag_rivalry_thompson,
-         adv_signal_last3, log_distance,
-         sample_cow,
-         sample_atop)
-
-# create promises
-promises.annual <- promises.data %>%
-  group_by(year) %>%
-  summarize(
-    total_statements = sum(statements_americas, na.rm = TRUE),
-    .groups = "keep"
-  ) %>%
-  ungroup() %>%
-  mutate(
-    lag_statements = lag(total_statements),
-    election = ifelse(year %in% pres.elections, 1, 0),
-    lag_election = lag(election),
-    lead_election = lead(election)
-  )
-
-# Create a vector of presidential administrations
-promises.annual$president <- pres.full(promises.annual)
-
-# time to election
-promises.annual$time_to_elec <- rep(seq(from = 3, to = 0, by = -1),
-                                    length.out = nrow(promises.annual))
-
-
-
 # combine latent support with trade data
 # first create it with modified scripts
-source("data/revise-latent-supp/Generate US Support.R")
-source("data/revise-latent-supp/Generate UK Support.R")
-source("data/revise-latent-supp/Generate France Support.R")
-
+# source("data/revise-latent-supp/Generate US Support.R")
+# source("data/revise-latent-supp/Generate UK Support.R")
+# source("data/revise-latent-supp/Generate France Support.R")
+# 
 latent.supp <- bind_rows(phi.us,
                          phi.fr,
                          phi.uk) %>%
@@ -64,17 +28,66 @@ latent.supp <- bind_rows(phi.us,
 # latent.supp$ccode2[latent.supp$year < 1991 & latent.supp$ccode2 == 255] <- 260
 
 
+
+# elections
+pres.elections <- seq(from = 1952, to = 2020, by = 4)
+
+# elections data
+elections.data <- as.data.frame(x = seq(from = 1945, to = 2020, by = 1))
+colnames(elections.data) <- "year"
+
+# add elections
+elections.data <- mutate(elections.data,
+                   election = ifelse(year %in% pres.elections, 1, 0),
+                   lag_election = lag(election),
+                   lead_election = lead(election))
+
+# Create a vector of presidential administrations
+elections.data$president <- pres.full(elections.data)
+
+# time to election
+elections.data$time_to_elec <- rep(seq(from = 3, to = 0, by = -1),
+                                    length.out = nrow(elections.data))
+
+
+
+# load Blankenship promises data
+promises.data <- read_dta("data/ReplicationData_ISQ_Promises.dta") %>%
+  select(ccode, year, statements_americas,
+         us_intervene_amer, 
+         lag_latency_pilot, lag_rivalry_thompson,
+         adv_signal_last3, log_distance,
+         sample_cow,
+         sample_atop)
+
+# create promises
+promises.annual <- promises.data %>%
+  group_by(year) %>%
+  summarize(
+    total_statements = sum(statements_americas, na.rm = TRUE),
+    .groups = "keep"
+  ) %>%
+  ungroup() %>%
+  mutate(
+    lag_statements = lag(total_statements)
+    ) %>%
+  left_join(elections.data)
+
+
 # use peacesciencer to 
 # generate dyad-year data on other dimensions
 dyadic.trade <- create_dyadyears(system = "cow",
                                  mry = TRUE, 
                                  directed = FALSE) %>%
-  add_gml_mids() %>%
+  add_cow_mids() %>%
   add_democracy() %>%
   add_atop_alliance() %>%
-  add_igos()
+  add_igos() %>%
+  filter(year >= 1949)
 # flow1 is imports to ccode1 from ccode2
 # flow2 is vice-versa- imports by ccode2 from ccode1
+dyadic.trade$atop_defense[dyadic.trade$year == 2019] <- NA
+dyadic.trade$atop_defense[dyadic.trade$year == 2020] <- NA
 
 
 
@@ -84,10 +97,6 @@ cepii.data <- read_dta("data/TRADHIST_v4.dta") %>%
   filter(year > 1948) %>%
   select(
     iso_o, iso_d, year,
-    FLOW, FLOW_0, 
-    IPTOT_o, IPTOT_d, 
-    XPTOT_o, XPTOT_d,
-    TARIFF_d, 
     GDP_o, GDP_d,
     POP_o, POP_d,
     Distw, Comlang, Contig,
@@ -101,35 +110,84 @@ cepii.data <- read_dta("data/TRADHIST_v4.dta") %>%
   ) %>% # dem major powers
   filter(ccode1 == 2 | ccode1 == 200 |
            ccode1 == 220) %>%
+  group_by(ccode1, ccode2) %>% 
   mutate(
-    # express trade in billions
-    XPTOT_o = XPTOT_o / 1000000000,
-    IPTOT_o = IPTOT_o / 1000000000,
-    lag_exports = lag(XPTOT_o),
-    lag_imports = lag(IPTOT_o),
-    
+    # key controls
     change_gdp_o = GDP_o - lag(GDP_o),
     change_gdp_d = GDP_d - lag(GDP_d),
+    ln_distw = log(Distw),
     
     ln_gdp_o = log(GDP_o),
     ln_gdp_d = log(GDP_d),
     ln_pop_o = log(POP_o),
-    ln_pop_d = log(POP_d),
-    ln_exports = log(XPTOT_o + 1), 
-    ln_imports = log(IPTOT_o + 1), 
-    ln_distw = log(Distw),
-    change_exports = XPTOT_o - lag_exports,
-    ihs_change_exports = asinh(change_exports),
-    change_imports = IPTOT_o - lag_imports,
-    ihs_change_imports = asinh(change_imports),
+    ln_pop_d = log(POP_d))
+    
+    
+# save this chunk for IMF data 
+imf.dot <- read.csv("data/imf-dot.csv") %>%
+            filter(origin == "France" | 
+                     origin == "United Kingdom" |
+                     origin == "United States") %>%
+           pivot_longer(-c(origin, flow_type, destination,
+                           origin_imf_code, 
+                           destination_imf_code)) %>%
+           rename(year = name) %>%
+           pivot_wider(id_cols = c(origin, destination, year,
+                                   origin_imf_code,
+                                   destination_imf_code),
+                       names_from = flow_type,
+                       values_from = value) %>% 
+           mutate(year = as.numeric(substr(year, 2, 5)))
+
+# rebase to 2018 us dollars
+cpi.data <- read_dta("data/cpi_avg.dta")
+
+imf.dot <- left_join(imf.dot, cpi.data) %>%
+    mutate(
+      ccode1 = countrycode(origin_imf_code,
+                      origin = "imf", destination = "cown"),
+      ccode2 = countrycode(destination_imf_code,
+                      origin = "imf", destination = "cown"),
+      # measure flows in billions
+      imports = imports / 1000000000,
+      exports = exports / 1000000000,
+      trade_balance = trade_balance / 1000000000,
+      # rebase
+      imports = (imports * cpi_avg_2018) / cpi_avg,
+      exports = (exports * cpi_avg_2018) / cpi_avg,
+      trade_balance = (trade_balance * cpi_avg_2018) / cpi_avg,
+    ln_exports = log(exports + 1), 
+    ln_imports = log(imports + 1), 
+    lag_exports = lag(exports),
+    lag_imports = lag(imports),
+    change_exports = exports - lag_exports,
+    change_imports = imports - lag_imports,
     lag_ln_exports = lag(ln_exports),
     change_ln_exports = ln_exports - lag_ln_exports,
     lag_ln_imports = lag(ln_imports),
+    change_ln_imports = ln_imports - lag_ln_imports,
     change_ln_exports = ln_exports - lag_ln_exports,
-    trade_balance = ln_exports - ln_imports,
     lag_trade_balance = lag(trade_balance),
-    change_trade_balance = trade_balance - lag_trade_balance
-  )
+    change_trade_balance = trade_balance - lag_trade_balance,
+    ihs_trade_balance = asinh(trade_balance),
+    lag_ihs_balance = lag(ihs_trade_balance),
+    change_ihs_balance = ihs_trade_balance - lag_ihs_balance,
+    ihs_change_balance = asinh(change_trade_balance),
+  ) 
+# fix a couple small ccode issues
+# north korea
+imf.dot$ccode2[imf.dot$destination == "Korea, Dem. People's Rep. of"] <- 731
+# east germany
+imf.dot$ccode2[imf.dot$destination == "Eastern Germany"] <- 265
+
+# missing ccodes are now aggregates
+imf.dot <- drop_na(imf.dot, ccode2)
+
+
+
+
+# join with cepii data
+trade.full <- left_join(imf.dot, cepii.data)
 
 
 
@@ -171,7 +229,7 @@ dyadic.trade.major <- latent.supp %>%
   select(year, ccode1, ccode2, 
          median, lag_median,
          change_median) %>% 
-  left_join(cepii.data) %>%
+  left_join(trade.full) %>%
   left_join(dyadic.trade) %>%
   rename(ccode = ccode1) 
 # add elections data 
@@ -187,7 +245,8 @@ dyadic.trade.major$incumbent[is.na(dyadic.trade.major$incumbent)] <- 0
 
 # full data cleaning
 dyadic.mp.ally <- dyadic.trade.major %>%
-  group_by(ccode, ccode2) %>%
+  rename(ccode1 = ccode) %>%
+  group_by(ccode1, ccode2) %>%
   mutate(
     lead_election = lead(election),
     lag_election = lag(election),
@@ -200,12 +259,13 @@ dyadic.mp.ally <- dyadic.trade.major %>%
     prior_leader_supp = ifelse(leader != lag(leader),
                                lag_median, NA)
   ) %>%
-  fill(prior_leader_supp, 
+  fill(c(prior_leader_supp, atop_defense), 
        .direction = "down") %>% 
+  filter(atop_defense == 1) %>% 
   mutate(
     change_leader_supp = median - prior_leader_supp
   ) %>%
-  group_by(ccode, ccode2, leader) %>%
+  group_by(ccode1, ccode2, leader) %>%
   mutate(
     # running mean support
     mean_leader_supp = rollapply(median, 2, mean,
@@ -216,12 +276,13 @@ dyadic.mp.ally <- dyadic.trade.major %>%
                                   align ='right', 
                                   fill = lag(change_leader_supp))
   ) %>% 
-  select(ccode, ccode2, year, electionid, leader, mean_leader_supp,
+  select(ccode1, ccode2, year, electionid, leader, atop_defense, mean_leader_supp,
          lag_median, prior_leader_supp, change_leader_supp, 
          total_change_supp,
          everything()) 
+  
 # w/ original measure, add: 
-# filter(atop_defense == 1 &
+# %>% filter(atop_defense == 1 &
 #    (ccode == 2 | ccode == 200 | ccode == 220))
 
 
@@ -237,12 +298,15 @@ us.trade.ally <- filter(dyadic.mp.ally,
                         ccode == 2) %>%
   ungroup() %>%
   rename(
-    us_imports = IPTOT_o,
-    us_exports = XPTOT_o,
-    us.code = ccode,
+    us_imports = imports,
+    us_exports = exports,
+    us.code = ccode1,
     ccode = ccode2
   ) %>%
+  right_join(select(elections.data, year, 
+                   president, time_to_elec)) %>%
   left_join(promises.data) %>%
+  group_by(ccode) %>% 
   mutate(
     lag_us_exports = lag(us_exports),
     lag_us_imports = lag(us_imports),
@@ -250,19 +314,20 @@ us.trade.ally <- filter(dyadic.mp.ally,
     change_us_imports = us_imports - lag_us_imports,
     growth_us_exports = change_us_exports / lag_us_exports,
     growth_us_imports = change_us_imports / lag_us_imports,
-    lag_us_trade = lag(FLOW) / 1000000000, 
-    ln_us_trade = log((FLOW / 1000000000) + 1),
+    ln_us_trade = ln_exports + ln_imports,
     lag_ln_trade = lag(ln_us_trade),
-    change_us_trade = (FLOW - lag(FLOW)) / 1000000000,
+    change_lnus_trade = ln_us_trade - lag_ln_trade, 
     change_lnus_trade = ln_us_trade - lag_ln_trade,
-    ihs_change_trade = asinh(change_us_trade),
-    growth_us_trade = change_us_trade / lag_us_trade, 
+    growth_lnus_trade = change_lnus_trade / lag_ln_trade, 
     ln_us_exports = log(us_exports), 
     ln_us_imports = log(us_imports), 
     lag_ln_exports = lag(ln_exports),
     lag_ln_imports = lag(ln_imports),
     change_lnus_exports = ln_us_exports - lag_ln_exports,
     change_lnus_imports = ln_us_imports - lag_ln_imports,
+    ihs_trade_balance = asinh(trade_balance),
+    lag_ihs_balance = lag(ihs_trade_balance),
+    ihs_change_balance = asinh(change_trade_balance),
     # presidential partisanship
     rep_pres = ifelse((year >= 1921 & year <= 1932) | # Harding, Coolidge, Hoover
                         (year >= 1953 & year <= 1960) | # Ike
@@ -273,8 +338,6 @@ us.trade.ally <- filter(dyadic.mp.ally,
                       1, 0),
     change_pres = ifelse(rep_pres != lag(rep_pres), 1, 0)
   ) %>%
-  left_join(select(promises.annual, year, 
-                   president, time_to_elec)) %>%
   group_by(president, ccode) %>%
   mutate(
     # running mean stat
@@ -285,6 +348,5 @@ us.trade.ally <- filter(dyadic.mp.ally,
 us.trade.ally$dyad.id <- group_indices(us.trade.ally, us.code, ccode) 
 
 # fix INF values- small states w/ no trade in lagged year
-us.trade.ally$growth_us_trade[us.trade.ally$growth_us_trade == Inf] <- 1
-us.trade.ally$growth_us_exports[us.trade.ally$growth_us_exports == Inf] <- 1
-us.trade.ally$growth_us_imports[us.trade.ally$growth_us_imports == Inf] <- 1
+us.trade.ally$growth_lnus_trade[us.trade.ally$growth_lnus_trade == Inf] <- 1
+
