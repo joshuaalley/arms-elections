@@ -3,3 +3,5 @@ archigos.txt filter=lfs diff=lfs merge=lfs -text
 TRADHIST_v4.dta filter=lfs diff=lfs merge=lfs -text
 data/archigos.txt filter=lfs diff=lfs merge=lfs -text
 data/TRADHIST_v4.dta filter=lfs diff=lfs merge=lfs -text
+imf-dot.csv filter=lfs diff=lfs merge=lfs -text
+data/imf-dot.csv filter=lfs diff=lfs merge=lfs -text
