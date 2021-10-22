@@ -348,7 +348,7 @@ lm.state.exports <- lm(ln_state_exports ~ lag_ln_exports +
                          # reelection_trump*lag_diff_vote + 
                          #atop_defense*election*lag_diff_vote + reelection_trump +
                          #lag_election + lead_election +
-                         reelection_bush + reelection_obama + #reelection_trump +
+                       reelection_bush + reelection_obama + 
                          lag_poptotal + lag_ln_ngdp + fin_crisis +
                          lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
                        data = state.exports.dyad.comp)
@@ -390,7 +390,7 @@ lm.state.exports.prox <- lm(ln_state_exports ~ lag_ln_exports +
                                #reelection_trump*pivot_prox + 
                               #dem_incumbent*pivot_prox + reelection_trump +
                               lag_poptotal + lag_ln_ngdp + fin_crisis +
-                              reelection_bush + reelection_obama + reelection_trump +
+                              reelection_bush + reelection_obama + 
                               lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
                             data = state.exports.dyad.comp)
 summary(lm.state.exports.prox)
@@ -420,20 +420,6 @@ lm.state.exports.prox.12 <- rlm(ln_state_exports ~ lag_ln_exports +
 summary(lm.state.exports.prox.12)
 
 plot_cme(lm.state.exports.prox.12, 
-         condition = "pivot_prox", 
-         effect = "atop_defense")
-
-
-# 2020
-# simple OLS model:
-lm.state.exports.prox.20 <- rlm(ln_state_exports ~ lag_ln_exports +
-                                 atop_defense*pivot_prox +
-                                 lag_poptotal + lag_ln_ngdp + 
-                                 lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
-                               data = filter(state.exports.dyad.comp, year == 2020))
-summary(lm.state.exports.prox.20)
-
-plot_cme(lm.state.exports.prox.20, 
          condition = "pivot_prox", 
          effect = "atop_defense")
 
@@ -552,41 +538,6 @@ grid.arrange(plot.vdiff.ex, plot.prox.ex, nrow = 1)
 me.all.state <- arrangeGrob(plot.vdiff.ex, plot.prox.ex, nrow = 1)
 ggsave("figures/me-all-state.png", me.all.state,
        height = 6, width = 8)
-
-
-# FE analysis
-# state only- can't use dyad or destination b/c perfectly collinear w/ alliance dummy
-state.exports.fe <- lm(
-  change_ln_exports ~ 
-    atop_defense*lag_diff_vote + 
-    reelection_bush + reelection_obama +
-    reelection_trump + 
-    lag_poptotal + lag_ln_ngdp +
-    lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g +
-    factor(state),
-  data = state.exports.dyad.comp)
-summary(state.exports.fe)
-
-plot_cme(state.exports.fe, 
-         condition = "lag_diff_vote", 
-         effect = "lag_atop_defense")
-
-
-# proximity
-state.exports.fe.prox <- lm(
-  change_ln_exports ~ 
-    atop_defense*pivot_prox + 
-    reelection_bush + reelection_obama +
-    reelection_trump + 
-    lag_poptotal + lag_ln_ngdp +
-    lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g +
-    factor(state),
-  data = state.exports.dyad.comp)
-summary(state.exports.fe.prox)
-
-plot_cme(state.exports.fe.prox, 
-         condition = "pivot_prox", 
-         effect = "lag_atop_defense")
 
 
 

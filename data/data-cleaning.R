@@ -5,9 +5,9 @@
 
 # combine latent support with trade data
 # first create it with modified scripts
-# source("data/revise-latent-supp/Generate US Support.R")
-# source("data/revise-latent-supp/Generate UK Support.R")
-# source("data/revise-latent-supp/Generate France Support.R")
+ source("data/revise-latent-supp/Generate US Support.R")
+ source("data/revise-latent-supp/Generate UK Support.R")
+ source("data/revise-latent-supp/Generate France Support.R")
 # 
 latent.supp <- bind_rows(phi.us,
                          phi.fr,
@@ -155,6 +155,8 @@ imf.dot <- left_join(imf.dot, cpi.data) %>%
       # rebase
       imports = (imports * cpi_avg_2018) / cpi_avg,
       exports = (exports * cpi_avg_2018) / cpi_avg,
+      total_trade = log(imports + exports + 1),
+      change_trade = total_trade - lag(total_trade),
       trade_balance = (trade_balance * cpi_avg_2018) / cpi_avg,
     ln_exports = log(exports + 1), 
     ln_imports = log(imports + 1), 
@@ -182,9 +184,6 @@ imf.dot$ccode2[imf.dot$destination == "Eastern Germany"] <- 265
 
 # missing ccodes are now aggregates
 imf.dot <- drop_na(imf.dot, ccode2)
-
-
-
 
 # join with cepii data
 trade.full <- left_join(imf.dot, cepii.data)
@@ -225,33 +224,29 @@ nelda <- read_dta("data/nelda.dta") %>%
 
 
 # make the merger
-dyadic.trade.major <- latent.supp %>% 
-  select(year, ccode1, ccode2, 
-         median, lag_median,
-         change_median) %>% 
+dyadic.trade.major <- latent.supp %>%
   left_join(trade.full) %>%
   left_join(dyadic.trade) %>%
-  rename(ccode = ccode1) 
+  rename(ccode = ccode1)
+
+
 # add elections data 
 dyadic.trade.major <- left_join(dyadic.trade.major,
                                 nelda) %>%
   left_join(archigos)
 # fill in elections w/ zeros
 dyadic.trade.major$election[is.na(dyadic.trade.major$election)] <- 0
-dyadic.trade.major$election[is.na(dyadic.trade.major$lag_election)] <- 0
-dyadic.trade.major$election[is.na(dyadic.trade.major$lead_election)] <- 0
 dyadic.trade.major$incumbent[is.na(dyadic.trade.major$incumbent)] <- 0
-
 
 # full data cleaning
 dyadic.mp.ally <- dyadic.trade.major %>%
   rename(ccode1 = ccode) %>%
   group_by(ccode1, ccode2) %>%
   mutate(
-    lead_election = lead(election),
-    lag_election = lag(election),
     lag_atop_defense = lag(atop_defense),
-    lag_xm_qudsest2 = lag(xm_qudsest2)
+    lag_xm_qudsest2 = lag(xm_qudsest2),
+    lag_election = lag(election),
+    lead_election = lead(election)
   ) %>% 
   ungroup() %>%
   mutate(
@@ -259,9 +254,9 @@ dyadic.mp.ally <- dyadic.trade.major %>%
     prior_leader_supp = ifelse(leader != lag(leader),
                                lag_median, NA)
   ) %>%
-  fill(c(prior_leader_supp, atop_defense), 
-       .direction = "down") %>% 
-  filter(atop_defense == 1) %>% 
+  fill(c(prior_leader_supp, atop_defense),
+       .direction = "down") %>%
+  filter(atop_defense == 1) %>%
   mutate(
     change_leader_supp = median - prior_leader_supp
   ) %>%
@@ -271,15 +266,15 @@ dyadic.mp.ally <- dyadic.trade.major %>%
     mean_leader_supp = rollapply(median, 2, mean,
                                  align ='right', fill = lag_median),
     # running sum of changes
-    total_change_supp = rollapply(change_leader_supp, 
+    total_change_supp = rollapply(change_leader_supp,
                                   2, sum,
-                                  align ='right', 
+                                  align ='right',
                                   fill = lag(change_leader_supp))
-  ) %>% 
+  ) %>%
   select(ccode1, ccode2, year, electionid, leader, atop_defense, mean_leader_supp,
-         lag_median, prior_leader_supp, change_leader_supp, 
+         lag_median, prior_leader_supp, change_leader_supp,
          total_change_supp,
-         everything()) 
+         everything())
   
 # w/ original measure, add: 
 # %>% filter(atop_defense == 1 &
@@ -287,7 +282,7 @@ dyadic.mp.ally <- dyadic.trade.major %>%
 
 
 # dyad id
-dyadic.mp.ally$dyad.id <- group_indices(dyadic.mp.ally, ccode, ccode2) 
+dyadic.mp.ally$dyad.id <- group_indices(dyadic.mp.ally, ccode1, ccode2) 
 
 
 
@@ -295,7 +290,7 @@ dyadic.mp.ally$dyad.id <- group_indices(dyadic.mp.ally, ccode, ccode2)
 
 # get us exports
 us.trade.ally <- filter(dyadic.mp.ally, 
-                        ccode == 2) %>%
+                        ccode1 == 2) %>%
   ungroup() %>%
   rename(
     us_imports = imports,

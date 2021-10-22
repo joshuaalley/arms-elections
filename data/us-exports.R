@@ -177,8 +177,8 @@ us.trade.all <- rlm(change_lnus_trade ~
                        lag_latency_pilot + lag_rivalry_thompson +
                        adv_signal_last3 + xm_qudsest2 + 
                        cowmidongoing + dyadigos +
-                       change_gdp_o + change_gdp_d + Distw +
-                       Comlang + Contig + Evercol,
+                       change_gdp_o + change_gdp_d + + 
+                      factor(ccode),
                      data = us.trade.ally.comp,
                      maxit = 40)
 summary(us.trade.all)
@@ -202,8 +202,8 @@ us.exports.all <- rlm(ln_us_exports ~ lag_ln_exports + lag_ln_imports +
                         lag_latency_pilot + lag_rivalry_thompson +
                         adv_signal_last3 + xm_qudsest2 + 
                         cowmidongoing + dyadigos +
-                       change_gdp_o + change_gdp_d + Distw +
-                       Comlang + Contig + Evercol,
+                       change_gdp_o + change_gdp_d + + 
+                        factor(ccode),
                       maxit = 40,
                        data = us.trade.ally.comp)
 summary(us.exports.all)
@@ -291,8 +291,8 @@ us.imports.all <- rlm(change_lnus_imports ~
                        lag_latency_pilot + lag_rivalry_thompson +
                        adv_signal_last3 + xm_qudsest2 + 
                        cowmidongoing + dyadigos +
-                       change_gdp_o + change_gdp_d + Distw +
-                       Comlang + Contig + Evercol,
+                       change_gdp_o + change_gdp_d + 
+                      factor(ccode),
                      data = us.trade.ally.comp)
 summary(us.imports.all)
 
@@ -388,8 +388,8 @@ us.me.plots <- arrangeGrob(me.supp.balance, me.supp.balance.fe,
                            me.supp.change,
                            me.supp.imports,
                            nrow = 2)
-ggsave("figures/me-plots-us.png", us.me.plots,
-       height = 7, width = 9)
+#ggsave("figures/me-plots-us.png", us.me.plots,
+#       height = 7, width = 9)
 
 
 
