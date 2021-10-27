@@ -345,3 +345,16 @@ us.trade.ally$dyad.id <- group_indices(us.trade.ally, us.code, ccode)
 # fix INF values- small states w/ no trade in lagged year
 us.trade.ally$growth_lnus_trade[us.trade.ally$growth_lnus_trade == Inf] <- 1
 
+
+
+# export mp trade to iso3c codes
+unique(countrycode(dyadic.mp.ally$ccode2, origin = "cown", destination = "iso3c"))
+
+# add to text file 
+# define text file
+mp.iso3c <- file("data/mp-ally-iso3c.txt")
+# write blocks to text
+writeLines(unlist(unique(countrycode(dyadic.mp.ally$ccode2, origin = "cown", destination = "iso3c"))),
+           con = mp.iso3c,
+           sep = ";")
+close(mp.iso3c)

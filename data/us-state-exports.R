@@ -284,7 +284,7 @@ state.exports.dyad.comp <- select(state.exports.dyad,
                                   pivot_prox, election,
                                   lag_election, lead_election,
                                   lag_poptotal, election, lead_election,
-                                  lag_atop_defense, atop_defense, lag_ln_ngdp,
+                                  atop_defense, lag_ln_ngdp,
                                   lag_ln_rgdpe, lag_pop, lag_xr, lag_csh_g) %>%
   filter(election == 1) %>%
   mutate(
@@ -330,110 +330,47 @@ ggplot(state.exports.dyad.comp, aes(x = ln_state_exports)) + geom_histogram()
 
 
 # simple OLS model:
-lm.state.exports <- lm(ln_state_exports ~ lag_ln_exports +
+lm.state.exports <- rlm(ln_state_exports ~ lag_ln_exports +
                          atop_defense*lag_diff_vote +
-                         #mean_leader_supp*lag_diff_vote +
-                         #year_2004*lag_diff_vote +
-                         #year_2008*lag_diff_vote +
-                         #year_2012*lag_diff_vote +
-                         #year_2016*lag_diff_vote +
-                         #year_2020*lag_diff_vote +
-                         #atop_defense*year_2004*lag_diff_vote +
-                         # atop_defense*year_2008*lag_diff_vote +
-                         # atop_defense*year_2012*lag_diff_vote +
-                         # atop_defense*year_2016*lag_diff_vote +
-                         # atop_defense*year_2020*lag_diff_vote +
-                         #election*lag_diff_vote +
-                         # reelection_bush*lag_diff_vote + reelection_obama*lag_diff_vote +
-                         # reelection_trump*lag_diff_vote + 
-                         #atop_defense*election*lag_diff_vote + reelection_trump +
-                         #lag_election + lead_election +
-                       reelection_bush + reelection_obama + 
+                       reelection_bush + reelection_obama + reelection_trump +
                          lag_poptotal + lag_ln_ngdp + fin_crisis +
                          lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
                        data = state.exports.dyad.comp)
 summary(lm.state.exports)
 
-# old 
-# elec.years <- c(2004, 2008, 2012, 2016, 2020)
-# 
-# for(i in 1:length(elec.years)){
-# print(
-#   plot_cme(lm.state.exports, 
-#          condition = "lag_diff_vote", 
-#          effect = paste0("year_", elec.years[i])) +
-#    geom_hline(yintercept = 0) +
-#    labs(
-#     x = "Prior Election Vote Difference",
-#     y = "Marginal Effect of Election",
-#     title = paste("State Exports to Allies in", elec.years[[i]])
-#     )
-# )
-# }
-
 
 
 # pivot proximity instead: 
-lm.state.exports.prox <- lm(ln_state_exports ~ lag_ln_exports +
+lm.state.exports.prox <- rlm(ln_state_exports ~ lag_ln_exports +
                               atop_defense*pivot_prox +
-                              #mean_leader_supp*pivot_prox +
-                              # year_2004*pivot_prox +
-                              # year_2008*pivot_prox +
-                              # year_2012*pivot_prox +
-                              # year_2016*pivot_prox +
-                              # year_2020*pivot_prox +
-                              # atop_defense*year_2012*lag_diff_vote +
-                              # atop_defense*year_2012*lag_diff_vote +
-                              # atop_defense*year_2016*lag_diff_vote +
-                              # atop_defense*year_2020*lag_diff_vote +
-                               #reelection_bush*pivot_prox + reelection_obama*pivot_prox +
-                               #reelection_trump*pivot_prox + 
-                              #dem_incumbent*pivot_prox + reelection_trump +
                               lag_poptotal + lag_ln_ngdp + fin_crisis +
-                              reelection_bush + reelection_obama + 
+                              reelection_bush + reelection_obama + reelection_trump +
                               lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
                             data = state.exports.dyad.comp)
 summary(lm.state.exports.prox)
 
 
-# 2004
-# simple OLS model:
-lm.state.exports.prox.04 <- rlm(ln_state_exports ~ lag_ln_exports +
-                            atop_defense*pivot_prox +
-                            lag_poptotal + lag_ln_ngdp + 
-                            lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
-                          data = filter(state.exports.dyad.comp, year == 2004))
-summary(lm.state.exports.prox.04)
-
-plot_cme(lm.state.exports.prox.04, 
-         condition = "pivot_prox", 
-         effect = "atop_defense")
-
-
-# 2012
-# simple OLS model:
-lm.state.exports.prox.12 <- rlm(ln_state_exports ~ lag_ln_exports +
-                                 atop_defense*pivot_prox +
-                                 lag_poptotal + lag_ln_ngdp + 
-                                 lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
-                               data = filter(state.exports.dyad.comp, year == 2012))
-summary(lm.state.exports.prox.12)
-
-plot_cme(lm.state.exports.prox.12, 
-         condition = "pivot_prox", 
-         effect = "atop_defense")
-
-
-
 # dyad robust se 
-state.exports.dr <- dyadRobust(lm.state.exports,
+state.exports.dr <- dyadRobust(lm(ln_state_exports ~ lag_ln_exports +
+                                    atop_defense*lag_diff_vote +
+                                    reelection_bush + reelection_obama + reelection_trump +
+                                    lag_poptotal + lag_ln_ngdp + fin_crisis +
+                                    lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
+                                  weights = lm.state.exports$w,
+                                  data = state.exports.dyad.comp),
                                dat = state.exports.dyad.comp,
                                dyadid = "dyad.id",
                                egoid = "state",
                                alterid = "ccode")
 
 # dyad robust se
-state.exports.prox.dr <- dyadRobust(lm.state.exports.prox,
+state.exports.prox.dr <- dyadRobust(lm(ln_state_exports ~ lag_ln_exports +
+                                         atop_defense*pivot_prox +
+                                         reelection_bush + reelection_obama + reelection_trump +
+                                         lag_poptotal + lag_ln_ngdp + fin_crisis +
+                                         lag_ln_rgdpe + lag_pop + lag_xr + lag_csh_g,
+                                       weights = lm.state.exports.prox$w,
+                                       data = state.exports.dyad.comp),
                                     dat = state.exports.dyad.comp,
                                     dyadid = "dyad.id",
                                     egoid = "state",
