@@ -8,7 +8,7 @@
  source("data/revise-latent-supp/Generate US Support.R")
  source("data/revise-latent-supp/Generate UK Support.R")
  source("data/revise-latent-supp/Generate France Support.R")
-# 
+# combine results
 latent.supp <- bind_rows(phi.us,
                          phi.fr,
                          phi.uk) %>%
@@ -27,6 +27,29 @@ latent.supp <- bind_rows(phi.us,
 #                    change_median = median - lag_median)
 # latent.supp$ccode2[latent.supp$year < 1991 & latent.supp$ccode2 == 255] <- 260
 
+
+# bring in state control of economy
+vdem <- vdem %>%
+         select(
+           country_name, country_id, year, 
+           v2x_polyarchy, v2clstown
+         ) %>% 
+         filter(year >= 1950) 
+# cow country codes
+vdem$ccode2 <- countrycode(vdem$country_id,
+                          origin = "vdem",
+                          destination = "cown")
+# greater values mean less state control
+ggplot(vdem, aes(x = v2clstown)) + geom_histogram()
+
+
+# add to latent support
+latent.supp <- left_join(latent.supp,
+                         select(vdem, -c(country_name,
+                                         country_id))) %>%
+                mutate( # reverse state control: positive = greater control 
+                  v2clstown = -1 * v2clstown
+                )
 
 
 # elections
@@ -163,6 +186,7 @@ imf.dot <- left_join(imf.dot, cpi.data) %>%
     lag_exports = lag(exports),
     lag_imports = lag(imports),
     change_exports = exports - lag_exports,
+    pc_exports = change_exports / lag_exports,
     change_imports = imports - lag_imports,
     lag_ln_exports = lag(ln_exports),
     change_ln_exports = ln_exports - lag_ln_exports,

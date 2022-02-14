@@ -22,6 +22,7 @@ library(MCMCpack)
 library(doBy)
 library(fastDummies)
 library(interflex)
+library(vdemdata)
 
 
 # set seed

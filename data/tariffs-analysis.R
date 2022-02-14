@@ -77,6 +77,7 @@ tariffs.all <- left_join(select(ungroup(dyadic.mp.ally),
                                 ccode1, ccode2, year,
                                 election, mean_leader_supp,
                                 lag_election, lead_election,
+                                v2clstown,
                                   incumbent, xm_qudsest2, 
                                   cowmidongoing, dyadigos,
                                   change_gdp_o, change_gdp_d, Distw,
@@ -98,6 +99,7 @@ tariffs.all <- left_join(select(ungroup(dyadic.mp.ally),
                   # avoid perfect dyadid collinearity 
                   drop_na(change_wavg_tariff,
                               election, mean_leader_supp,
+                              v2clstown,
                               lag_election, lead_election,
                               incumbent, xm_qudsest2,
                               cowmidongoing, dyadigos,
@@ -120,6 +122,7 @@ tariffs.all <- filter(tariffs.all, dyad.id != 2 & dyad.id != 72)
 mp.tariff.all <- rlm(asinh(change_avg_tariff) ~ 
                          election*mean_leader_supp +
                        lag_election + lead_election +
+                       v2clstown +
                          incumbent + xm_qudsest2 +
                          cowmidongoing + dyadigos +
                          change_gdp_o + change_gdp_d +
@@ -147,6 +150,7 @@ all.tariff
 mp.wtariff.all <- rlm(asinh(change_wavg_tariff) ~ 
                        election*mean_leader_supp +
                        lag_election + lead_election +
+                        v2clstown +
                        incumbent + xm_qudsest2 + 
                        cowmidongoing + dyadigos +
                        change_gdp_o + change_gdp_d + 
@@ -183,6 +187,7 @@ summary(tariffs.all$min_tariff)
 mp.maxtariff.all <- rlm(change_log_max_tariff ~ 
                         election*mean_leader_supp +
                         lag_election + lead_election +
+                          v2clstown +
                         incumbent + xm_qudsest2 + 
                         cowmidongoing + dyadigos +
                         change_gdp_o + change_gdp_d + 
