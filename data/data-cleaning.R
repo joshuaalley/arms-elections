@@ -248,8 +248,7 @@ nelda <- read_dta("data/nelda.dta") %>%
 
 
 # make the merger
-dyadic.trade.major <- latent.supp %>%
-  left_join(trade.full) %>%
+dyadic.trade.major <- trade.full %>%
   left_join(dyadic.trade) %>%
   rename(ccode = ccode1)
 
@@ -262,8 +261,8 @@ dyadic.trade.major <- left_join(dyadic.trade.major,
 dyadic.trade.major$election[is.na(dyadic.trade.major$election)] <- 0
 dyadic.trade.major$incumbent[is.na(dyadic.trade.major$incumbent)] <- 0
 
-# full data cleaning
-dyadic.mp.ally <- dyadic.trade.major %>%
+# dyadic.trade.major %>%
+dyadic.trade.major <- dyadic.trade.major %>% 
   rename(ccode1 = ccode) %>%
   group_by(ccode1, ccode2) %>%
   mutate(
@@ -271,7 +270,14 @@ dyadic.mp.ally <- dyadic.trade.major %>%
     lag_xm_qudsest2 = lag(xm_qudsest2),
     lag_election = lag(election),
     lead_election = lead(election)
-  ) %>% 
+  ) 
+
+# dyad id
+dyadic.trade.major$dyad.id <- group_indices(dyadic.trade.major, ccode1, ccode2) 
+
+# full data cleaning: cut down to MP allies
+dyadic.mp.ally <- latent.supp %>%
+  left_join(dyadic.trade.major) %>%
   ungroup() %>%
   mutate(
     # prior support and changes
@@ -280,6 +286,7 @@ dyadic.mp.ally <- dyadic.trade.major %>%
   ) %>%
   fill(c(prior_leader_supp, atop_defense),
        .direction = "down") %>%
+  # filter for alliances only
   filter(atop_defense == 1) %>%
   mutate(
     change_leader_supp = median - prior_leader_supp
@@ -313,12 +320,10 @@ dyadic.mp.ally$dyad.id <- group_indices(dyadic.mp.ally, ccode1, ccode2)
 
 
 # get us exports
-us.trade.ally <- filter(dyadic.mp.ally, 
+us.trade.ally <- filter(dyadic.trade.major, 
                         ccode1 == 2) %>%
   ungroup() %>%
   rename(
-    us_imports = imports,
-    us_exports = exports,
     us.code = ccode1,
     ccode = ccode2
   ) %>%
@@ -327,26 +332,6 @@ us.trade.ally <- filter(dyadic.mp.ally,
   left_join(promises.data) %>%
   group_by(ccode) %>% 
   mutate(
-    lag_us_exports = lag(us_exports),
-    lag_us_imports = lag(us_imports),
-    change_us_exports = us_exports - lag_us_exports,
-    change_us_imports = us_imports - lag_us_imports,
-    growth_us_exports = change_us_exports / lag_us_exports,
-    growth_us_imports = change_us_imports / lag_us_imports,
-    ln_us_trade = ln_exports + ln_imports,
-    lag_ln_trade = lag(ln_us_trade),
-    change_lnus_trade = ln_us_trade - lag_ln_trade, 
-    change_lnus_trade = ln_us_trade - lag_ln_trade,
-    growth_lnus_trade = change_lnus_trade / lag_ln_trade, 
-    ln_us_exports = log(us_exports), 
-    ln_us_imports = log(us_imports), 
-    lag_ln_exports = lag(ln_exports),
-    lag_ln_imports = lag(ln_imports),
-    change_lnus_exports = ln_us_exports - lag_ln_exports,
-    change_lnus_imports = ln_us_imports - lag_ln_imports,
-    ihs_trade_balance = asinh(trade_balance),
-    lag_ihs_balance = lag(ihs_trade_balance),
-    ihs_change_balance = asinh(change_trade_balance),
     # presidential partisanship
     rep_pres = ifelse((year >= 1921 & year <= 1932) | # Harding, Coolidge, Hoover
                         (year >= 1953 & year <= 1960) | # Ike
@@ -365,9 +350,6 @@ us.trade.ally <- filter(dyadic.mp.ally,
     ln_total_statements = log(total_statements + 1)
   )
 us.trade.ally$dyad.id <- group_indices(us.trade.ally, us.code, ccode) 
-
-# fix INF values- small states w/ no trade in lagged year
-us.trade.ally$growth_lnus_trade[us.trade.ally$growth_lnus_trade == Inf] <- 1
 
 
 

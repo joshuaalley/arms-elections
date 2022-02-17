@@ -70,7 +70,7 @@ data$president[data$year >= 2017] <- "Trump"
 data$president
 }
 
-# function to tidy dr lists
+# function to tidy dyad robust lists
 dr.clean <- function(est){
   data.clean <- cbind.data.frame(est$bhat, est$sehat)
   colnames(data.clean) <- c("coef", "se")
@@ -78,3 +78,36 @@ dr.clean <- function(est){
   data.clean$model <-  deparse(substitute(est))
   data.clean
 }
+
+
+coef.names.map = c("lag_exports" = "Lag Exports",
+                   "lag_imports" = "Lag Imports",
+                   "lag_trade_balance" = "Lag Trade Balance",
+                   "election" = "Election",
+                   "atop_defense" = "Defense Pact",
+                   "time_to_elec:atop_defense" = "Defense Pact x Years to Election",
+                   "mean_leader_supp" = "Change Leader Support", 
+                   "election:mean_leader_supp" = "Election x Change Leader Support",
+                   "time_to_elec" = "Years to Election",
+                   "time_to_elec:mean_leader_supp" = "Years to Election x Change Leader Support",
+                   "lag_election" = "Lag Election",
+                   "lead_election" = "Lead Election", 
+                   "incumbent" = "Incumbent",
+                   "xm_qudsest2" = "Allied Democracy",
+                   "v2clstown" = "Ally Economic Control",
+                   "GDP_o" = "Major Power GDP",
+                   "change_gdp_o" = "Change Major Power GDP",
+                   "GDP_d" = "Ally GDP",
+                   "change_gdp_d" = "Change Ally GDP",
+                   "Distw" = "Pop. Weighted Distance)",
+                   "Contig" = "Contiguous",
+                   "Comlang" = "Common Language",
+                   "Evercol" = "Former Colony",
+                   "cowmidongoing" = "Ongoing MID",
+                   "dyadigos" = "Shared IGOs",
+                   "lag_latency_pilot" = "Lag Ally Latency",
+                   "lag_rivalry_thompson" = "Lag Rivalry",
+                   "adv_signal_last3" = "Prior Adversary Signal",
+                   "change_ln_imports" = "Change Ln(Imports)",
+                   "change_ln_exports" = "Change Ln(Exports",
+                   "rep_pres" = "Republican President")

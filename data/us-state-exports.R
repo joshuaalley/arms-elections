@@ -281,6 +281,7 @@ quantile(state.exports.dyad$ln_state_exports)
 state.exports.dyad.comp <- select(state.exports.dyad,
                                   state, ccode, year, 
                                   value, lag_close_state, lag_diff_vote,
+                                  #time_to_elec,
                                   pivot_prox, election,
                                   lag_election, lead_election,
                                   lag_poptotal, election, lead_election,
@@ -329,7 +330,7 @@ summary(state.exports.dyad.comp$value)
 ggplot(state.exports.dyad.comp, aes(x = ln_state_exports)) + geom_histogram()
 
 
-# simple OLS model:
+# simple weighted model:
 lm.state.exports <- rlm(ln_state_exports ~ lag_ln_exports +
                          atop_defense*lag_diff_vote +
                        reelection_bush + reelection_obama + reelection_trump +
