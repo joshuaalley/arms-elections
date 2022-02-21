@@ -110,4 +110,5 @@ coef.names.map = c("lag_exports" = "Lag Exports",
                    "adv_signal_last3" = "Prior Adversary Signal",
                    "change_ln_imports" = "Change Ln(Imports)",
                    "change_ln_exports" = "Change Ln(Exports",
+                   "eu_member" = "EU Member",
                    "rep_pres" = "Republican President")

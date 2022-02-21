@@ -269,7 +269,9 @@ dyadic.trade.major <- dyadic.trade.major %>%
     lag_atop_defense = lag(atop_defense),
     lag_xm_qudsest2 = lag(xm_qudsest2),
     lag_election = lag(election),
-    lead_election = lead(election)
+    lead_election = lead(election),
+    eu_member = ifelse(((ccode2 >= 200 & ccode2 <= 325) | ccode2 == 350) & 
+      year >= 1988, 1, 0)
   ) 
 
 # dyad id
@@ -340,7 +342,8 @@ us.trade.ally <- filter(dyadic.trade.major,
                         (year >= 2001 & year <= 2008) | # HW Bush
                         (year >= 2017), # Trump
                       1, 0),
-    change_pres = ifelse(rep_pres != lag(rep_pres), 1, 0)
+    change_pres = ifelse(rep_pres != lag(rep_pres), 1, 0),
+    near_elec = ifelse(time_to_elec == 0 | time_to_elec == 1, 1, 0)
   ) %>%
   group_by(president, ccode) %>%
   mutate(

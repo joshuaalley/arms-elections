@@ -50,10 +50,10 @@ comp.us.elec <- function(data){
                           time_to_elec, atop_defense, rep_pres,
                           lag_election, lead_election, 
                           xm_qudsest2,  cowmidongoing, dyadigos,
-                          GDP_o, GDP_d, Distw,
+                          GDP_o, GDP_d, Distw, eu_member,
                           Comlang, Contig, Evercol) %>%
                  drop_na()
-  out[, 9:20] <- apply(out[, 9:20], 2, function(x) 
+  out[, 9:21] <- apply(out[, 9:21], 2, function(x) 
                           arm::rescale(x, 
                               binary.inputs = "0/1"))
   out
@@ -65,7 +65,7 @@ us.exports.elec <- rlm(exports ~ lag_exports + lag_imports +
                         time_to_elec + atop_defense + rep_pres +
                         lag_election + lead_election + incumbent +
                         xm_qudsest2 +  cowmidongoing + dyadigos +
-                        GDP_o + GDP_d + Distw +
+                        GDP_o + GDP_d + Distw + eu_member +
                         Comlang + Contig + Evercol,
                        maxit = 40,
                       data = us.trade.ally)
@@ -77,7 +77,7 @@ us.lnexports.elec <- rlm(ln_exports ~ lag_ln_exports + lag_ln_imports +
                           time_to_elec + atop_defense + rep_pres +
                           lag_election + lead_election + incumbent +
                           xm_qudsest2 +  cowmidongoing + dyadigos +
-                          GDP_o + GDP_d + Distw +
+                          GDP_o + GDP_d + Distw + eu_member +
                           Comlang + Contig + Evercol,
                          maxit = 40,
                         data = us.trade.ally)
@@ -90,7 +90,7 @@ us.chexports.elec <- rlm(change_ln_exports ~ change_ln_imports +
                           time_to_elec*atop_defense + rep_pres +
                           lag_election + lead_election + 
                           xm_qudsest2 +  cowmidongoing + dyadigos +
-                          GDP_o + GDP_d + Distw +
+                          GDP_o + GDP_d + Distw + eu_member +
                           Comlang + Contig + Evercol,
                         data = comp.us.elec(us.trade.ally))
 summary(us.chexports.elec)
@@ -103,7 +103,7 @@ us.imports.elec <- rlm(imports ~ lag_imports + lag_exports +
                         time_to_elec + atop_defense + rep_pres +
                         lag_election + lead_election + incumbent +
                         xm_qudsest2 +  cowmidongoing + dyadigos +
-                        GDP_o + GDP_d + Distw +
+                        GDP_o + GDP_d + Distw + eu_member +
                         Comlang + Contig + Evercol,
                        maxit = 40,
                       data = us.trade.ally)
@@ -115,7 +115,7 @@ us.lnimports.elec <- rlm(ln_imports ~ lag_ln_imports + lag_ln_exports +
                           time_to_elec + atop_defense + rep_pres +
                           lag_election + lead_election + incumbent +
                           xm_qudsest2 +  cowmidongoing + dyadigos +
-                          GDP_o + GDP_d + Distw +
+                          GDP_o + GDP_d + Distw + eu_member +
                           Comlang + Contig + Evercol,
                          maxit = 40,
                         data = us.trade.ally)
@@ -127,7 +127,7 @@ us.chimports.elec <- rlm(change_ln_imports ~ change_ln_exports +
                           time_to_elec*atop_defense + rep_pres +
                           lag_election + lead_election + 
                           xm_qudsest2 +  cowmidongoing + dyadigos +
-                          GDP_o + GDP_d + Distw +
+                          GDP_o + GDP_d + Distw + eu_member +
                           Comlang + Contig + Evercol,
                          data = comp.us.elec(us.trade.ally))
 summary(us.chimports.elec)
@@ -140,7 +140,7 @@ us.chtrade.elec <- rlm(change_trade ~
                         time_to_elec*atop_defense + rep_pres +
                         lag_election + lead_election + 
                         xm_qudsest2 +  cowmidongoing + dyadigos +
-                        GDP_o + GDP_d + Distw +
+                        GDP_o + GDP_d + Distw + eu_member +
                         Comlang + Contig + Evercol,
                        data = comp.us.elec(us.trade.ally))
 summary(us.chtrade.elec)
@@ -151,7 +151,7 @@ us.balance.elec <- rlm(change_ihs_balance ~
                         time_to_elec*atop_defense + rep_pres +
                         lag_election + lead_election + 
                         xm_qudsest2 +  cowmidongoing + dyadigos +
-                        GDP_o + GDP_d + Distw +
+                        GDP_o + GDP_d + Distw + eu_member +
                         Comlang + Contig + Evercol,
                        data = comp.us.elec(us.trade.ally))
 summary(us.balance.elec)
@@ -346,29 +346,6 @@ ggsave("figures/us-defense-me.png", height = 6, width = 8)
 dyadic.major.nous <- filter(dyadic.trade.major, ccode1 != 2)
 
 ### exports 
-# model w/o changes or transformation 
-mp.exports.elec <- rlm(exports ~ lag_exports + lag_imports +
-                         election + atop_defense +
-                         lag_election + lead_election + incumbent +
-                         xm_qudsest2 +  cowmidongoing + dyadigos +
-                         GDP_o + GDP_d + Distw +
-                         Comlang + Contig + Evercol,
-                       maxit = 40,
-                       data = dyadic.major.nous)
-summary(mp.exports.elec)
-
-
-# model w/ log
-mp.lnexports.elec <- rlm(ln_exports ~ lag_ln_exports + lag_ln_imports +
-                           election + atop_defense +
-                           lag_election + lead_election + incumbent +
-                           xm_qudsest2 +  cowmidongoing + dyadigos +
-                           GDP_o + GDP_d + Distw +
-                           Comlang + Contig + Evercol,
-                         maxit = 40,
-                         data = dyadic.major.nous)
-summary(mp.lnexports.elec)
-
 
 # close to unit root, so changes
 # model w/ log
@@ -376,7 +353,7 @@ mp.chexports.elec <- rlm(change_ln_exports ~ change_ln_imports +
                            election*atop_defense +
                            lag_election + lead_election + 
                            xm_qudsest2 +  cowmidongoing + dyadigos +
-                           GDP_o + GDP_d + Distw +
+                           GDP_o + GDP_d + Distw + eu_member +
                            Comlang + Contig + Evercol,
                          data = dyadic.major.nous)
 summary(mp.chexports.elec)
@@ -384,28 +361,6 @@ summary(mp.chexports.elec)
 
 
 ### imports 
-# model w/o changes or transformation 
-mp.imports.elec <- rlm(imports ~ lag_imports + lag_exports +
-                         election + atop_defense +
-                         lag_election + lead_election + incumbent +
-                         xm_qudsest2 +  cowmidongoing + dyadigos +
-                         GDP_o + GDP_d + Distw +
-                         Comlang + Contig + Evercol,
-                       maxit = 40,
-                       data = dyadic.major.nous)
-summary(mp.imports.elec)
-
-
-# model w/ log
-mp.lnimports.elec <- rlm(ln_imports ~ lag_ln_imports + lag_ln_exports +
-                           election + atop_defense +
-                           lag_election + lead_election + incumbent +
-                           xm_qudsest2 +  cowmidongoing + dyadigos +
-                           GDP_o + GDP_d + Distw +
-                           Comlang + Contig + Evercol,
-                         maxit = 40,
-                         data = dyadic.major.nous)
-summary(mp.lnimports.elec)
 
 # close to unit root, so changes
 # model w/ log
@@ -413,7 +368,7 @@ mp.chimports.elec <- rlm(change_ln_imports ~ change_ln_exports +
                            election*atop_defense +
                            lag_election + lead_election + 
                            xm_qudsest2 +  cowmidongoing + dyadigos +
-                           GDP_o + GDP_d + Distw +
+                           GDP_o + GDP_d + Distw + eu_member +
                            Comlang + Contig + Evercol,
                          data = dyadic.major.nous)
 summary(mp.chimports.elec)
@@ -426,7 +381,7 @@ mp.chtrade.elec <- rlm(change_trade ~
                          election*atop_defense +
                          lag_election + lead_election + 
                          xm_qudsest2 +  cowmidongoing + dyadigos +
-                         GDP_o + GDP_d + Distw +
+                         GDP_o + GDP_d + Distw + eu_member +
                          Comlang + Contig + Evercol,
                        data = dyadic.major.nous)
 summary(mp.chtrade.elec)
@@ -437,7 +392,7 @@ mp.balance.elec <- rlm(change_ihs_balance ~
                          election*atop_defense +
                          lag_election + lead_election + 
                          xm_qudsest2 +  cowmidongoing + dyadigos +
-                         GDP_o + GDP_d + Distw +
+                         GDP_o + GDP_d + Distw + eu_member +
                          Comlang + Contig + Evercol,
                        data = dyadic.major.nous)
 summary(mp.balance.elec)
