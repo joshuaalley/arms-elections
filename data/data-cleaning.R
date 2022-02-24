@@ -51,6 +51,9 @@ latent.supp <- left_join(latent.supp,
                   v2clstown = -1 * v2clstown
                 )
 
+# greater values mean less state control
+ggplot(latent.supp, aes(x = v2clstown)) + geom_histogram()
+
 
 # elections
 pres.elections <- seq(from = 1952, to = 2020, by = 4)
@@ -343,7 +346,8 @@ us.trade.ally <- filter(dyadic.trade.major,
                         (year >= 2017), # Trump
                       1, 0),
     change_pres = ifelse(rep_pres != lag(rep_pres), 1, 0),
-    near_elec = ifelse(time_to_elec == 0 | time_to_elec == 1, 1, 0)
+    near_elec = ifelse(time_to_elec == 0 | time_to_elec == 1, 1, 0),
+    cold_war = ifelse(year >= 1989, 1, 0)
   ) %>%
   group_by(president, ccode) %>%
   mutate(
@@ -354,6 +358,24 @@ us.trade.ally <- filter(dyadic.trade.major,
   )
 us.trade.ally$dyad.id <- group_indices(us.trade.ally, us.code, ccode) 
 
+
+# pull in US arms trade data 
+us.arms.sipri <- read.csv("data/us-arms-exports.csv")%>%
+                  pivot_longer(-recipient, names_to = "year",
+                               values_to = "us_arms") 
+us.arms.sipri$year <- as.numeric(str_remove(us.arms.sipri$year, "X"))
+us.arms.sipri$us_arms[us.arms.sipri$us_arms == 0] <- 0.25 # small values are 0, not NA
+us.arms.sipri$us_arms[is.na(us.arms.sipri$us_arms)] <- 0 # replace NA w/ 0 
+
+# create countrycodes 
+us.arms.sipri$ccode <- countrycode(us.arms.sipri$recipient,
+                                   origin = "country.name",
+                                   destination = "cown")
+us.arms.sipri$ccode[us.arms.sipri$recipient == "Serbia"] <- 345
+us.arms.sipri$ccode[us.arms.sipri$recipient == "Micronesia"] <- 987
+
+# merge 
+us.trade.ally <- left_join(us.trade.ally, us.arms.sipri)
 
 
 # export mp trade to iso3c codes

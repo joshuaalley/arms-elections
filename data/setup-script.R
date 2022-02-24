@@ -9,7 +9,9 @@ library(haven)
 library(marginaleffects)
 library(pscl)
 library(peacesciencer)
-library(brms)
+library(cmdstanr)
+library(MASS)
+#library(brms)
 library(systemfit)
 library(cspp)
 library(countrycode)
@@ -18,8 +20,7 @@ library(dyadRobust)
 library(modelsummary)
 library(gridExtra)
 library(lubridate)
-library(MCMCpack)
-library(doBy)
+#library(doBy)
 library(fastDummies)
 library(interflex)
 library(vdemdata)
@@ -49,6 +50,11 @@ conflict_prefer("ar", "brms")
 conflict_prefer("marginal_effects", "brms")
 conflict_prefer("year", "lubridate")
 conflict_prefer("month", "lubridate")
+conflict_prefer("between", "dplyr")
+conflict_prefer("combine", "dplyr")
+conflict_prefer("order_by", "doBy")
+conflict_prefer("some", "purrr")
+conflict_prefer("ddirichlet", "brms")
 
 
 # function to create presidential indicator
@@ -111,4 +117,5 @@ coef.names.map = c("lag_exports" = "Lag Exports",
                    "change_ln_imports" = "Change Ln(Imports)",
                    "change_ln_exports" = "Change Ln(Exports",
                    "eu_member" = "EU Member",
+                   "cold_war" = "Cold War",
                    "rep_pres" = "Republican President")
