@@ -15,11 +15,12 @@ us.trade.total <- us.trade.ally %>%
                      total_exports_change = sum(change_ln_exports, na.rm = TRUE),
                      #total_imports = sum(ln_imports, na.rm = TRUE),
                      total_imports_change = sum(change_ln_imports, na.rm = TRUE),
-                     time_to_elec = min(time_to_elec)
+                     time_to_elec = min(time_to_elec),
+                     cold_war = max(cold_war, na.rm = TRUE)
                    ) %>% # remove pure NA w/ sum = 0
                   filter(year >= 1950) %>%
                   pivot_longer(
-                    cols = -c(year, time_to_elec),
+                    cols = -c(year, time_to_elec, cold_war),
                     names_to = "trade",
                     values_to = "value"
                   )
@@ -42,6 +43,21 @@ ggplot(us.trade.total, aes(x = factor(time_to_elec), y = value)) +
 ggsave("figures/us-trade-cycles.png", height = 6, width = 8)
 
 
+# cold war split
+ggplot(us.trade.total, aes(x = factor(time_to_elec), y = value)) +
+  facet_wrap(~ cold_war + trade,
+             nrow = 2,
+             labeller = labeller(trade = c("total_exports_change" = "Exports",
+                                           "total_imports_change" = "Imports",
+                                           "total_trade_change" = "Total Trade"),
+                                 cold_war = c(`0` = "Post-Cold War",
+                                              `1` = "Cold War"))) +
+  geom_boxplot(outlier.shape = NA) +
+  ylim(-15, 15) +
+  labs(y = "Annual Trade Change",
+       x = "Years to Presidential Election")
+
+
 # complete cases to use robust lm w
 # complete cases of dyad data: changes and rescaled continuous regressors
 comp.us.elec <- function(data){
@@ -50,7 +66,8 @@ comp.us.elec <- function(data){
                           time_to_elec, atop_defense, rep_pres,
                           lag_election, lead_election, cold_war,
                           xm_qudsest2,  cowmidongoing, dyadigos,
-                          GDP_o, GDP_d, Distw, eu_member, us_arms,
+                          GDP_o, GDP_d, Distw, eu_member, 
+                          us_arms, lag_us_arms,
                           Comlang, Contig, Evercol) %>%
                  drop_na()
   out[, 9:ncol(out)] <- apply(out[, 9:ncol(out)], 2, function(x) 
@@ -62,7 +79,7 @@ comp.us.elec <- function(data){
 ### exports 
 # model w/o changes or transformation 
 us.exports.elec <- rlm(exports ~ lag_exports + lag_imports +
-                        time_to_elec + atop_defense + rep_pres +
+                        time_to_elec*atop_defense + rep_pres +
                          cold_war +
                         xm_qudsest2 +  cowmidongoing + dyadigos +
                         GDP_o + GDP_d + Distw + eu_member +
@@ -74,7 +91,7 @@ summary(us.exports.elec)
 
 # model w/ log
 us.lnexports.elec <- rlm(ln_exports ~ lag_ln_exports + lag_ln_imports +
-                          time_to_elec + atop_defense + rep_pres +
+                          time_to_elec*atop_defense + rep_pres +
                            cold_war +
                           xm_qudsest2 +  cowmidongoing + dyadigos +
                           GDP_o + GDP_d + Distw + eu_member +
@@ -94,6 +111,27 @@ us.chexports.elec <- rlm(change_ln_exports ~ change_ln_imports +
                           Comlang + Contig + Evercol,
                         data = comp.us.elec(us.trade.ally))
 summary(us.chexports.elec)
+
+
+
+# cold war threat
+# model w/ log
+us.chexports.elec.cw <- rlm(change_ln_exports ~ change_ln_imports +
+                           time_to_elec*atop_defense + rep_pres +
+                           xm_qudsest2 +  cowmidongoing + dyadigos +
+                           GDP_o + GDP_d + Distw + eu_member +
+                           Comlang + Contig + Evercol,
+                         data = filter(us.trade.ally, cold_war == 1))
+summary(us.chexports.elec.cw)
+
+
+us.chexports.elec.pcw <- rlm(change_ln_exports ~ change_ln_imports +
+                              time_to_elec*atop_defense + rep_pres +
+                              xm_qudsest2 +  cowmidongoing + dyadigos +
+                              GDP_o + GDP_d + Distw + eu_member +
+                              Comlang + Contig + Evercol,
+                            data = filter(us.trade.ally, cold_war == 0))
+summary(us.chexports.elec.pcw)
 
 
 

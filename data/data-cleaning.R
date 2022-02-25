@@ -375,7 +375,12 @@ us.arms.sipri$ccode[us.arms.sipri$recipient == "Serbia"] <- 345
 us.arms.sipri$ccode[us.arms.sipri$recipient == "Micronesia"] <- 987
 
 # merge 
-us.trade.ally <- left_join(us.trade.ally, us.arms.sipri)
+us.trade.ally <- left_join(us.trade.ally, us.arms.sipri) %>%
+                   group_by(ccode) %>%
+                   mutate(
+                     lag_us_arms = lag(us_arms),
+                     change_us_arms = us_arms - lag_us_arms
+                   )
 
 
 # export mp trade to iso3c codes
