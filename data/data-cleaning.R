@@ -378,9 +378,14 @@ us.arms.sipri$ccode[us.arms.sipri$recipient == "Micronesia"] <- 987
 us.trade.ally <- left_join(us.trade.ally, us.arms.sipri) %>%
                    group_by(ccode) %>%
                    mutate(
+                     us_arms = log(us_arms + 1),
                      lag_us_arms = lag(us_arms),
-                     change_us_arms = us_arms - lag_us_arms
+                     change_us_arms = us_arms - lag_us_arms,
+                     nz_us_arms = ifelse(us_arms > 0, 1, 0)
                    )
+
+
+ggplot(us.trade.ally, aes(x = us_arms)) + geom_histogram()
 
 
 # export mp trade to iso3c codes

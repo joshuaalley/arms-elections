@@ -3,70 +3,74 @@
 
 
 
+
+### log normal hurdle model
+us.arms.comp <- select(us.trade.ally,
+                       ccode, year,
+   us_arms, lag_us_arms, nz_us_arms,
+   change_us_arms,
+   time_to_elec, atop_defense, 
+   rep_pres, cold_war,
+   xm_qudsest2,  cowmidongoing, dyadigos,
+   GDP_o, GDP_d, Distw, eu_member,
+   Comlang, Contig, Evercol) %>%
+   mutate(
+      election_defense = time_to_elec*atop_defense
+   ) %>%
+   drop_na() %>%
+   ungroup()
+
+# non-zero arms
+us.arms.nz <- glm(nz_us_arms ~ 
+                     atop_defense + 
+                     rep_pres + cold_war +
+                     xm_qudsest2 +  cowmidongoing + dyadigos +
+                     GDP_o + GDP_d + Distw + eu_member +
+                     Comlang + Contig + Evercol,
+                  data = us.arms.comp,
+                  family = binomial(link = "logit"))
+summary(us.arms.nz)
+
+
+
+
+# predicted prob of non-zero arms
+us.arms.comp$pred_nz_arms <- predict(us.arms.nz, type = "response")
+ggplot(us.arms.comp, aes(x = pred_nz_arms)) + geom_histogram()
+ggplot(us.arms.comp, aes(x = pred_nz_arms,
+                         group = nz_us_arms,
+                         fill = nz_us_arms)) + geom_histogram()
+
 # arms trade models
 us.arms.ex <- rlm(us_arms ~ lag_us_arms +
                      time_to_elec*atop_defense + 
                      rep_pres + cold_war +
                      xm_qudsest2 +  cowmidongoing + dyadigos +
                      GDP_o + GDP_d + Distw + eu_member +
-                     Comlang + Contig + Evercol,
-                  maxit = 40,
-                 data = us.trade.ally)
+                     Comlang + Contig + Evercol + pred_nz_arms,
+                  data = filter(us.arms.comp, nz_us_arms == 1))
 summary(us.arms.ex)
 
-
-# changes in arms exports
+# changes in arms exports: same as trade levels
 us.arms.chex <- rlm(change_us_arms ~ 
-                     time_to_elec*atop_defense + 
-                     rep_pres + cold_war +
-                     xm_qudsest2 +  cowmidongoing + dyadigos +
-                     GDP_o + GDP_d + Distw + eu_member +
-                     Comlang + Contig + Evercol,
-                  data = us.trade.ally)
+                      time_to_elec*atop_defense + 
+                      rep_pres + cold_war +
+                      xm_qudsest2 +  cowmidongoing + dyadigos +
+                      GDP_o + GDP_d + Distw + eu_member +
+                      Comlang + Contig + Evercol +
+                      pred_nz_arms,
+                   data = filter(us.arms.comp, nz_us_arms == 1))
 summary(us.arms.chex)
 
 # ME and predicted values
-us.arms.res <- me.us.elec(model = us.arms.ex,
-                data = us.trade.ally)
-
-
-# during cold war 
-us.arms.ex.cw <- rlm(us_arms ~ lag_us_arms +
-                     time_to_elec*atop_defense + 
-                     rep_pres +
-                     xm_qudsest2 +  cowmidongoing + dyadigos +
-                     GDP_o + GDP_d + Distw + 
-                     Comlang + Contig + Evercol,
-                     maxit = 40,
-                  data = filter(us.trade.ally, cold_war == 1))
-summary(us.arms.ex.cw)
-
-
-us.arms.cw.res <- me.us.elec(model = us.arms.ex.cw,
-                          data = filter(us.trade.ally, cold_war == 1))
-
-# post cold war
-us.arms.ex.pcw <- rlm(us_arms ~ lag_us_arms +
-                        time_to_elec*atop_defense + 
-                        rep_pres +
-                        xm_qudsest2 +  cowmidongoing + dyadigos +
-                        GDP_o + GDP_d + Distw +
-                         Comlang + Contig + Evercol,
-                      maxit = 40,
-                     data = filter(us.trade.ally, cold_war == 0))
-summary(us.arms.ex.pcw)
-
-
-us.arms.pcw.res <- me.us.elec(model = us.arms.ex.pcw,
-                          data = filter(us.trade.ally, cold_war == 0))
+us.arms.res <- me.us.elec(model = us.arms.chex,
+                          data = filter(us.arms.comp, nz_us_arms == 1))
 
 
 # results
 # combine predictions 
 us.arms.pred <- bind_rows(
    "All Years" = us.arms.res[[2]],
-   "Cold War" = us.arms.cw.res[[2]],
-   "Post-Cold War" = us.arms.pcw.res[[2]],
    .id = "time"
 )
 
@@ -92,8 +96,6 @@ ggplot(us.arms.pred, aes(y = fit,
 # combine marginal effects  
 us.arms.me <- bind_rows(
    "All Years" = us.arms.res[[1]],
-   "Cold War" = us.arms.cw.res[[1]],
-   "Post-Cold War" = us.arms.pcw.res[[1]],
    .id = "time"
 )
 
@@ -108,7 +110,62 @@ ggplot(us.arms.me, aes(y = dydx,
       ymin = dydx - 1.96*std.error,
       ymax = dydx + 1.96*std.error),
       position = position_dodge(width = .1)) +
-   labs(y = "Estimated Marginal Effect of Alliance")
+   labs(y = "Estimated Marginal Effect of Alliance",
+        x = "Years to Election")
+
+
+### hurdle models instead 
+# regressor matrices
+
+# regressors: fixed
+hurdle.arms.nz <- as.matrix(select(us.arms.comp, 
+                                   lag_us_arms,
+                                   time_to_elec, atop_defense, 
+                                   election_defense,
+                                   rep_pres, cold_war,
+                                   xm_qudsest2,  cowmidongoing, dyadigos,
+                                   GDP_o, GDP_d, Distw, eu_member,
+                                   Comlang, Contig, Evercol))
+
+
+hurdle.arms.z <- as.matrix(select(us.arms.comp,
+                                  atop_defense, 
+                                  rep_pres, cold_war,
+                                  xm_qudsest2,  cowmidongoing,
+                                  Comlang, Contig, Evercol))
+
+
+# data
+us.arms.data <- list(
+   Y = us.arms.comp$us_arms,
+   N = nrow(us.arms.comp),
+   K = ncol(hurdle.arms.nz),
+   X = hurdle.arms.nz,
+   K_hu = ncol(hurdle.arms.z),
+   X_hu = hurdle.arms.z
+)
+
+# compile model code
+arms.hurdle <- cmdstan_model("data/stan-hurdle-logn.stan",
+                             cpp_options = list(stan_threads = TRUE))
+
+# stan model fit
+fit.us.arms <- arms.hurdle$sample(
+   data = us.arms.data,
+   seed = 12,
+   iter_warmup = 1000,
+   iter_sampling = 1000,
+   chains = 4,
+   parallel_chains = 4,
+   threads_per_chain = 4,
+   refresh = 200,
+   max_treedepth = 20,
+   adapt_delta = .90
+)
+fit.us.ex$cmdstan_diagnose()
+fit.us.ex$cmdstan_summary()
+
+
 
 
 # set up analysis with allied data
@@ -124,13 +181,6 @@ us.supp <- filter(latent.supp, ccode1 == 2) %>%
             bind_cols(
                filter(us.signals, us_pact == 1)) %>%
             select(-us_arms)
-
-
-ggplot(us.supp, aes(x = year, y = us_arms)) +
-   facet_wrap(~ ccode, scales = "free_y") +
-   geom_line(size = 1) +
-   geom_vline(xintercept=c(pres.elections), linetype="dotted") 
-
 
 
 # filter and clean us ally data
@@ -156,7 +206,7 @@ us.all.data <- filter(us.trade.ally, atop_defense == 1) %>%
                 change_ln_exports, change_ln_imports,
                 change_trade, change_ihs_balance,
                 v2clstown, mean_leader_supp, 
-                mean_party_supp, us_words, us_arms, us_troops,
+                mean_party_supp, us_words, us_arms, change_us_arms, us_troops,
                 us_nukes, us_vis, total_leader_words, total_leader_vis,
                   eu_member, near_elec, 
                   xm_qudsest2, cowmidongoing, dyadigos,
@@ -174,9 +224,22 @@ us.all.data[, 5:ncol(us.all.data)] <- apply(us.all.data[, 5:ncol(us.all.data)],
 
 
 # separate models for near elections 
+us.all.supp <- rlm(change_ln_exports ~ 
+                      eu_member +  
+                      change_us_arms + us_troops + us_nukes +
+                      total_leader_vis + total_leader_words + 
+                      xm_qudsest2 +  cowmidongoing + dyadigos +
+                      GDP_o + GDP_d + Distw +
+                      rep_pres +
+                      Comlang + Contig + Evercol,
+                   data = us.all.data)
+summary(us.all.supp)
+
+
+# separate models for near elections 
 us.all.elec <- rlm(change_ln_exports ~ 
                      eu_member +  
-                      us_arms + us_troops + us_nukes +
+                      change_us_arms + us_troops + us_nukes +
                       total_leader_vis + total_leader_words + 
                      xm_qudsest2 +  cowmidongoing + dyadigos +
                      GDP_o + GDP_d + Distw +
@@ -189,8 +252,8 @@ summary(us.all.elec)
 # separate models for near elections: no election 
 us.all.noelec <- rlm(change_ln_exports ~ 
                       eu_member +  
-                        us_words + us_arms + us_troops +
-                        us_nukes + us_vis +
+                        change_us_arms + us_troops + us_nukes +
+                        total_leader_vis + total_leader_words + 
                       xm_qudsest2 +  cowmidongoing + dyadigos +
                       GDP_o + GDP_d + Distw +
                       rep_pres +
@@ -198,82 +261,4 @@ us.all.noelec <- rlm(change_ln_exports ~
                    data = filter(us.all.data, near_elec == 0))
 summary(us.all.noelec)
 
-# varying slopes model- start with exports 
 
-
-# compile model code
-vars.us.ally <- cmdstan_model("data/vars-us-ally.stan",
-                              cpp_options = list(stan_threads = TRUE))
-
-# regressors matrices
-
-# regressors: fixed
-us.reg.fixed <- as.matrix(select(us.all.data, 
-                                 xm_qudsest2, cowmidongoing, dyadigos,
-                                 GDP_o, GDP_d, Distw,
-                                 rep_pres,
-                                 Comlang, Contig, Evercol))
-
-
-us.reg.var <- as.matrix(select(us.all.data,
-                               v2clstown, mean_leader_supp, 
-                               eu_member))
-
-
-
-table(us.all.data$near_elec) 
-us.all.data$near_elec <- recode(us.all.data$near_elec,
-                                `0` = 1, `1` = 2)
-table(us.all.data$near_elec)
-
-# data
-us.ex.data <- list(
-   y = us.all.data$change_ln_exports,
-   N = nrow(us.all.data),
-   P = ncol(us.reg.fixed),
-   X = us.reg.fixed,
-   J = length(unique(us.all.data$near_elec)),
-   elec = us.all.data$near_elec,
-   L = ncol(us.reg.var),
-   Z = us.reg.var
-   )
-
-# stan model fit
-fit.us.ex <- vars.us.ally$sample(
-  data = us.ex.data,
-  seed = 12,
-  iter_warmup = 1000,
-  iter_sampling = 1000,
-  chains = 4,
-  parallel_chains = 4,
-  threads_per_chain = 4,
-  refresh = 200
-)
-fit.us.ex$cmdstan_diagnose()
-fit.us.ex$cmdstan_summary()
-
-
-# brms expression
-us.all.priors <- c(set_prior("normal(0, 1)", class = "b"),
-                   #set_prior("normal(0, 1)", class = "sd"),
-                   set_prior("normal(0, 1)", class = "sigma"))
-                   #set_prior("normal(0, 1)", class = "Intercept"))
-
-us.ally.elec <- brm(change_ln_exports ~ 
-                      v2clstown + mean_leader_supp + eu_member + near_elec + 
-                      xm_qudsest2 +  cowmidongoing + dyadigos +
-                      GDP_o + GDP_d + Distw +
-                      rep_pres +
-                      Comlang + Contig + Evercol,
-                    data = us.all.data, 
-                    prior = us.all.priors,
-                    family = "student",
-                    backend = "cmdstanr",
-                    iter = 2000,
-                    warmup = 1000,
-                    cores = 4, 
-                    chains = 4,
-                    threads = threading(4),
-                    control = list(
-                      max_treedepth = 20
-                    ))
