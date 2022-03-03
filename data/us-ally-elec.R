@@ -79,7 +79,7 @@ ggplot(us.arms.pred, aes(y = fit,
                          x = time_to_elec,
                          group = factor(atop_defense),
                          color = factor(atop_defense))) +
-   facet_wrap(~ time, scales = "free_y") +
+   facet_wrap(~ time) +
    scale_x_reverse() + # decreasing time to election
    #geom_hline(yintercept = 0) +
    geom_line() +
@@ -167,8 +167,88 @@ fit.us.ex$cmdstan_summary()
 
 
 
+### Arms sales cycles
 
-# set up analysis with allied data
+# load arms sales data
+arms.sales <- read.csv("data/us-arms-sales.csv")
+glimpse(arms.sales)
+# nothing after year- notifications
+# .1 after year- authorizations
+# .2 after year- deliveries
+
+# reshape 
+arms.sales <- pivot_longer(arms.sales,
+                           cols = -c(country),
+                           names_to = "year",
+                           values_to = "sale")
+# label type of flow 
+arms.sales$year <- as.numeric(str_remove(arms.sales$year, "X"))
+arms.sales$flow <- round(arms.sales$year%%1 * 10)
+arms.sales$flow <- recode(arms.sales$flow, `0` = "notif",
+                          `1` = "author",
+                          `2` = "deliv")
+# clean up years and flow
+arms.sales$year <- round(arms.sales$year)
+arms.sales$sale <- as.numeric(gsub("[[:punct:]]", "", arms.sales$sale))
+# sales in billions
+arms.sales$sale <- arms.sales$sale / 1000000
+summary(arms.sales$sale)
+# Set NA to zero
+arms.sales$sale[is.na(arms.sales$sale)] <- 0
+
+# log transform
+arms.sales$sale <- log(arms.sales$sale + 1)
+
+# add countrycode 
+arms.sales$ccode <- countrycode(arms.sales$country,
+                                origin = "country.name",
+                                destination = "cown")
+arms.sales$ccode[arms.sales$country == "Serbia"] <- 345
+
+# remove non-countries 
+arms.sales <- drop_na(arms.sales, ccode)
+
+# plot sales overall
+ggplot(arms.sales, aes(x = sale,
+                       group = flow,
+                       fill = flow)) +
+   geom_histogram(position = position_dodge())
+
+# plot flows over time 
+arms.sales.yr <- arms.sales %>%
+                  group_by(year, flow) %>%
+                  summarize(
+                     sales = sum(sale, na.rm = TRUE),
+                     .groups = "keep"
+                  )
+
+ggplot(arms.sales.yr, aes(x = year, y = sales,
+                          group = flow,
+                          color = flow)) +
+   geom_line() +
+   geom_vline(xintercept=c(pres.elections), linetype="dotted") +
+   xlim(2000, 2020)
+
+# pivot wider and add covariates 
+us.arms.sales <- pivot_wider(arms.sales,
+                             id_cols = c("country", "ccode", "year"),
+                             names_from = "flow",
+                             values_from = "sale") %>%
+                 left_join(us.trade.ally) %>%
+                 group_by(ccode, year) %>%
+                 mutate(
+                    lag_author = lag(author),
+                    lag_deliv = lag(deliv)
+                 )
+
+# correlation between sales and arms: stronger in year than with lags
+cor.test(us.arms.sales$author, us.arms.sales$us_arms)
+cor.test(us.arms.sales$deliv, us.arms.sales$us_arms)
+
+
+
+
+### Signals to allies and exports 
 
 # us signals
 us.signals <- read.csv("data/revise-latent-supp/Individual Signals Dataset.csv", header=TRUE) %>% 
