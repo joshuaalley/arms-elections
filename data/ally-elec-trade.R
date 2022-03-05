@@ -16,7 +16,8 @@ us.trade.total <- us.trade.ally %>%
                      #total_imports = sum(ln_imports, na.rm = TRUE),
                      total_imports_change = sum(change_ln_imports, na.rm = TRUE),
                      time_to_elec = min(time_to_elec),
-                     cold_war = max(cold_war, na.rm = TRUE)
+                     cold_war = max(cold_war),
+                     .groups = "keep"
                    ) %>% # remove pure NA w/ sum = 0
                   filter(year >= 1950) %>%
                   pivot_longer(
@@ -26,32 +27,26 @@ us.trade.total <- us.trade.ally %>%
                   )
 
 
-ggplot(us.trade.total, aes(x = year, y = value,
-                           group = trade, color = trade)) +
-  geom_line(size = 1, alpha = .75) +
-  geom_vline(xintercept=c(pres.elections), linetype="dotted") 
-
 ggplot(us.trade.total, aes(x = factor(time_to_elec), y = value)) +
   facet_wrap(~ trade,
              labeller = labeller(trade = c("total_exports_change" = "Exports",
-                                   "total_imports_change" = "Imports",
-                                   "total_trade_change" = "Total Trade"))) +
+                                           "total_imports_change" = "Imports",
+                                           "total_trade_change" = "Total Trade"))) +
   geom_boxplot(outlier.shape = NA) +
-  ylim(-15, 15) +
+  ylim(-10, 10) +
   labs(y = "Annual Trade Change",
        x = "Years to Presidential Election")
 ggsave("figures/us-trade-cycles.png", height = 6, width = 8)
 
 
 # cold war split
-ggplot(us.trade.total, aes(x = factor(time_to_elec), y = value)) +
-  facet_wrap(~ cold_war + trade,
-             nrow = 2,
+ggplot(us.trade.total, aes(x = factor(time_to_elec), y = value,
+                           color = factor(cold_war))) +
+  facet_wrap(~ trade,
+             nrow = 3,
              labeller = labeller(trade = c("total_exports_change" = "Exports",
                                            "total_imports_change" = "Imports",
-                                           "total_trade_change" = "Total Trade"),
-                                 cold_war = c(`0` = "Post-Cold War",
-                                              `1` = "Cold War"))) +
+                                           "total_trade_change" = "Total Trade"))) +
   geom_boxplot(outlier.shape = NA) +
   ylim(-15, 15) +
   labs(y = "Annual Trade Change",
