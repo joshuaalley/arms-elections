@@ -210,16 +210,6 @@ In anticipation of elections, leaders undertake political business cycles by usi
 Given strong central bank interdependence, which is common in most alliance patrons, fiscal cycles are more likely \citep{ClarkHallerberg2000}. 
 
 
-% increased domestic consumption- imports rise
-Greater economic growth from political budget cycles increases domestic consumption.
-This increases demand for imported goods. 
-Electoral cycles in imports follow, as consumption shifts with economic expansions and contractions from political budget cycles.  
-
-
-% more focused efforts- impact exports
-Generic export cycles are less likely, because 
-
-
 % targeted and flexible policies 
 Fiscal and monetary policies are relatively blunt policy instruments, however. 
 Aggregate budgets have less flexibility, as leaders often lack discretion in how to spend allocated resources. 
@@ -254,6 +244,12 @@ Close security cooperation and economic integration of defense industries create
 \citet{Thurneretal2019} find that the relative importance of security and economic factors fluctuates, but alliances consistently increase arms transfers.
 
 
+% positive statecraft tie-in from Baldwin 
+
+
+% Sales and transfers- who pays for what
+
+
 % sending arms: political benefits for patron and proteges
 Electoral cycles in arms transfers thus have political benefits for patron and protege leaders.
 Patrons gain additional flexibility to manipulate economic conditions.
@@ -271,6 +267,16 @@ Arms transfers also fall under direct leader control in the protege, which gives
 Arms imports are more flexible than trade policy. 
 To give a related example, political control over firms increases trade policy flexibility \citep{Davisetal2019}.
 As the customer for arms, the protege government has direct control over import decisions.
+
+
+% increased domestic consumption- imports rise
+Electoral cycles in fiscal and monetary policy impact other trade ties as well. 
+Greater economic growth from political budget cycles increases domestic consumption.
+This increases demand for imported goods. 
+Electoral cycles in imports follow, as consumption shifts with economic expansions and contractions from political budget cycles.  
+
+
+% Net implications: total trade increases and trade balances unchanged
 
 
 % Result- increased exports, tied to electoral cycles
@@ -330,33 +336,31 @@ Finally, I test the final link in the argument chain with an analysis of defense
 
 
 
-\section{Major Power Exports to Allies}
+\section{Electoral Cycles in U.S. Exports to Allies}
 
-To test the first hypothesis, I analyze democratic major power trade with junior alliance partners. 
-I expect that when an election could replace leaders who have signaled greater commitment to their alliance partners, patron state exports to junior partners will increase.
-Outside election years, support signals will reduce economic leverage over allies.
-This implies a negative constituent term on the leader support variable and a positive interaction between leader signals of support and time to the election.
-
-
-Following \citet{DigiuseppeShea2021}, I measure leader commitment to each allied state using the latent commitment measure of \citet{McManusNieman2019}, refit to a sample of allied states without the alliance variable. 
-Using this measure means that I employ a dyadic dataset of trade relations between the United States, France and United Kingdom and their non-major power allies from 1950 to 2012.\footnote{The analysis stops in 2012 due to limits on the major power support measure.}
-Because reputations adhere to leaders, I measure commitment as the moving average of support across each leader's tenure. 
-Increased support implies that a leader is more supportive and thus more valuable to allies than likely alternatives.
-I then employ elections data from the National Elections across Democracy and Autocracy (NELDA) dataset \citep{HydeMarinov2012} to identify election years.
-Finally, I interact the moving average of protege support with a dummy indicator of election years.
+To test the first hypothesis, I analyze U.S. trade from 1950 to 2014. 
+This analysis presents electoral trade cycles, then establishes that allies drive electoral export cycles.
+The key independent variable is a dummy indicator of a defensive alliance between the United States and each state, drawn from the ATOP database \citep{Leedsetal2002}.
+I then employ elections data from the National Elections across Democracy and Autocracy (NELDA) dataset \citep{HydeMarinov2012} to identify presidential election years and calculate years to the election.
+The years to election variable ranges from zero in election years to three in the year immediately after an election.
+Finally, I interact the defensive alliance dummy with the years to election variable.
 
 
-The outcome of interest is annual changes in the natural log of exports, but I also model total trade, imports, and the trade balance to assess the net impact of export changes.
-Estimating models of changes allows me to include dyadic fixed effects.\footnote{Fixed effects in dynamic models often bias estimates \citep{Nickell1981}. Results are robust to dynamic models without fixed effects. See the appendix for details.}
-Furthermore, lagged trade flows have unit roots or near unit root coefficients, so models in levels risk spurious inferences.
+For U.S. exports, my argument makes three predictions about the interaction between alliances and years to election. 
+First a positive constituent term on the defensive alliance variable, which indicates that allies take more exports than non-allies in election years, when time to election is zero.
+Second, I expect a negative constituent term on years to election as non-allied states respond to political business cycles in other ways.
+Last, and most importantly, a negative interaction between alliances and time to the election, which suggests that exports to allies are more responsive to elections than exports to states without a defensive alliances with the United States.
+
+
+The key outcome is annual changes in the natural log of exports, but I also model changes in total trade, imports, and the trade balance to assess the net impact of export changes.
+I use changes because models in levels with a lagged dependent variable suggest non-stationarity in many panels. 
+Because lagged trade flows have unit roots or near unit root coefficients, models in levels risk spurious inferences.
 I draw on exports and imports data from the IMF's direction of trade statistics database.
 
 
-In addition to the interaction of time to elections and leader support for allies, I include a series of control variables that may be correlated with alliances and trade. 
-%The lagged trade balance addresses temporal autocorrelation in trade ties.
-I adjust for changes in the GDP of both states \citep{FouquinHugot2016}, democracy \citep{Marquez2016}, the presence of a militarized interstate dispute \citep{Gibleretal2016}, shared IGO membership \citep{Pevehouseetal2020} and whether an incumbent leader is running.\footnote{Some dyadic data from the \textit{peacesciencer} \textsf{R} package \citep{peacesciencer-package}.}
-Finally, I include dummy indicators of years before and after elections.
-% population-weighted distance, contiguity, common language, former colonial ties, 
+In addition to the interaction of time to elections and a defensive alliance, I include a series of control variables that may be correlated with alliances and trade. 
+Key trade variables include for changes in the GDP of both states, population-weighted distance, contiguity, common language and former colonial ties \citep{FouquinHugot2016}.
+I also adjust for democracy \citep{Marquez2016}, the presence of a militarized interstate dispute \citep{Gibleretal2016}, and shared IGO membership \citep{Pevehouseetal2020}.\footnote{Some dyadic data from the \textit{peacesciencer} \textsf{R} package \citep{peacesciencer-package}.}
 
 
 Some trade flow changes are unusual. 
@@ -364,156 +368,96 @@ This creates heavy-tailed residuals, so I employ a robust regression estimator; 
 Robust regression places less weight on unusual observations, making it more efficient than OLS for this particular outcome.
 
 
-Dyadic data is also clustered, which can generate misleading regression estimates.
-I account for this in two ways. 
-First, all models I report here include dyadic fixed effects.
-As a result, I estimate the association between leader support, elections and trade within patron-protege dyads. 
-Fixed effects estimate within-dyad changes in exports as leader signals of support shift.
-Second, I adjust the standard errors for dyadic clustering using the sandwich estimator of \citep{Aronowetal2015}.
-
-
-
 
 \subsection{Results}
 
 
-As prior support signals by a major power leader increase, exports to non-major power allies increase during election years. 
-\autoref{fig:mp-model-coefs} presents coefficient estimates from models of changes in exports, imports, total trade and the trade balance. 
-As expected, the interaction between mean leader support and the election year dummy is positive, which implies that leaders who have signaled more support to allies export more to that ally in election years. 
-Moreover, the mean leader support signals constituent term is negative in all models, but not clearly so. 
-The positive election constituent term is harder to interpret, because it reflects the impact of an election when average leader support is zero and the latent support measure never equals zero. 
+Raw trade data clearly shows electoral cycles in U.S. exports, imports and total trade. 
+\autoref{fig:us-trade-cycles} presents the distribution of changes in exports, imports and overall trade in years with differing electoral proximity.
+Box plots summarize the distribution of U.S. trade with all states in those years. 
+The dark line in each box plot marks the median value. 
+
 
 
 \begin{figure}
 \centering
 \includegraphics[width=0.95\textwidth]{../figures/us-trade-cycles.png}
-\caption{Electoral Cycles in U.S. trade.}
+\caption{Electoral cycles in U.S. trade between 1950 and 2014. Each box plot summarizes the distribution of changes in logged exports, imports, and overall trade as a presidential election approaches. The thick black line in each plot marks the median value.}
 \label{fig:us-trade-cycles}
 \end{figure}
 
 
+While there is ample variation in export changes across all years, the median change in exports is higher in the year before or year of a presidential election.
+Imports also rise, though they are extremely variable in the year before an election. 
+As a result of increasing exports and imports, total trade often increases, especially in presidential election years.
 
-% marginal effects
-The sign and confidence intervals of the interaction terms are inadequate evidence of a conditional relationship \citep{BramborClarkGolder2006}, so I plot predicted changes in trade flows in \autoref{fig:me-plots-mp}.
-This figure presents predicted changes in trade across the range of mean leader support with and without election years. 
-Given the non-linear relationships from logged trade flows and a robust estimator, these predictions are more straightforward to interpret than marginal effects.\footnote{I present marginal effects in the appendix.} 
+
+\autoref{fig:us-trade-cycles} shows electoral cycles in U.S. trade, but it does not clarify which states are driving those trade differences. 
+\autoref{tab:us-trade-coefs} presents coefficient estimates from the robust regression models. along with 95\% confidence intervals in parentheses. 
+These estimates suggest that allies drive U.S. export cycles, but all states respond to elections with increased exports to the United States. 
+
+
+\input{../figures/us-trade-coefs.tex}
+
+
+As expected, the interaction between the defensive alliance dummy and years to election is negative, which implies that allies receive more U.S. exports as presidential elections approach.
+Allies receive more U.S. exports in general, and respond especially strongly to elections when doing so.
+
+
+The interaction term for imports suggests no clear difference in U.S. imports around elections between allies and non-allied states. 
+Moreover, the time to election constituent term is negative for all outcomes, except the trade balance. 
+Trade changes approximate the track of exports. 
+Simultaneous increases in imports and exports have a more uncertain impact on trade balances.
+ 
+
+
+% predicted
+The sign and confidence intervals of the interaction terms are inadequate evidence of a conditional relationship \citep{BramborClarkGolder2006}, so I plot predicted changes in trade flows in \autoref{fig:us-elec-pred}.
+This figure presents predicted changes in trade across time to election for states with and without a U.S. defense pact. 
+Given non-linear relationships from logged trade flows and a robust estimator, these predictions are more straightforward to interpret than marginal effects.\footnote{I present marginal effects in the appendix.} 
 
 
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{../figures/us-elec-pred.png}
-	\caption{Predicted changes in trade between the the United States and non-major powers. Points lines mark the predictions and error bars summarize the 95\% confidence interval.}
+	\caption{Predicted changes in trade between the the United States and other states. Points mark the predictions and error bars summarize the 95\% confidence interval.}
 	\label{fig:us-elec-pred}
 \end{figure}
 
 
-The positive interaction between elections and leader support in the model of democratic major power exports reflects a slight increase in exports in election years and falling exports outside of elections. 
-In non-election years, greater average support from the incumbent leader reduces major power exports. 
-A clear positive difference between election and non-election years at the highest values of mean leader support results. 
+The predicted changes in exports, imports, total trade and the trade balance are consistent with inferences from the coefficient estimates. 
+While U.S. exports to non-allies rise somewhat with election proximity, exports to allied states rise far more. 
+Allied and non-allied export changes are comparable until the year before and year of U.S. presidential elections, and after that, allied exports increase by far more. 
 
 
 % time to election
-Imports are less responsive to electoral cycles and leader support. 
-A similar pattern might obtain, but predicted imports in election and non-election years at any level of leader support are largely indistinguishable. 
-There is a potential difference in total trade, but given limited import fluctuations, this difference is less pronounced than changes in exports. 
-Finally, inferences about electoral differences in trade balances across the range of leader support are uncertain.
+U.S. imports increase as presidential elections approach, and there is little difference in the trend between allies and other states. 
+This is the result of political budget cycles boosting domestic consumption, which do not target specific goods.
+Imports from allies are consistently greater than imports from non-allies, however, which is consistent with prior work on alliances and trade promotion \citep{GowaMansfield2004}. 
 
 
-% control variables show other suggestive evidence of a cycle
-Some of the other estimates in \autoref{fig:mp-model-coefs} and \autoref{fig:me-plots-mp} suggest an electoral cycle in democratic major power trade with allies.
-Incumbent leaders reduce exports, but democratic major power trade balances with allies also increase before an election.
-Furthermore, allied democracy is associated with greater exports from democratic major powers and more positive trade balances.
+Differences in exports produce distinct electoral trade cycles between states with a U.S. defense treaty and those without. 
+Non-allies increase imports and exports in similar ways as elections approach. 
+As a result, their total trade changes increase with election proximity, but less so than allies. 
+
+
+Trade balances, a common concern among some policymakers, show less evidence of electoral cycles. 
+U.S. trade deficits with allies narrow somewhat around elections, but expand with non-allies, as imports rise more than exports. 
+Uncertainty in these estimates makes distinguishing the estimates between and within the two groups difficult.
 
 
 % improved trade balance
-These results are consistent with the economic changes hypothesis. 
-When leaders demonstrate alliance commitment, exports to allies are higher in election years than non-election years.
-In the next analysis, I show that in the United States, election year exports are concentrated in electorally competitive states.
+These results are consistent with the export cycles hypothesis. 
+Exports to allies increase more near elections than exports to non-allies.
+In the next analysis, I show that these differences in exports are the result of arms transfers.
 
 
 
-\section{Swing States and U.S. Exports to Allies in Election Years}
+\section{Arms Transfers and Presidential Elections}
 
 
-Greater U.S. exports to allied states during election years concentrate in swing states.
-In election years, allied states import more goods than other states, especially from important electoral states.
-The result holds across two measures of electoral importance--- prior electoral competitiveness and pivot proximity \citep{Wright2009}.
-
-
-To examine state trade in election years, I fit two gravity models of trade to a dyadic dataset of logged exports from U.S. states to foreign countries during election years.
-This analysis employs exports data from the St. Louis Federal Reserve and includes elections from 2002 to 2020.
-The key independent variables are a dummy indicator of whether the destination country has a defense pact with the United States and two separate measures of electoral competition. 
-Because I expect that allies will be more likely to import from electorally competitive areas to maximize the impact of their economic policy changes, allied imports from swing states should be higher than imports from other states in election years. 
-The first electoral competition measure is the difference in the two-party vote share in the last presidential election.
-Smaller differences in the vote share imply greater competition.
-The second measure captures a state's pivot proximity in the election results. 
-The pivot state is the state that, after ranking states by the vote share of the winner, gives the winner 270 electoral votes \citep{Wright2009}.
-Keeping the same ranking orders states by distance from the pivot in positive and negative directions--- proximity is the absolute value of this distance. 
-Pivot proximity thus encompasses vote share and electoral college considerations. 
-A low pivot proximity score implies a state was closer to providing the winning margin and was thus more important, while high proximity distance indicates that a state was unlikely to put the winning candidate over the top.\footnote{To maximize the number of elections in this analysis, I do not examine the conditioning effect of prior leader support, as the latent support measure only runs through 2010.} 
-
-
-Because smaller pivot proximity and vote differences imply greater competition, I expect that the interaction of U.S. alliance and these variables will be negative, as allied trade with less important states falls off.
-The U.S. alliance constituent term should be positive, as alliances support trade most in states with low past vote differences and pivot proximity.
-The overall effect of alliances will likely be positive \citep{GowaMansfield2004, Fordham2010}, but it will be strongest in swing states. 
-I have no strong expectations about the electoral competition constituent term.
-
-
-These models adjust for correlates of alliances, electoral competition and trade.
-First, standard gravity model controls include the logged population and GDP of each state and corresponding country destination. 
-I also adjust for the reelection years of George W. Bush, Barack Obama and Donald Trump with separate dummy indicators, as well as the exchange rate and government spending as a share of GDP in the destination state. 
-A lagged dependent variable adjusts for temporal autocorrelation in dyadic exports.
-To account for dyadic clustering, especially the diffusion of electoral competition in a state across dyads, I employ a cluster-robust sandwich estimator for the standard errors \citep{Aronowetal2015}.
-
-
-
-\subsection{Results}
-
-As expected, allied states import more from U.S. states than other countries during election years. 
-U.S. exports to allies also concentrate in electoral college battlegrounds. 
-This is consistent with claims that allies make strategic economic concessions. 
-
-
-\autoref{fig:state-model-coefs} presents the coefficient estimates from the two primary regression models. 
-The constituent term for the alliance variable is positive, which indicates that when vote difference is zero, or a state was pivotal in the Electoral College, allied states import more than other states. 
-Among non-allied states, electoral salience does not have a clear association with exports. 
-The negative interactions between alliances and electoral competition measures indicate that decreasing electoral salience reduces the association between an alliance and exports. 
-
-
-
-\begin{figure}[htpb]
-	\centering
-		\includegraphics[width=0.95\textwidth]{../figures/state-model-coefs.png}
-	\caption{Coefficient estimates from a gravity model of exports from U.S. states to foreign countries, 2002 to 2020. Points mark the coefficient estimates and error bars summarize 95\% confidence intervals.}
-	\label{fig:state-model-coefs}
-\end{figure}
-
-
-The control variables in the model are also generally sensible. 
-Increasing GDP in the state of origin and international destination both increase exports. 
-Trump's 2020 reelection campaign is associated with far lower exports than other elections due to the Covid-19 pandemic. 
-
-
-To show the interactions, \autoref{fig:me-all-state} presents the estimated marginal effect of an alliance on exports across the range of electoral competition. 
-Regardless of prior election vote differences or proximity to the electoral pivot, allies still import more than other states.
-The positive association between alliances and trade in election years is stronger in more competitive states, however. 
-This implies that allies seek out swing state exports during election years. 
-
-
-\begin{figure}[htpb]
-	\centering
-		\includegraphics[width=0.95\textwidth]{../figures/me-all-state.png}
-	\caption{Estimated marginal effect of an alliance on exports from U.S. states to foreign countries across two measures of electoral competitiveness, 2002 to 2020. Smaller vote difference or pivot proximity implies greater electoral competition.}
-	\label{fig:me-all-state}
-\end{figure}
-
-
-Allies make targeted economic changes in election years. 
-U.S. allies concentrate their imports in states that are electorally crucial.
-This analysis does not show whether supply or demand drives theses export patterns, however. 
-Both paths are plausible. 
-Regardless of whether allies seek exports from competitive states, or take on more goods from swing states where politicians want to bolster prosperity to win elections, they faciliate trade flows for electoral advantage. 
-%As I show in the appendix, these interactions, as well as the conditional relationship between prior leader support and trade around elections, are robust to alternative interaction specifications and functional forms \citep{Hainmuelleretal2019}.
+I model arms transfers using data from the SIPRI Arms Transfer Database \citep{SIPRI2021}.
+The outcome in this analysis is a 
 
 
 
