@@ -393,11 +393,16 @@ As a result of increasing exports and imports, total trade often increases, espe
 
 
 \autoref{fig:us-trade-cycles} shows electoral cycles in U.S. trade, but it does not clarify which states are driving those trade differences. 
-\autoref{tab:us-trade-coefs} presents coefficient estimates from the robust regression models. along with 95\% confidence intervals in parentheses. 
+\autoref{fig:us-trade-coefs} presents coefficient estimates from the robust regression models. along with 95\% confidence intervals in parentheses. 
 These estimates suggest that allies drive U.S. export cycles, but all states respond to elections with increased exports to the United States. 
 
 
-\input{../figures/us-trade-coefs.tex}
+\begin{figure}
+\centering
+\includegraphics[width=0.95\textwidth]{../figures/us-trade-coefs.png}
+\caption{Robust regression coefficients from models of U.S. trade, 1950 to 2014. Points mark coefficient estimates and error bars encapsulate 95\% confidence intervals. All continuous predictors rescaled by two standard deviations.}
+\label{fig:us-trade-coefs}
+\end{figure}
 
 
 As expected, the interaction between the defensive alliance dummy and years to election is negative, which implies that allies receive more U.S. exports as presidential elections approach.
@@ -449,7 +454,7 @@ Uncertainty in these estimates makes distinguishing the estimates between and wi
 % improved trade balance
 These results are consistent with the export cycles hypothesis. 
 Exports to allies increase more near elections than exports to non-allies.
-In the next analysis, I show that these differences in exports are the result of arms transfers.
+In the next section, I show that these differences in exports are the result of arms transfers, and transfers follow from increased defense contracting.
 
 
 
@@ -457,8 +462,35 @@ In the next analysis, I show that these differences in exports are the result of
 
 
 I model arms transfers using data from the SIPRI Arms Transfer Database \citep{SIPRI2021}.
-The outcome in this analysis is a 
+The outcome in this analysis is annual changes in logged arms transfers.
+I cannot use the same estimation strategy, however, because 60\% of the observations have zero observed arms transfers, and thus a change of zero.
+Such zero-inflation makes standard regression techniques impractical.
+To overcome this issue, I use a two-stage approach. 
 
+
+In the first stage, I model a binary indicator of non-zero arms transfers with a logistic regression. 
+The logistic regression predicts U.S. arms transfer presence with the defensive alliance dummy, dummy indicators of the Cold War, EU membership and Republican presidencies, recipient democracy, shared IGO membership and MID participation. 
+I also include indicators of U.S. and recipient GDP, population-weighted distance, along with binary measures of common language, contiguity and colonial history. 
+
+
+The second stage model is a robust regression --M-estimation with Tukey's biweight function-- of all non-zero changes in arms that adds the predicted probability of non-zero arms transfers to predictors as the model of changes in exports.
+I interact defense pacts and time to election to capture differences in electoral cycles between U.S. allies and non-allies. 
+Other controls match the exports model, encapsulating economic, cultural, and distance in ties between the United States and other states.
+As a result, this model approximates a hurdle from zero to positive arms transfers.
+
+
+\subsection{Results}
+
+\autoref{fig:us-arms-plots} shows the key estimates from this robust hurdle model.
+These predicted changes in arms transfers and estimated marginal effect of defensive alliances match the regression coefficients.
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{../figures/us-arms-plots.png}
+	\caption{Predicted out and the marginal impact of defensive alliances on changes in the log of arms transfers between the United States and other states 1950 to 2014. Points mark the estimates and error bars summarize the 95\% confidence interval.}
+	\label{fig:us-arms-plots}
+\end{figure}
 
 
 

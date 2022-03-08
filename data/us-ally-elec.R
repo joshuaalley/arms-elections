@@ -22,16 +22,18 @@ us.arms.comp <- select(us.trade.ally,
 
 # non-zero arms
 us.arms.nz <- glm(nz_us_arms ~ 
-                     atop_defense + 
-                     rep_pres + cold_war +
+                     atop_defense + cold_war +
+                     rep_pres + eu_member +
                      xm_qudsest2 +  cowmidongoing + dyadigos +
-                     GDP_o + GDP_d + Distw + eu_member +
+                     GDP_o + GDP_d + Distw + 
                      Comlang + Contig + Evercol,
                   data = us.arms.comp,
                   family = binomial(link = "logit"))
 summary(us.arms.nz)
 
-
+table(us.arms.comp$nz_us_arms)
+table(us.arms.comp$cold_war)
+table(us.arms.comp$nz_us_arms, us.arms.comp$cold_war)
 
 
 # predicted prob of non-zero arms
@@ -75,13 +77,12 @@ us.arms.pred <- bind_rows(
 )
 
 # plot
-ggplot(us.arms.pred, aes(y = fit, 
+pred.ch.usarms <- ggplot(us.arms.res[[2]], aes(y = fit, 
                          x = time_to_elec,
                          group = factor(atop_defense),
                          color = factor(atop_defense))) +
-   facet_wrap(~ time) +
    scale_x_reverse() + # decreasing time to election
-   #geom_hline(yintercept = 0) +
+   geom_hline(yintercept = 0) +
    geom_line() +
    geom_pointrange(aes(ymin = lwr, ymax = upr),
                    position = position_dodge(width = .1)) +
@@ -89,9 +90,10 @@ ggplot(us.arms.pred, aes(y = fit,
                     start = 0.7,
                     end = 0.1,
                     labels = c(`0` = "No", `1` = "Yes")) +
-   labs(y = "Predicted Arms Exports",
-        x = "Years to Election")
-
+   labs(title = "Predicted Change in Arms Transfers",
+        y = "Predicted Change in Log Arms Exports",
+        x = "Years to Presidential Election")
+pred.ch.usarms
 
 # combine marginal effects  
 us.arms.me <- bind_rows(
@@ -100,18 +102,27 @@ us.arms.me <- bind_rows(
 )
 
 # plot
-ggplot(us.arms.me, aes(y = dydx, 
+me.ch.usarms <- ggplot(us.arms.res[[1]], aes(y = dydx, 
                        x = time_to_elec)) +
-   facet_wrap(~ time, scales = "free_y") +
    scale_x_reverse() +
    geom_hline(yintercept = 0) +
    geom_line() +
    geom_pointrange(aes(
       ymin = dydx - 1.96*std.error,
       ymax = dydx + 1.96*std.error),
-      position = position_dodge(width = .1)) +
-   labs(y = "Estimated Marginal Effect of Alliance",
-        x = "Years to Election")
+      position = position_dodge(width = .1)
+      ) +
+   labs(title = "Marginal Impact of Alliance on Arms Transfer Changes",
+        y = "Estimated Marginal Effect of Alliance",
+        x = "Years to Presidential Election")
+me.ch.usarms
+
+# combine and export
+grid.arrange(pred.ch.usarms, me.ch.usarms, nrow = 1)
+us.arms.plots <- arrangeGrob(pred.ch.usarms, me.ch.usarms)
+ggsave("figures/us-arms-plots.png", us.arms.plots, height = 6, width = 8)
+
+
 
 
 ### hurdle models instead 
@@ -288,7 +299,7 @@ us.all.data <- filter(us.trade.ally, atop_defense == 1) %>%
                 v2clstown, mean_leader_supp, 
                 mean_party_supp, us_words, us_arms, change_us_arms, us_troops,
                 us_nukes, us_vis, total_leader_words, total_leader_vis,
-                  eu_member, near_elec, 
+                  eu_member, time_to_elec, near_elec,
                   xm_qudsest2, cowmidongoing, dyadigos,
                   GDP_o, GDP_d, Distw,
                   rep_pres,
@@ -303,9 +314,9 @@ us.all.data[, 5:ncol(us.all.data)] <- apply(us.all.data[, 5:ncol(us.all.data)],
                               arm::rescale(x, binary.inputs = "0/1"))
 
 
-# separate models for near elections 
+# overall model 
 us.all.supp <- rlm(change_ln_exports ~ 
-                      eu_member +  
+                      time_to_elec + eu_member +  
                       change_us_arms + us_troops + us_nukes +
                       total_leader_vis + total_leader_words + 
                       xm_qudsest2 +  cowmidongoing + dyadigos +
@@ -316,10 +327,37 @@ us.all.supp <- rlm(change_ln_exports ~
 summary(us.all.supp)
 
 
+# interact election timing 
+us.all.supp <- rlm(change_ln_exports ~ 
+                      time_to_elec*us_troops + time_to_elec*us_nukes +
+                      time_to_elec*total_leader_vis + 
+                      time_to_elec*total_leader_words + 
+                      xm_qudsest2 +  cowmidongoing + dyadigos +
+                      GDP_o + GDP_d + Distw +
+                      rep_pres + eu_member + 
+                      Comlang + Contig + Evercol,
+                   data = us.all.data)
+summary(us.all.supp)
+
+
+# overall model: arms
+us.all.supp <- rlm(change_us_arms ~ 
+                      eu_member +  
+                      time_to_elec*us_troops + time_to_elec*us_nukes +
+                      time_to_elec*total_leader_vis + 
+                      time_to_elec*total_leader_words + 
+                      xm_qudsest2 +  cowmidongoing + dyadigos +
+                      GDP_o + GDP_d + Distw +
+                      rep_pres +
+                      Comlang + Contig + Evercol,
+                   data = us.all.data)
+summary(us.all.supp)
+
+
 # separate models for near elections 
-us.all.elec <- rlm(change_ln_exports ~ 
+us.all.elec <- rlm(change_us_arms ~ 
                      eu_member +  
-                      change_us_arms + us_troops + us_nukes +
+                      us_troops + us_nukes +
                       total_leader_vis + total_leader_words + 
                      xm_qudsest2 +  cowmidongoing + dyadigos +
                      GDP_o + GDP_d + Distw +
@@ -330,9 +368,9 @@ summary(us.all.elec)
 
 
 # separate models for near elections: no election 
-us.all.noelec <- rlm(change_ln_exports ~ 
+us.all.noelec <- rlm(change_us_arms ~ 
                       eu_member +  
-                        change_us_arms + us_troops + us_nukes +
+                        us_troops + us_nukes +
                         total_leader_vis + total_leader_words + 
                       xm_qudsest2 +  cowmidongoing + dyadigos +
                       GDP_o + GDP_d + Distw +

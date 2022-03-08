@@ -95,4 +95,14 @@ ggplot(us.arms.sum, aes(x = factor(time_to_elec), y = us_arms,
 ggplot(us.arms.sum, aes(x = factor(time_to_elec), y = us_arms,
                         color = factor(atop_defense))) +
      facet_wrap(~ cold_war) +
-     geom_boxplot()
+     geom_boxplot(outlier.shape = NA)
+
+
+# Japan key for intro
+us.trade.japan <- us.trade.ally %>%
+  filter(ccode == 740) %>%
+  select(year, change_ln_exports, exports, 
+         ln_exports, us_arms, change_us_arms) %>%
+  mutate(
+    us_arms_nolog = exp(us_arms)
+  )

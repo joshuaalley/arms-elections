@@ -145,7 +145,7 @@ summary(us.lnexports.elec)
 
 # close to unit root, so changes
 # model w/ log
-us.chexports.elec <- rlm(change_ln_exports ~ change_ln_imports +
+us.chexports.elec <- rlm(change_ln_exports ~ 
                           time_to_elec*atop_defense + rep_pres +
                            cold_war +
                           xm_qudsest2 +  cowmidongoing + dyadigos +
@@ -158,7 +158,7 @@ summary(us.chexports.elec)
 
 # cold war threat
 # model w/ log
-us.chexports.elec.cw <- rlm(change_ln_exports ~ change_ln_imports +
+us.chexports.elec.cw <- rlm(change_ln_exports ~ 
                            time_to_elec*atop_defense + rep_pres +
                            xm_qudsest2 +  cowmidongoing + dyadigos +
                            change_gdp_o + change_gdp_d + Distw + eu_member +
@@ -167,7 +167,7 @@ us.chexports.elec.cw <- rlm(change_ln_exports ~ change_ln_imports +
 summary(us.chexports.elec.cw)
 
 
-us.chexports.elec.pcw <- rlm(change_ln_exports ~ change_ln_imports +
+us.chexports.elec.pcw <- rlm(change_ln_exports ~ 
                               time_to_elec*atop_defense + rep_pres +
                               xm_qudsest2 +  cowmidongoing + dyadigos +
                               change_gdp_o + change_gdp_d + Distw + eu_member +
@@ -203,7 +203,7 @@ summary(us.lnimports.elec)
 
 # close to unit root, so changes
 # model w/ log
-us.chimports.elec <- rlm(change_ln_imports ~ change_ln_exports +
+us.chimports.elec <- rlm(change_ln_imports ~ 
                           time_to_elec*atop_defense + rep_pres +
                            cold_war +
                           xm_qudsest2 +  cowmidongoing + dyadigos +
@@ -288,6 +288,7 @@ ggplot(us.coef.est, aes(y = factor(variable, ordered = T,
   labs(x = "Estimate",
        y = "Term",
        color = "Model")
+ggsave("figures/us-trade-coefs.png", height = 6, width = 9)
 
 # interaction terms only
 ggplot(filter(us.coef.est, variable == "Years to Election" | 
