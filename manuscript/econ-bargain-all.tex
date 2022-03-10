@@ -37,7 +37,7 @@
 
 
 \singlespace
-\title{\textbf{Arms Transfers and Electoral Cycles in Trade Between Allies}}
+\title{\textbf{Arms Transfers and Electoral Trade Cycles Between Allies}}
 \author{Joshua Alley \\
 Postdoctoral Research Associate \\
 University of Virginia\thanks{Thanks to Brian Blankenship, Lauren Peritz, Erik Lin-Greenberg, Zachary Markovitch and participants in the Boston University Political Economy of Security Online Workshop Series for helpful comments.} \\
@@ -462,7 +462,8 @@ In the next section, I show that these differences in exports are the result of 
 
 
 I model arms transfers using data from the SIPRI Arms Transfer Database \citep{SIPRI2021}.
-The outcome in this analysis is annual changes in logged arms transfers.
+The outcome in this analysis is annual logged arms transfers.
+I model arms transfer levels because these shifts are less autocorrelated than overall exports.
 I cannot use the same estimation strategy, however, because 60\% of the observations have zero observed arms transfers, and thus a change of zero.
 Such zero-inflation makes standard regression techniques impractical.
 To overcome this issue, I use a two-stage approach. 
@@ -471,17 +472,98 @@ To overcome this issue, I use a two-stage approach.
 In the first stage, I model a binary indicator of non-zero arms transfers with a logistic regression. 
 The logistic regression predicts U.S. arms transfer presence with the defensive alliance dummy, dummy indicators of the Cold War, EU membership and Republican presidencies, recipient democracy, shared IGO membership and MID participation. 
 I also include indicators of U.S. and recipient GDP, population-weighted distance, along with binary measures of common language, contiguity and colonial history. 
+Finally, I account for duration dependence with cubic time polynomials \citep{CarterSignorino2010}.
 
 
-The second stage model is a robust regression --M-estimation with Tukey's biweight function-- of all non-zero changes in arms that adds the predicted probability of non-zero arms transfers to predictors as the model of changes in exports.
+The second stage model is a robust regression --M-estimation with Tukey's biweight function-- of all non-zero changes in arms that adds the predicted probability of non-zero arms transfers and a lagged arms transfer indicator to the predictors from the model of changes in exports.
 I interact defense pacts and time to election to capture differences in electoral cycles between U.S. allies and non-allies. 
-Other controls match the exports model, encapsulating economic, cultural, and distance in ties between the United States and other states.
+Other controls match the exports model, encapsulating economic, cultural, and distance in ties between the United States and other states. 
 As a result, this model approximates a hurdle from zero to positive arms transfers.
 
 
 \subsection{Results}
 
-\autoref{fig:us-arms-plots} shows the key estimates from this robust hurdle model.
+
+These results proceed in two parts.
+First, I present the coefficient estimates from the logistic regression of arms transfer presence and robust regression of elections, alliances and arms transfer changes in \autoref{fig:us-trade-cycles}.
+I then summarize the interaction of alliances and presidential election proximity in \autoref{fig:us-arms-plots}.
+
+
+At the arms transfer hurdle stage, defense pacts increase the likelihood of arms transfers, as does contiguity, shared IGO membership, and former colonial ties.
+Increasing allied GDP increases the likelihood of arms transfers.
+More distant states are also more likely to receive arms transfers, as the United States sells many arms outside the Western Hemisphere. 
+After accounting for alliances, increasing democracy and U.S. GDP make arms transfers less likely, as did the Cold War. 
+The negative Cold War coefficient reflects greater dispersion in U.S. arms transfers across multiple states after the USSR collapsed.
+
+
+\begin{table}
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}[t]{lcc}
+\toprule
+  & Non-Zero Arms Transfer: Logit & Arms Transfers: Robust Reg\\
+\midrule
+Defense Pact & 1.61 & 0.34\\
+ & (1.43, 1.79) & (0.13, 0.56)\\
+Years to Election &  & 0.04\\
+ &  & (-0.02, 0.10)\\
+Defense Pact x Years to Election &  & -0.08\\
+ &  & (-0.16, -0.01)\\
+Partner Democracy & -0.34 & -0.01\\
+ & (-0.51, -0.18) & (-0.12, 0.11)\\
+US GDP & -0.50 & -0.19\\
+ & (-0.76, -0.25) & (-0.37, -0.01)\\
+Partner GDP & 0.24 & 0.09\\
+ & (0.06, 0.42) & (0.01, 0.18)\\
+Pop. Weighted Distance) & 1.39 & 0.49\\
+ & (1.23, 1.56) & (0.33, 0.65)\\
+Contiguous & 1.12 & 0.59\\
+ & (0.53, 1.78) & (0.32, 0.86)\\
+Common Language & -0.04 & -0.22\\
+ & (-0.17, 0.09) & (-0.31, -0.12)\\
+Former Colony & 1.00 & 0.22\\
+ & (0.50, 1.54) & (0.04, 0.40)\\
+Ongoing MID & -0.81 & -0.20\\
+ & (-1.23, -0.40) & (-0.55, 0.15)\\
+Shared IGOs & 2.63 & 0.54\\
+ & (2.40, 2.87) & (0.25, 0.83)\\
+EU Member & -0.20 & -0.30\\
+ & (-0.52, 0.14) & (-0.48, -0.12)\\
+Cold War & -0.80 & -0.18\\
+ & (-1.04, -0.56) & (-0.37, 0.02)\\
+Republican President & -0.10 & -0.03\\
+ & (-0.23, 0.02) & (-0.12, 0.06)\\
+Lag Ln(Arms Transfers) &  & 0.61\\
+ &  & (0.58, 0.63)\\
+Pred. Prob. of Arms Transfer &  & -0.65\\
+ &  & (-1.21, -0.09)\\
+\midrule
+Num.Obs. & 7879 & 3268\\
+\bottomrule
+\end{tabular}
+}
+\caption{Coefficient estimates from a logistic regression of non-zero U.S. arms transfers and robust regression of changes in arms transfers. All continuous predictors rescaled by two standard deviations. Intercepts included but omitted from the table. The logit model estimates also omit the cubic time polynomials.}
+\label{tab:arms-ch-hurdle}
+\end{table}
+
+
+In the robust regression of arms transfer changes, states with a U.S. defense pact receive greater arms transfer changes in presidential election years. 
+As with overall exports, the difference between allies and non-allies decreases as time to an election increases.
+The key difference with the overall exports finding is that arms transfers to non-allies fall as presidential elections approach. 
+This suggests that increasing exports from non-allies to the United States around elections in \autoref{fig:us-elec-pred} concentrate in other goods. 
+
+
+Alliances and elections are not the only meaningful predictors of arms transfers.
+The level of arms transfers is less sensitive to partner democracy, but it increases with allied GDP and decreases with U.S. GDP. 
+Contiguous, more distant and former colony states also receive more transfers, as do states that share more IGO membership with the United States.
+The predicted probability of arms transfer coefficient implies that states that were more likely to receive arms are less likely to see large increases in arms. 
+Large increases in U.S. GDP reduce arms exports changes. 
+The Cold War coefficient is largely negative, perhaps as the scale of arms transfers was more limited in that period. 
+Last, there is some temporal autocorrelation in arms transfers, as the lagged dependent variable  
+
+
+Again, the coefficient estimates in \autoref{tab:arms-ch-hurdle} are imperfect indicators of how alliances and electoral proximity interact.
+\autoref{fig:us-arms-plots} therefore plots the predicted outcome and marginal effect of defense pacts based on the robust regression estimates.
 These predicted changes in arms transfers and estimated marginal effect of defensive alliances match the regression coefficients.
 
 
@@ -493,6 +575,21 @@ These predicted changes in arms transfers and estimated marginal effect of defen
 \end{figure}
 
 
+First, predicted arms transfers to U.S. allies increase as presidential elections approach.
+For a U.S. ally, predicted arms transfers rise by .14 in expectation. 
+At the same time, arms transfers to non-allies fall as elections approach. 
+
+
+As a result, while arms transfers to allies and non-allies are similar in the year after a presidential election, there is an expected gap of .34 between allies and non-allies in election years.
+This is reflected in the marginal impact of a defense pact on arms transfers, which rises as presidential elections draw closer.
+
+
+These divergent electoral cycles in arms transfers reflect divergent political relations.
+Allies have more to gain from accommodating electoral cycles in arms transfers, and can fit additional U.S. arms into their forces that already use more U.S. kit.
+Arms transfers cement cooperative relationships and bolster allied security through additional capability.
+Leaders may also face more scrutiny over arms transfers outside alliances as elections approach. 
+
+
 
 
 \section{Discussion and Conclusion}
@@ -500,9 +597,9 @@ These predicted changes in arms transfers and estimated marginal effect of defen
 
 All three results are consistent with temporary and targeted economic concessions to support committed leaders of large alliance members around elections. 
 In the appendix, I check these findings.
-First, I check for non-linear relationships and adequate support in the interactions \citep{Hainmuelleretal2019}. 
+First, I present alternative model specifications that find similar conditional relationships.
+%check for non-linear relationships and adequate support in the interactions \citep{Hainmuelleretal2019}. 
 %I also present inferences from Bayesian models that adjust for dyadic clustering through varying intercepts.
-I also present alternative model specifications that find similar conditional relationships.
 
 
 Demonstrating alliance commitment aids credible security commitments and provides contingent economic leverage. 
