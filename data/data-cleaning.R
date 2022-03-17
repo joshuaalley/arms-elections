@@ -387,15 +387,3 @@ us.trade.ally <- left_join(us.trade.ally, us.arms.sipri) %>%
 
 ggplot(us.trade.ally, aes(x = us_arms)) + geom_histogram()
 
-
-# export mp trade to iso3c codes
-unique(countrycode(dyadic.mp.ally$ccode2, origin = "cown", destination = "iso3c"))
-
-# add to text file 
-# define text file
-mp.iso3c <- file("data/mp-ally-iso3c.txt")
-# write blocks to text
-writeLines(unlist(unique(countrycode(dyadic.mp.ally$ccode2, origin = "cown", destination = "iso3c"))),
-           con = mp.iso3c,
-           sep = ";")
-close(mp.iso3c)

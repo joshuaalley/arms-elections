@@ -97,7 +97,7 @@ ggplot(drop_na(us.trade.total.all, atop_defense), aes(x = factor(time_to_elec,
   labs(y = "Annual Trade Change",
        x = "Years to Presidential Election",
        color = "Defensive Alliance")
-#ggsave("figures/us-trade-cycles-all.png", height = 6, width = 8)
+ggsave("figures/us-trade-cycles-all.png", height = 6, width = 8)
 
 
 # complete cases to use robust lm w

@@ -98,11 +98,96 @@ ggplot(us.arms.sum, aes(x = factor(time_to_elec), y = us_arms,
      geom_boxplot(outlier.shape = NA)
 
 
-# Japan key for intro
-us.trade.japan <- us.trade.ally %>%
-  filter(ccode == 740) %>%
-  select(year, change_ln_exports, exports, 
-         ln_exports, us_arms, change_us_arms) %>%
-  mutate(
-    us_arms_nolog = exp(us_arms)
-  )
+
+### Select cases for intro paragraphs
+
+# key variables for matching
+# match within election years
+casem.elec <- vector(mode = "list", length = length(pres.elections))
+
+
+for(i in 1:length(casem.elec)){
+us.trade.nearel <- as.data.frame(select(us.trade.ally,
+                       ccode, year, destination,
+                       change_ln_exports, change_ln_imports,
+                       change_ihs_balance, change_trade,
+                       time_to_elec, atop_defense, # rep_pres,
+                       xm_qudsest2, dyadigos, ln_gdp_d,
+                      Distw,# eu_member, cowmidongoing,
+                       us_arms) %>%
+                      filter(ccode >= 100 & ccode <= 920) %>%
+                      filter(year == pres.elections[i]))
+
+match.vars <- c("time_to_elec", "rep_pres",
+                "cold_war", "xm_qudsest2",  
+                "cowmidongoing", "dyadigos",
+                 "change_gdp_d", "Distw", "eu_member")
+
+drop.vars <- c("change_ln_exports", "change_ln_imports",
+               "change_ihs_balance", "change_trade",
+               "us_arms", "ccode", "destination", "atop_defense",
+               "time_to_elec", "year")
+
+casem <- case.match(data = us.trade.nearel, id.var="destination", 
+                     leaveout.vars = drop.vars,
+                     distance = "mahalanobis", case.N = 2, 
+                     number.of.matches.to.return = 10,
+                     treatment.var = "atop_defense",
+                    max.variance = TRUE)
+casem.elec[[i]] <- casem
+}
+
+names(casem.elec) <- pres.elections
+
+# combine all matched observations
+casem.elec.all <- bind_rows(casem.elec,
+                            .id = "year")
+
+
+# look at cases:
+# used this data from intro cases 
+key.cases <- filter(us.trade.ally, ccode == 651 | ccode == 640) %>%
+                select(ccode, year, atop_defense, 
+                       time_to_elec,
+                       change_ln_exports, change_ln_imports,
+                       change_ihs_balance, change_trade, us_arms,
+                       change_us_arms) 
+
+t.test(key.cases$change_ln_exports ~ key.cases$ccode)
+t.test(key.cases$us_arms ~ key.cases$ccode)
+
+key.cases.long <- key.cases %>%
+             pivot_longer(
+             cols = -c(ccode, year, time_to_elec, atop_defense),
+              names_to = "trade",
+            values_to = "value"
+            )
+
+ggplot(key.cases.long, aes(x = factor(time_to_elec,
+                        ordered = TRUE, 
+                        levels = c("3", "2", "1", "0")), 
+                        y = value,
+                        color = factor(ccode))) +
+  facet_wrap(~ trade, scales = "free_y",
+             labeller = labeller(trade = c("change_ln_exports" = "Exports",
+                                           "change_ln_imports" = "Imports",
+                                           "change_ihs_balance" = "Trade Balance",
+                                           "us_arms" = "Arms Transfers",
+                                           "change_us_arms" = "Change Arms Transfers",
+                                           "change_trade" = "Total Trade"))) +
+  geom_boxplot(outlier.shape = NA) 
+
+# all years 
+ggplot(key.cases.long, aes(x = year, 
+                                              y = value,
+                                              group = factor(ccode),
+                                              color = factor(ccode))) +
+  facet_wrap(~ trade, scales = "free_y",
+             labeller = labeller(trade = c("change_ln_exports" = "Exports",
+                                           "change_ln_imports" = "Imports",
+                                           "change_ihs_balance" = "Trade Balance",
+                                           "us_arms" = "Arms Transfers",
+                                           "change_us_arms" = "Change Arms Transfers",
+                                           "change_trade" = "Total Trade"))) +
+  geom_line()
+
