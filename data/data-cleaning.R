@@ -5,9 +5,9 @@
 
 # combine latent support with trade data
 # first create it with modified scripts
- source("data/revise-latent-supp/Generate US Support.R")
- source("data/revise-latent-supp/Generate UK Support.R")
- source("data/revise-latent-supp/Generate France Support.R")
+ # source("data/revise-latent-supp/Generate US Support.R")
+ # source("data/revise-latent-supp/Generate UK Support.R")
+ # source("data/revise-latent-supp/Generate France Support.R")
 # combine results
 latent.supp <- bind_rows(phi.us,
                          phi.fr,

@@ -19,7 +19,7 @@ us.trade.total <- us.trade.ally %>%
                      cold_war = max(cold_war),
                      .groups = "keep"
                    ) %>% # remove pure NA w/ sum = 0
-                  filter(year >= 1950) %>%
+                  filter(year > 1950 & year < 2020) %>%
                   pivot_longer(
                     cols = -c(year, time_to_elec, cold_war),
                     names_to = "trade",
@@ -47,9 +47,8 @@ cor.test(us.trade.ally$time_to_elec, us.trade.ally$change_ln_imports)
 cor.test(us.trade.ally$time_to_elec, us.trade.ally$change_trade)
 
 # cold war split
-ggplot(us.trade.total, aes(x = factor(time_to_elec), y = value,
-                           color = factor(cold_war))) +
-  facet_wrap(~ trade,
+ggplot(us.trade.total, aes(x = factor(time_to_elec), y = value)) +
+  facet_wrap(~ trade + cold_war,
              nrow = 3,
              labeller = labeller(trade = c("total_exports_change" = "Exports",
                                            "total_imports_change" = "Imports",

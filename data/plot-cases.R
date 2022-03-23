@@ -86,13 +86,21 @@ ggplot(us.arms.sum, aes(x = year, y = us_arms,
   geom_vline(xintercept=c(pres.elections), linetype="dotted") 
 
 # electoral differences: ally or not 
-ggplot(us.arms.sum, aes(x = factor(time_to_elec), y = us_arms,
+ggplot(us.arms.sum, aes(x = factor(time_to_elec,
+                                   ordered = TRUE,
+                                   levels = c("3", "2",
+                                              "1", "0")),
+                        y = us_arms,
                         color = factor(atop_defense))) +
   geom_boxplot()
 
 
 # electoral differences: ally or not: Cold War
-ggplot(us.arms.sum, aes(x = factor(time_to_elec), y = us_arms,
+ggplot(us.arms.sum, aes(x = factor(time_to_elec,
+                                   ordered = TRUE,
+                                   levels = c("3", "2",
+                                              "1", "0")), 
+                        y = us_arms,
                         color = factor(atop_defense))) +
      facet_wrap(~ cold_war) +
      geom_boxplot(outlier.shape = NA)

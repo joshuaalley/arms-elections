@@ -1,5 +1,5 @@
 # Joshua Alley
-# Set up analysis for economic bargaining in alliances
+# Set up script for economic bargaining in alliances
 
 
 # load packages

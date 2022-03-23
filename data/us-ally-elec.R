@@ -78,7 +78,7 @@ us.arms.ex <- lm(us_arms ~ lag_us_arms +
                   data = filter(us.arms.comp, nz_us_arms == 1))
 summary(us.arms.ex)
 
-# changes in arms exports: gives odd results
+# changes in arms exports: gives odd results on alliance constituent term
 us.arms.chex <- rlm(change_us_arms ~ 
                       time_to_elec*atop_defense + 
                       rep_pres + cold_war +
@@ -213,6 +213,33 @@ fit.us.arms <- arms.hurdle$sample(
 )
 fit.us.ex$cmdstan_diagnose()
 fit.us.ex$cmdstan_summary()
+
+
+# Cold War vs not
+# arms trade models
+us.arms.ex.cw <- rlm(us_arms ~ lag_us_arms +
+                    time_to_elec*atop_defense + 
+                    rep_pres +
+                    xm_qudsest2 +  cowmidongoing + dyadigos +
+                    GDP_o + GDP_d + Distw + eu_member +
+                    Comlang + Contig + Evercol + pred_nz_arms,
+                    maxit = 40,
+                 data = filter(us.arms.comp, cold_war == 1))
+summary(us.arms.ex.cw)
+
+
+# not cold war 
+# arms trade models
+us.arms.ex.ncw <- rlm(us_arms ~ lag_us_arms +
+                       time_to_elec*atop_defense + 
+                       rep_pres +
+                       xm_qudsest2 +  cowmidongoing + dyadigos +
+                       GDP_o + GDP_d + Distw + eu_member +
+                       Comlang + Contig + Evercol + pred_nz_arms,
+                      maxit = 40,
+                    data = filter(us.arms.comp, cold_war == 0))
+summary(us.arms.ex.ncw)
+
 
 
 
