@@ -9,7 +9,8 @@ us.arms.comp <- select(us.trade.ally,
                        ccode, year,
    us_arms, lag_us_arms, nz_us_arms,
    change_us_arms,
-   time_to_elec, atop_defense, 
+   time_to_elec, near_elec,
+   atop_defense, 
    rep_pres, cold_war,
    xm_qudsest2,  cowmidongoing, dyadigos,
    GDP_o, GDP_d, Distw, eu_member,
@@ -21,7 +22,7 @@ us.arms.comp <- select(us.trade.ally,
    drop_na() %>%
    ungroup()
 
-us.arms.comp[, 9:ncol(us.arms.comp)-1] <- apply(us.arms.comp[, 9:ncol(us.arms.comp)-1],
+us.arms.comp[, 10:ncol(us.arms.comp)-1] <- apply(us.arms.comp[, 10:ncol(us.arms.comp)-1],
                                               2, function(x) 
    arm::rescale(x, 
                 binary.inputs = "0/1"))
