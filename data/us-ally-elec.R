@@ -102,7 +102,7 @@ modelplot(list("Non-Zero Arms Transfer: Logit" = us.arms.nz,
                "Arms Transfers: Robust Reg" = us.arms.ex),
           coef_map =  coef.names.map)
 modelsummary(list("Non-Zero Arms Transfer: Logit" = us.arms.nz, 
-                  "Arms Transfers: Robust Reg" = us.arms.ex),
+                  "Arms Transfers: OLS" = us.arms.ex),
              fmt = 2,
              coef_map =  coef.names.map,
              estimate = "{estimate}",
@@ -130,7 +130,7 @@ pred.usarms <- ggplot(us.arms.res[[2]], aes(y = fit,
                     start = 0.7,
                     end = 0.1,
                     labels = c(`0` = "No", `1` = "Yes")) +
-   labs(title = "Predicted Arms Transfers",
+   labs(title = "Elections and Arms Exports",
         y = "Predicted Log Arms Exports",
         x = "Years to Presidential Election")
 pred.usarms
@@ -196,24 +196,24 @@ us.arms.data <- list(
 )
 
 # compile model code
-arms.hurdle <- cmdstan_model("data/stan-hurdle-logn.stan",
-                             cpp_options = list(stan_threads = TRUE))
-
-# stan model fit
-fit.us.arms <- arms.hurdle$sample(
-   data = us.arms.data,
-   seed = 12,
-   iter_warmup = 1000,
-   iter_sampling = 1000,
-   chains = 4,
-   parallel_chains = 4,
-   threads_per_chain = 4,
-   refresh = 200,
-   max_treedepth = 20,
-   adapt_delta = .90
-)
-fit.us.ex$cmdstan_diagnose()
-fit.us.ex$cmdstan_summary()
+# arms.hurdle <- cmdstan_model("data/stan-hurdle-logn.stan",
+#                              cpp_options = list(stan_threads = TRUE))
+# 
+# # stan model fit
+# fit.us.arms <- arms.hurdle$sample(
+#    data = us.arms.data,
+#    seed = 12,
+#    iter_warmup = 1000,
+#    iter_sampling = 1000,
+#    chains = 4,
+#    parallel_chains = 4,
+#    threads_per_chain = 4,
+#    refresh = 200,
+#    max_treedepth = 20,
+#    adapt_delta = .90
+# )
+# fit.us.ex$cmdstan_diagnose()
+# fit.us.ex$cmdstan_summary()
 
 
 # Cold War vs not

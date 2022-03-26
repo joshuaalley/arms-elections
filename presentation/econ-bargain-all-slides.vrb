@@ -1,0 +1,11 @@
+
+\pause
+\begin{figure}[htpb]
+\adjustbox{scale = .55}{
+%\centering
+\begin{tikzcd}
+  \mbox{Budget Cycles} \arrow[r] & \mbox{Defense Contracting} \arrow[r] & \mbox{Arms Exports} \arrow[r] & \mbox{Trade Cycles, especially arms to allies}   &
+\end{tikzcd}
+}
+\end{figure}
+

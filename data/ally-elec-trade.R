@@ -92,7 +92,7 @@ ggplot(drop_na(us.trade.total.all, atop_defense), aes(x = factor(time_to_elec,
                                            "total_trade_change" = "Total Trade"))) +
   geom_boxplot(outlier.shape = NA) +
   scale_color_grey(start = .8, end = .4) +
-  ylim(-10, 10) +
+  ylim(-6, 6) +
   labs(y = "Annual Trade Change",
        x = "Years to Presidential Election",
        color = "Defensive Alliance")
