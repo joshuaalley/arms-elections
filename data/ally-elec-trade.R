@@ -426,7 +426,7 @@ ggplot(us.elec.me, aes(y = dydx,
     position = position_dodge(width = .1)) +
   labs(y = "Estimated Marginal Effect of Alliance",
        x = "Years to Presidential Election")
-ggsave("figures/us-defense-me.png", height = 6, width = 8)
+ggsave("appendix/us-defense-me.png", height = 6, width = 8)
 
 
 

@@ -31,8 +31,8 @@
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
 
-\title{Alliances, Arms Transfers, and Electoral Trade Cycles}
-\date{April 8, 2022}
+\title{Alliances, Arms Exports, and Electoral Trade Cycles}
+\date{April 1, 2022}
 \author{Joshua Alley}
 \institute{Democratic Statecraft Lab, University of Virginia}
 
@@ -48,12 +48,33 @@
 
 %------------------------------------------------
 % Here's my question. 
- \begin{frame}[standout]
+% \begin{frame}[standout]
+%
+%How do political budget cycles affect international economic and security ties? 
+%
+%
+% \end{frame}
+ 
+  %------------------------------------------------
 
-U.S. political budget cycles expand international trade, especially arms exports to allies. 
+\begin{frame}{Monetary Policy Pressure}
 
+\pause 
+\begin{figure}[htbp]
+		\includegraphics[height=0.75\textheight]{trump-fed-tweets.png}
+\end{figure}
 
- \end{frame}
+\end{frame}
+ 
+ %------------------------------------------------
+
+\begin{frame}{Arms Sales}
+
+\begin{figure}[htbp]
+		\includegraphics[width=0.75\textwidth]{trump-sales.jpg}
+\end{figure}
+
+\end{frame}
  
  %------------------------------------------------
 
@@ -66,31 +87,8 @@ U.S. political budget cycles expand international trade, especially arms exports
 \pause 
 \item Contracting cycles lead to arms exports, especially to allies. 
 \pause
-\item \textbf{Result}: General trade increase, and allies receive more U.S. exports than other states. 
+\item \textbf{Outcome}: General trade increase, and allies receive more U.S. exports through arms. 
 \end{enumerate}
-
-\end{frame}
- 
-  %------------------------------------------------
-
-\begin{frame}{Why Should You Care?: Part 1}
-
-%\begin{figure}[htbp]
-%	\centering
-%		\includegraphics[height=.95\textheight]{p-8a-poseidon.png}
-%\end{figure}
-
-% https://www.armscontrol.org/act/2018-04/news/trump-touts-saudi-arms-sales
-
-\end{frame}
- 
- %------------------------------------------------
-
-\begin{frame}{Why Should You Care?: Part 2}
-
-% maybe trump arms initiative and trade? Saudi photo
-% juxtapose pressure on Powell to lower rates
-
 
 \end{frame}
 
@@ -125,7 +123,7 @@ In order to win elections.
 \begin{enumerate} 
 \item Leaders use fiscal and monetary policy to increase economic growth. 
 \pause 
-\item Often targeted policies, such as defense contracting.
+\item Includes more targeted policies, such as defense contracting.
 \end{enumerate}
 
 
@@ -176,40 +174,40 @@ In order to win elections.
 \item Common security interests, defense industry integration. 
 \pause
 \item Doubles as commitment signal for U.S. leaders. 
+\pause
+\item Allies gain security and establish a cooperative reputation.
 \end{enumerate}
 
 
 \end{frame} 
 
 %-----------------------------------------------
-%
-%\begin{frame}[fragile]
-%
-%\pause 
-%\begin{figure}[htpb]
-%\adjustbox{scale = .55}{
-%%\centering
-%\begin{tikzcd}         
-%  \mbox{Budget Cycles} \arrow[r] & \mbox{Defense Contracting} \arrow[r] & \mbox{Arms Exports} \arrow[r] & \mbox{Trade Cycles, especially arms to allies}   & 
-%\end{tikzcd}
-%}
-%\end{figure}
-%
-%\end{frame} 
+
+\begin{frame}[fragile]{Argument Summary}
+
+\begin{figure}[htpb]
+\adjustbox{scale = .65}{
+\begin{tikzcd}   
+  \mbox{Budget Cycles} \arrow[to = Y, bend left = 15] \arrow[r]  & \mbox{Defense Contracting} \arrow[r] & \mbox{Arms Production} \arrow[r] & |[alias=Y]| \mbox{Trade \& Arms Cycles}   & 
+\end{tikzcd}
+}
+\end{figure}
+
+\end{frame} 
 
 %-----------------------------------------------
-
-\begin{frame}{Argument Summary}
-
-\resizebox{.99\textwidth}{!}{
-\begin{tabular}{ccccccc}
-\mbox{Budget}  & $\rightarrow$    & \mbox{Defense}     & $\rightarrow$ & \mbox{Arms}     & $\rightarrow$ & \mbox{Trade Cycles} \\
-\mbox{Cycles}  &                  & \mbox{Contracting} &               &  \mbox{Exports}   &               & \mbox{with Allies} \\
-\end{tabular}
-}
-
-
-\end{frame}
+%
+%\begin{frame}{Argument Summary}
+%
+%\resizebox{.95\textwidth}{!}{
+%\begin{tabular}{ccccccc}
+%\mbox{Budget}  & $\rightarrow$    & \mbox{Defense}     & $\rightarrow$ & \mbox{Arms}     & $\rightarrow$ & \mbox{Trade Cycles \&} \\
+%\mbox{Cycles}  &                  & \mbox{Contracting} &               &  \mbox{Production}   &               & \mbox{Arms to Allies} \\
+%\end{tabular}
+%}
+%
+%
+%\end{frame}
 
 %-----------------------------------------------
 
@@ -264,7 +262,7 @@ Analyze changes in US trade with all other states, 1951 to 2019.
 
 %------------------------------------------------
 
-\section{Defense Contracting and Arms Transfer Cycles} 
+\section{Arms Export Cycles} 
 
 %-----------------------------------------------
 
@@ -274,13 +272,13 @@ Analyze changes in US trade with all other states, 1951 to 2019.
 Analyze US arms exports to all other states, 1951 to 2019. 
 \pause
 \begin{enumerate}
-\item Outcome: Log Arms Transfers (SIPRI)
+\item Outcome: Log Arms Transfers (SIPRI), non-zero values. 
 \pause
 \item Independent Variables: Dummy indicator of defense alliance, years to presidential election.
 \pause 
-\item Estimator: Regression. 
+\item Estimator: Linear regression (OLS) with hurdle. 
 \pause 
-\item Adjust for trade model controls, lagged arms transfers, and non-zero arms transfer selection.
+\item Adjust for trade model controls, lagged arms transfers, and non-zero arms transfer probability.
 \end{enumerate} 
 
 \end{frame} 
@@ -294,13 +292,17 @@ Analyze US arms exports to all other states, 1951 to 2019.
 		\includegraphics[height=.90\textheight]{us-arms-pred.png}
 \end{figure}
 
-
 \end{frame}
 
 
-%-------------------------------------------------
+%------------------------------------------------
 
-\begin{frame}{Arms Exports, Alliances, and Elections}
+\section{Defense Contracting Cycles} 
+
+%-----------------------------------------------
+
+
+\begin{frame}{Defense Contracting Cycles: 2000-2020}
 
 \begin{figure}[htbp]
 	\centering
@@ -336,7 +338,7 @@ Some limitations.
 
 \pause
 \begin{enumerate}
-\item Could use more detailed trade data. 
+\item Collecting more detailed trade and arms data. 
 \pause
 \item Generalizing beyond the United States. 
 \end{enumerate} 
@@ -351,20 +353,21 @@ Some limitations.
 
 % Major powers
 \begin{column}{0.5\textwidth}
-\textbf{Political Economy}
+\textbf{Alliance Politics}
 \begin{enumerate} 
 \item Alliances and Military Spending: \textit{International Studies Quarterly}, \textit{Research \& Politics} and  \textit{Security Studies}.
-\item Economic Consequences of Alliances: this project and economic benefits of US alliances. 
+\item Economic Benefits of US Alliances. 
+\item Democratic Alliance Durability.
 \end{enumerate} 
 \end{column}
 
 
 \begin{column}{0.5\textwidth}
-\textbf{Political Economy of Civil Conflict}
+\textbf{Civil Conflict}
 \begin{enumerate}
-\item Countering the Adaptable and Resilient: U.S. Foreign Terrorist Organization (FTO) List and Terrorist Attacks 
-\item Conflict Management Institutions and Foreign Direct Investment in Post-Conflict States
-\item Rumors of Boogaloo: Media and Support for Militant Right-Wing Extremism in the United States 
+\item U.S. Foreign Terrorist Organization (FTO) List and Terrorist Attacks 
+\item Conflict Management Institutions and FDI in Post-Conflict States
+\item Media and Support for Militant Right-Wing Extremism in the U.S.
 \end{enumerate} 
 \end{column}
 
@@ -393,9 +396,54 @@ jkalley@virginia.edu
 
 %-----------------------------------------------
 
+
 %-----------------------------------------------
 
-\begin{frame}{Elite Cues Attributes}
+\begin{frame}{Interaction Terms: Alliances and Trade}
+
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[width=.90\textwidth]{trade-inter-terms.png}
+\end{figure}
+
+
+\end{frame}
+
+
+%-----------------------------------------------
+
+\begin{frame}{Marginal Effects: Alliances and Trade}
+
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[height=.90\textheight]{us-defense-me.png}
+\end{figure}
+
+
+\end{frame}
+
+
+
+%-----------------------------------------------
+
+\begin{frame}{Marginal Effects: Alliances and Arms Exports}
+
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[height=.90\textheight]{us-defense-me-arms.png}
+\end{figure}
+
+
+\end{frame}
+
+%-----------------------------------------------
+
+\begin{frame}{Defense Contracting by Sector}
+
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[height=.90\textheight]{contract-cycles-sector.png}
+\end{figure}
 
 
 \end{frame}

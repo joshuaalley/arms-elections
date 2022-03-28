@@ -1,10 +1,9 @@
+\frametitle{Argument Summary}
 
-\pause
 \begin{figure}[htpb]
-\adjustbox{scale = .55}{
-%\centering
+\adjustbox{scale = .65}{
 \begin{tikzcd}
-  \mbox{Budget Cycles} \arrow[r] & \mbox{Defense Contracting} \arrow[r] & \mbox{Arms Exports} \arrow[r] & \mbox{Trade Cycles, especially arms to allies}   &
+  \mbox{Budget Cycles} \arrow[to = Y, bend left = 15] \arrow[r]  & \mbox{Defense Contracting} \arrow[r] & \mbox{Arms Production} \arrow[r] & |[alias=Y]| \mbox{Trade \& Arms Cycles}   &
 \end{tikzcd}
 }
 \end{figure}

@@ -30,7 +30,8 @@ ggplot(us.elec.pred, aes(y = fit,
   geom_hline(yintercept = 0) +
   geom_line() +
   geom_pointrange(aes(ymin = lwr, ymax = upr),
-                  position = position_dodge(width = .1)) +
+                  position = position_dodge(width = .1),
+                  size = .8) +
   scale_color_grey("Defense Pact", 
                    start = 0.7,
                    end = 0.1,
@@ -50,7 +51,8 @@ ggplot(us.arms.res[[2]], aes(y = fit,
   #geom_hline(yintercept = 0) +
   geom_line() +
   geom_pointrange(aes(ymin = lwr, ymax = upr),
-                  position = position_dodge(width = .1)) +
+                  position = position_dodge(width = .1),
+                  size = .8) +
   scale_color_grey("Defense Pact", 
                    start = 0.7,
                    end = 0.1,
@@ -99,3 +101,62 @@ ggplot(contracts.data.key, aes(x =  factor(time_to_elec,
        title = "Sectoral Defense Contracting") +
   theme_carly_presents()
 ggsave("presentation/contract-cycles-sector.png", height = 8, width = 10)
+
+
+# interaction terms- appendix
+# interaction terms only
+ggplot(filter(us.coef.est, variable == "Years to Election" | 
+                variable == "Defense Pact" |
+                variable == "Defense Pact x Years to Election"),
+       aes(y = variable, x = coef)) +
+  facet_grid(~ model, scales = "free_x") +
+  geom_vline(xintercept = 0) +
+  geom_pointrange(aes(
+    xmin = coef - 1.96*se,
+    xmax = coef + 1.96*se),
+    position = position_dodge(width = 1)
+  ) +
+  scale_color_grey() +
+  labs(x = "Estimate",
+       y = "Term",
+       color = "Model") +
+  theme_carly_presents()
+ggsave("presentation/trade-inter-terms.png", height = 8, width = 14)
+
+
+# marginal effects of trade: appendix
+# plot
+ggplot(us.elec.me, aes(y = dydx, 
+                       x = time_to_elec)) +
+  facet_wrap(~ outcome) +
+  scale_x_reverse() +
+  geom_hline(yintercept = 0) +
+  geom_line(size = .8) +
+  geom_pointrange(aes(
+    ymin = dydx - 1.96*std.error,
+    ymax = dydx + 1.96*std.error),
+    position = position_dodge(width = .1),
+    size = .8) +
+  labs(y = "Estimated\n Marginal\n Effect of\n Alliance",
+       x = "Years to Presidential Election") +
+  theme_carly_presents()
+ggsave("presentation/us-defense-me.png", height = 6, width = 8)
+
+
+# marginal effects for alliances: arms 
+ggplot(us.arms.res[[1]], aes(y = dydx, 
+                             x = time_to_elec)) +
+  scale_x_reverse() +
+  geom_hline(yintercept = 0) +
+  geom_line(size = .8) +
+  geom_pointrange(aes(
+    ymin = dydx - 1.96*std.error,
+    ymax = dydx + 1.96*std.error),
+    position = position_dodge(width = .1),
+    size = .8
+  ) +
+  labs(title = "Marginal Impact of Alliance on Arms Transfers",
+       y = "Estimated\n Marginal Effect\n of Alliance",
+       x = "Years to Presidential Election") +
+  theme_carly_presents()
+ggsave("presentation/us-defense-me-arms.png", height = 6, width = 8)
