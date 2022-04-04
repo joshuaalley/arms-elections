@@ -147,7 +147,7 @@ contracts.elec.agg
 contracts.data.key <- select(contracts.data.clean,
                              year, time_to_elec, missile_space,
                              air, vehicles, weapons_ammo,
-                             non_arms, ships) %>% 
+                             electronics, ships) %>% 
                       pivot_longer(
                         -c(year, time_to_elec),
                         names_to = "allocation",
@@ -173,7 +173,7 @@ contracts.elec.sector <- ggplot(contracts.data.key, aes(x =  factor(time_to_elec
                                      labeller = labeller(allocation = 
                                          c("air" = "Aircraft",
                                          "missile_space" = "Missiles & Space",
-                                         "non_arms" = "Other",
+                                         "electronics" = "Electronics",
                                          "ships" = "Ships",
                                          "vehicles" = "Vehicles",
                                          "weapons_ammo"= "Weapons & Ammo"))
