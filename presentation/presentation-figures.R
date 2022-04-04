@@ -20,12 +20,14 @@ ggplot(us.trade.total, aes(x = factor(time_to_elec,
 ggsave("presentation/us-trade-cycles.png", height = 6, width = 8)
 
 
-# marginal effects of alliances
-ggplot(us.elec.pred, aes(y = fit, 
+# predicted impact of alliances
+ggplot(filter(us.elec.pred, outcome == "Change Exports" | 
+                outcome == "Change Imports"), 
+              aes(y = fit, 
                          x = time_to_elec,
                          group = factor(atop_defense),
                          color = factor(atop_defense))) +
-  facet_wrap(~ outcome) +
+  facet_wrap(~ outcome, nrow  = 2) +
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
   geom_line() +
@@ -39,7 +41,31 @@ ggplot(us.elec.pred, aes(y = fit,
   labs(y = "Predicted\n Outcome",
        x = "Years to Presidential Election") +
   theme_carly_presents()
-ggsave("presentation/us-elec-pred.png", height = 8, width = 10)
+ggsave("presentation/us-elec-pred-exim.png", height = 8, width = 10)
+
+
+# predicted impact of alliances
+ggplot(filter(us.elec.pred, outcome == "Change Trade" | 
+                outcome == "Trade Balance"), 
+       aes(y = fit, 
+           x = time_to_elec,
+           group = factor(atop_defense),
+           color = factor(atop_defense))) +
+  facet_wrap(~ outcome, nrow  = 2) +
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line() +
+  geom_pointrange(aes(ymin = lwr, ymax = upr),
+                  position = position_dodge(width = .1),
+                  size = .8) +
+  scale_color_grey("Defense Pact", 
+                   start = 0.7,
+                   end = 0.1,
+                   labels = c(`0` = "No", `1` = "Yes")) +
+  labs(y = "Predicted\n Outcome",
+       x = "Years to Presidential Election") +
+  theme_carly_presents()
+ggsave("presentation/us-elec-pred-net.png", height = 8, width = 10)
 
 
 # arms predictions
@@ -90,7 +116,7 @@ ggplot(contracts.data.key, aes(x =  factor(time_to_elec,
              labeller = labeller(allocation = 
                                    c("air" = "Aircraft",
                                      "missile_space" = "Missiles & Space",
-                                     "non_arms" = "Other",
+                                     "electronics" = "Electronics",
                                      "ships" = "Ships",
                                      "vehicles" = "Vehicles",
                                      "weapons_ammo"= "Weapons & Ammo"))
