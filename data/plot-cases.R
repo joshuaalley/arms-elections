@@ -154,7 +154,7 @@ casem.elec.all <- bind_rows(casem.elec,
 
 # look at cases:
 # used this data from intro cases 
-key.cases <- filter(us.trade.ally, ccode == 651 | ccode == 640) %>%
+key.cases <- filter(us.trade.ally, ccode == 390 | ccode == 380) %>%
                 select(ccode, year, atop_defense, 
                        time_to_elec,
                        change_ln_exports, change_ln_imports,
@@ -197,5 +197,24 @@ ggplot(key.cases.long, aes(x = year,
                                            "us_arms" = "Arms Transfers",
                                            "change_us_arms" = "Change Arms Transfers",
                                            "change_trade" = "Total Trade"))) +
-  geom_line()
+  geom_line() +
+  geom_vline(xintercept=c(pres.elections), linetype="dotted") 
 
+
+# look at 1980s
+# all years 
+ggplot(filter(key.cases.long, trade == "change_ln_exports" | trade == 
+                     "change_us_arms" & (year >= 1988 & year <= 2002)), aes(x = year, 
+                           y = value,
+                           group = factor(ccode),
+                           color = factor(ccode))) +
+  facet_wrap(~ trade, scales = "free_y",
+             labeller = labeller(trade = c("change_ln_exports" = "Exports",
+                                           "change_ln_imports" = "Imports",
+                                           "change_ihs_balance" = "Trade Balance",
+                                           "us_arms" = "Arms Transfers",
+                                           "change_us_arms" = "Change Arms Transfers",
+                                           "change_trade" = "Total Trade"))) +
+  geom_line() +
+  geom_vline(xintercept=c(pres.elections), linetype="dotted") +
+  xlim(1988, 2002)
