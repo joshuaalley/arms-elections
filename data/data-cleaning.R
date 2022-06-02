@@ -387,3 +387,118 @@ us.trade.ally <- left_join(us.trade.ally, us.arms.sipri) %>%
 
 ggplot(us.trade.ally, aes(x = us_arms)) + geom_histogram()
 
+
+
+
+### Contracting data
+
+# load exports and time-series it 
+us.arms.year <- us.arms.sipri %>% 
+  group_by(year) %>%
+  summarize(
+    us_arms = sum(us_arms, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    lag_us_arms = lag(us_arms)
+  )
+
+# same with some key trade variables
+us.trade.year <- us.trade.ally %>%
+  group_by(year) %>%
+  summarize(
+    GDP_o = max(GDP_o, na.rm = TRUE),
+    change_gdp_o = max(GDP_o, na.rm = TRUE),
+    total_exports = sum(ln_exports, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    lag_total_exports = lag(total_exports)
+  )
+us.trade.year[us.trade.year == -Inf] <- NA
+
+
+
+# load contracts data
+contracts.data <- read.csv("data/contracts-data.csv") %>%
+  filter(year < 2021) # some 2020 obs from 2019- cut
+
+
+# annual by program
+contracts.data.yr <- contracts.data %>%
+  group_by(year) %>% 
+  summarize(
+    obligations = sum(fed.obligation, na.rm = TRUE)
+  ) %>% 
+  mutate( # obligations in billions
+    obligations = obligations / 1000000000
+  )
+
+# plot
+ggplot(contracts.data.yr, aes(x = year, y = obligations)) +
+  geom_vline(xintercept=c(pres.elections), linetype="dotted") +
+  xlim(2000, 2020) +
+  geom_line()
+
+# annual by program
+contracts.data.pyr <- contracts.data %>%
+  group_by(year, program) %>% 
+  summarize(
+    obligations = sum(fed.obligation, na.rm = TRUE)
+  ) %>% 
+  mutate( # obligations in billions
+    obligations = obligations / 1000000000
+  )
+
+# plot
+ggplot(contracts.data.pyr, aes(x = year, y = obligations)) +
+  facet_wrap(~ program, scales = "free_y") +
+  geom_vline(xintercept=c(pres.elections), linetype="dotted") +
+  xlim(2000, 2020) +
+  geom_line()
+
+# pivot wider
+contracts.data.pyr$program[contracts.data.pyr$program == ""] <- "Unknown"
+contracts.data.wide <- contracts.data.pyr %>%
+  pivot_wider(id_cols = "year",
+              names_from = "program",
+              values_from = "obligations")
+colnames(contracts.data.wide) <- c("year", "unknown", "air_engines", "airframes",
+                                   "all_others", "ammunition", "building",
+                                   "combat_vehicles", "construct", "construct_equip",
+                                   "electronics", "materials_equip", "medical",
+                                   "missile_space", "noncom_vehicles", "other_air",
+                                   "other_fuel", "petrol", "photo", "production",
+                                   "containers_handling", "services", "ships",
+                                   "subsistence", "textiles", "railway", "weapons")
+
+# create summary categories and add other info
+contracts.data.clean <- contracts.data.wide %>%
+  rowwise() %>%
+  mutate(
+    all_contracts = sum(c_across(unknown:weapons))
+  ) %>%
+  ungroup() %>%
+  left_join(us.arms.year) %>%
+  left_join(elections.data) %>%
+  left_join(us.trade.year) %>%
+  mutate(
+    air = air_engines + airframes + other_air,
+    lag_air = lag(air),
+    vehicles = combat_vehicles + noncom_vehicles,
+    lag_vehicles = lag(vehicles),
+    weapons_ammo = ammunition + weapons,
+    lag_weapons_ammo = lag(weapons_ammo),
+    transport = railway + other_fuel + petrol,
+    lag_transport = lag(transport),
+    arms_cont = air + ships + vehicles + weapons_ammo,
+    lag_arms_cont = lag(arms_cont),
+    non_arms = all_contracts - air - ships - vehicles - weapons_ammo,
+    lag_non_arms = lag(non_arms),
+    lag_ships = lag(ships),
+    lag_missile_space = lag(missile_space),
+    lag_electronics = lag(electronics),
+    lag_all_contracts = lag(all_contracts),
+    change_all_contracts = all_contracts - lag_all_contracts
+  ) 
+
