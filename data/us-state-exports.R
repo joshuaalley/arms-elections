@@ -230,7 +230,7 @@ pivot.state <- function(data, year){
 # rank pivotal states by election
 pivot.list <- pivot.state(election.res, unique(election.res$year))
 
-# merge with electio.res 
+# merge with election res 
 election.res <- left_join(election.res, bind_rows(pivot.list))
 
 # add to dyad data

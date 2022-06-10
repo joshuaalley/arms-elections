@@ -32,6 +32,7 @@ theme_set(theme_bw())
 # set modelsummary TeX output
 options(modelsummary_format_numeric_latex = "plain")
 
+
 # manage conflicts
 conflict_scout()
 # set preferences 
