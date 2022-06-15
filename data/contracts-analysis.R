@@ -10,13 +10,6 @@ arms.ts.reg <- lm(us_arms ~ lag_us_arms +
 summary(arms.ts.reg)
 
 
-
-# super coarse regression of arms: lag contracts is positive w/ negative interaction 
-exports.ts.reg <- lm(total_exports ~ lag_total_exports +
-                    lag_all_contracts*time_to_elec,
-                  data = contracts.data.clean)
-summary(exports.ts.reg)
-
 # elections and contracts: expected negative coef
 contracts.ts.reg <- lm(all_contracts ~ lag_all_contracts +
                          time_to_elec,
@@ -89,6 +82,7 @@ contract.cycles <- arrangeGrob(contracts.elec.agg, contracts.elec.sector,
                                                      c(1, 1, 2, 2, 2),
                                                      c(1, 1, 2, 2, 2)))
 ggsave("figures/contract-cycles.png", contract.cycles, height = 6, width = 8)
+
 
 
 

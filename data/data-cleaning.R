@@ -423,6 +423,11 @@ us.trade.year[us.trade.year == -Inf] <- NA
 contracts.data <- read.csv("data/contracts-data.csv") %>%
   filter(year < 2021) # some 2020 obs from 2019- cut
 
+# negative values are deobligations- usually due to changes in project scope
+# https://datalab.usaspending.gov/analyst-guide/ 
+# move these to zero
+contracts.data$fed.obligation[contracts.data$fed.obligation < 0] <- 0
+
 
 # annual by program
 contracts.data.yr <- contracts.data %>%
@@ -444,7 +449,8 @@ ggplot(contracts.data.yr, aes(x = year, y = obligations)) +
 contracts.data.pyr <- contracts.data %>%
   group_by(year, program) %>% 
   summarize(
-    obligations = sum(fed.obligation, na.rm = TRUE)
+    obligations = sum(fed.obligation, na.rm = TRUE),
+    .groups = "keep"
   ) %>% 
   mutate( # obligations in billions
     obligations = obligations / 1000000000

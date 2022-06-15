@@ -64,12 +64,12 @@ rep.655.13$ccode[rep.655.13$country == "Serbia"] <- 345
 
 # countries only
 rep.655.13$year <- as.numeric(rep.655.13$year)
-rep.655.13 <- drop_na(rep.655.13, ccode) %>%
-               left_join(us.trade.ally)
 
-# authorized to numeric
-rep.655.13$authorized <- as.numeric(gsub("[^[:alnum:]]", "", rep.655.13$authorized))
-rep.655.13$total_shipped <- as.numeric(gsub("[^[:alnum:]]", "", rep.655.13$total_shipped))
+# authorized to numeric and in millions
+rep.655.13$authorized <- as.numeric(gsub("[^[:alnum:]]", "", rep.655.13$authorized)) /
+                            1000000
+rep.655.13$total_shipped <- as.numeric(gsub("[^[:alnum:]]", "", rep.655.13$total_shipped)) /
+                             1000000
 
 
 # clear usml labels
@@ -77,7 +77,7 @@ table(rep.655.13$usml_cat)
 rep.655.13$usml_det <- recode(rep.655.13$usml_cat,
                               "total" = "total",
                               "Agreements" = "agreements",
-                              # consolidate w/ inconsistent reporting 
+                              # consolidate I w/ inconsistent reporting 
                               "I" = "firearms",
                               "I (a)" = "firearms",
                               "a" = "firearms",
@@ -107,22 +107,109 @@ rep.655.13$usml_det <- recode(rep.655.13$usml_cat,
                               )
 table(rep.655.13$usml_det)
 
+# consolidate to match contract sectors
+rep.655.13$usml_cont <- NA
+rep.655.13$usml_cont[rep.655.13$usml_det == "ships" |
+                       rep.655.13$usml_det == "submersible"] <- "ships"
 
-# annual flow 
-annual.655 <- rep.655.13 %>%
-               drop_na(atop_defense) %>%
-               group_by(year, usml_det, atop_defense) %>%
+rep.655.13$usml_cont[rep.655.13$usml_det == "aircraft" |
+                       rep.655.13$usml_det == "turbine"] <- "air"
+
+rep.655.13$usml_cont[rep.655.13$usml_det == "missile-bomb-mine" |
+                       rep.655.13$usml_det == "spacecraft"] <- "missile_space"
+
+rep.655.13$usml_cont[rep.655.13$usml_det == "ground-vehicles"] <- "vehicles"
+
+rep.655.13$usml_cont[rep.655.13$usml_det == "firearms" |
+                       rep.655.13$usml_det == "ammunition" |
+                       rep.655.13$usml_det == "armament" |
+                       rep.655.13$usml_det == "explosives"] <- "arms"
+
+
+rep.655.13$usml_cont[rep.655.13$usml_det == "electronics" |
+                       rep.655.13$usml_det == "fire-control-sys"] <- "electronics"
+
+rep.655.13$usml_cont[is.na(rep.655.13$usml_cont)] <- "other"
+
+rep.655.13 <- drop_na(rep.655.13, ccode)
+
+
+# summarize by full category
+rep.655.cont <- rep.655.13 %>%
+                 drop_na(usml_cont) %>%
+                 group_by(year, ccode, usml_cont) %>%
+                 summarize(
+                   authorized = sum(authorized, na.rm = TRUE),
+                   .groups = "keep"
+                 ) 
+
+# wide
+rep.655.cont.wide <- rep.655.cont %>%
+                     pivot_wider(id_cols = c("ccode", "year"),
+                       names_from = "usml_cont",
+                      values_from = "authorized")
+rep.655.cont.wide[is.na(rep.655.cont.wide)] <- 0
+
+
+# annual flow: ally/not by sector
+annual.655.all <- rep.655.13 %>%
+               left_join(select(us.trade.ally, ccode, year, atop_defense)) %>%
+               drop_na(usml_cont) %>%
+               group_by(year, usml_cont, atop_defense) %>%
                summarize(
                  total_auth = sum(authorized, na.rm = TRUE),
-                 total_shipped = sum(total_shipped, na.rm = TRUE),
                  .groups = "keep"
-               ) %>%
-              left_join(elections.data)
+               ) 
 
 
-# plot
-ggplot(annual.655, aes(x = year, y = total_auth,
-                       group = factor(atop_defense),
-                       color = factor(atop_defense))) +
-  facet_wrap(~ usml_det, scales = "free_y") +
-  geom_line()
+# annual flow: state partners
+partner.655 <- rep.655.13 %>%
+  group_by(year, ccode) %>%
+  summarize( # summarize in billions (millions / 1000)
+    total_auth = sum(authorized, na.rm = TRUE) / 1000,
+    total_ship = sum(total_shipped, na.rm = TRUE) / 1000,
+    .groups = "keep"
+  ) 
+
+# tack on to aggregates
+us.trade.ally <- left_join(us.trade.ally, state.655)
+
+
+# wide data by sector and trade
+us.agg <- left_join(rep.655.cont.wide, us.trade.ally)
+
+
+# summarize sector variables: wide
+us.agg.all <- us.agg %>%
+                group_by(atop_defense, year) %>% 
+                drop_na(atop_defense) %>%
+                summarise( # sum in billions
+                  across(air:vehicles, ~ sum(.x, na.rm = TRUE) / 1000), 
+                  .groups = "keep"
+                  )
+# rename wide cols for merging 
+colnames(us.agg.all)[3:ncol(us.agg.all)] <- paste0(colnames(us.agg.all)[3:ncol(us.agg.all)], "_or")
+
+us.agg.all <- us.agg.all %>%
+            group_by(atop_defense) %>%
+            mutate_at(vars(matches("_or")), 
+              .funs = list(lag = lag,
+              change = function(x) x - lag(x)))
+
+
+
+# summarize sector variables: wide
+us.agg.yr <- us.agg %>%
+  group_by(year) %>% 
+  summarise( # sum in billions
+    across(air:vehicles, ~ sum(.x, na.rm = TRUE) / 1000), 
+    .groups = "keep"
+  )
+# rename wide cols for merging 
+colnames(us.agg.yr)[2:ncol(us.agg.yr)] <- paste0(colnames(us.agg.yr)[2:ncol(us.agg.yr)], "_or")
+
+us.agg.yr <- us.agg.yr %>%
+  ungroup() %>%
+  mutate_at(vars(matches("_or")), 
+            .funs = list(lag = lag,
+            change = function(x) x - lag(x)))
