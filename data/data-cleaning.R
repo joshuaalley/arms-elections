@@ -508,3 +508,216 @@ contracts.data.clean <- contracts.data.wide %>%
     change_all_contracts = all_contracts - lag_all_contracts
   ) 
 
+
+
+
+# clean specific orders data: SIPRI with a ton of manual cleaning
+us.trade.regis <- read.csv("data/us-trade-register.csv")
+colnames(us.trade.regis)[1] <- "country"
+
+# trim whitespace ends throughout
+us.trade.regis <- as.data.frame(apply(us.trade.regis, 2, function(x) str_trim(x)))
+
+# Tabs to NA
+us.trade.regis$country[us.trade.regis$country == ""] <- NA
+us.trade.regis <- fill(us.trade.regis, country, .direction = "down")
+
+# trim white space from years and orders- then to numeric
+us.trade.regis$ordered <- as.numeric(us.trade.regis$ordered)
+us.trade.regis$year <- as.numeric(us.trade.regis$year)
+us.trade.regis$delivered <- as.numeric(us.trade.regis$delivered)
+
+# start and end years of deliveries
+us.trade.regis$deliv.start <- as.numeric(substr(us.trade.regis$years.delivered, 1, 4))
+us.trade.regis$deliv.end <- as.numeric(substr(us.trade.regis$years.delivered, 6, 9))
+us.trade.regis$deliv.end[is.na(us.trade.regis$deliv.end)] <- us.trade.regis$deliv.start[is.na(us.trade.regis$deliv.end)]
+
+# comments to lower case
+us.trade.regis$comments <- str_to_lower(us.trade.regis$comments)
+
+# remove blank rows and add some new variables
+us.trade.regis <- drop_na(us.trade.regis, year) %>%
+                    mutate(
+                      deliv.dur = deliv.end - deliv.start,
+                      deliv.lag = deliv.start - year,
+                      second.hand = ifelse(str_detect(comments, "second-hand"),
+                                           1, 0),
+                      aid = ifelse(str_detect(comments, "aid"),
+                                           1, 0),
+                      offset = ifelse(str_detect(comments, "offset"),
+                                   1, 0),
+                      cost.m = str_extract(comments, "\\$\\d+[:space:][m]"),
+                      cost.mr = str_extract(comments, "\\$\\d+\\-\\d+[:space:][m]"),
+                      cost.b = str_extract(comments, "\\$\\d+[:space:][b]")
+                    )
+# combine the costs and clean up
+us.trade.regis <- unite(us.trade.regis,
+                                  cost.m, 
+                                   cost.mr, 
+                                    cost.b,
+                             na.rm = TRUE) %>%
+                mutate(
+                 cost.m = str_remove(cost.m, "\\$"),
+                 cost.size = str_extract(cost.m, "[a-z]"),
+                 cost.low = as.numeric(str_extract(cost.m, "\\d+")),
+                 cost.high = as.numeric(str_remove(str_extract(cost.m, "\\-\\d+"), "\\-"))
+                ) %>%
+                rowwise() %>%
+                mutate(
+                 cost = mean(c(cost.low, cost.high), na.rm = TRUE)
+                ) %>%
+                ungroup()
+us.trade.regis$cost[is.nan(us.trade.regis$cost)] <- NA
+
+us.trade.regis$cost[us.trade.regis$cost.size == "b" & !is.na(us.trade.regis$cost.size)] <- us.trade.regis$cost[
+                        us.trade.regis$cost.size == "b" &
+                      !is.na(us.trade.regis$cost.size)]*1000
+
+
+# summary to match contracts categories
+table(contracts.data.pyr$program)
+us.trade.regis$weapon.des <- str_to_lower(us.trade.regis$weapon.des)
+table(us.trade.regis$weapon.des)
+
+# summary here
+us.trade.regis$weapon.type <- NA
+# aircraft and helicopters 
+us.trade.regis$weapon.type[
+  str_detect(us.trade.regis$weapon.des, "aircraft") |
+  str_detect(us.trade.regis$weapon.des, "helicopter") |
+  str_detect(us.trade.regis$weapon.des, "uav") |
+  str_detect(us.trade.regis$weapon.des, "turbo") |
+  str_detect(us.trade.regis$weapon.des, "ground attack ac") |
+  str_detect(us.trade.regis$weapon.des, "light transport ac") |
+  str_detect(us.trade.regis$weapon.des, "transport ac") |
+  str_detect(us.trade.regis$weapon.des, "reconnaissance ac") |
+  str_detect(us.trade.regis$weapon.des, "recce/sigint ac") |
+  str_detect(us.trade.regis$weapon.des, "air refuel system") |
+  str_detect(us.trade.regis$weapon.des, "radial engine")] <- "aircraft"
+
+# ships 
+us.trade.regis$weapon.type[
+  str_detect(us.trade.regis$weapon.des, "aircraft carrier") |
+  str_detect(us.trade.regis$weapon.des, "submarine") |
+  str_detect(us.trade.regis$weapon.des, "ship") |  
+  str_detect(us.trade.regis$weapon.des, "mine") |
+  str_detect(us.trade.regis$weapon.des, "landing") |
+  str_detect(us.trade.regis$weapon.des, "frigate") |
+  str_detect(us.trade.regis$weapon.des, "cruiser") |
+  str_detect(us.trade.regis$weapon.des, "destroyer") |
+  str_detect(us.trade.regis$weapon.des, "corvette") |
+  str_detect(us.trade.regis$weapon.des, "tug") |
+  str_detect(us.trade.regis$weapon.des, "naval gun") |
+  str_detect(us.trade.regis$weapon.des, "gunboat") |
+  str_detect(us.trade.regis$weapon.des, "fac") |
+  str_detect(us.trade.regis$weapon.des, "abl") |
+  str_detect(us.trade.regis$weapon.des, "patrol craft")] <- "ships"
+
+
+us.trade.regis$weapon.type[
+  str_detect(us.trade.regis$weapon.des, "sam") |
+  str_detect(us.trade.regis$weapon.des, "missile") |
+  str_detect(us.trade.regis$weapon.des, "rocket") |
+  str_detect(us.trade.regis$weapon.des, "slbm") |
+  str_detect(us.trade.regis$weapon.des, "torpedo") |
+  str_detect(us.trade.regis$weapon.des, "abm") |
+  str_detect(us.trade.regis$weapon.des, "ssm") |
+  str_detect(us.trade.regis$weapon.des, "asw mrl") |
+  str_detect(us.trade.regis$weapon.des, "asm") |
+  str_detect(us.trade.regis$weapon.des, "sraam") |
+  str_detect(us.trade.regis$weapon.des, "bvraam") |
+  str_detect(us.trade.regis$weapon.des, "coastal defence system") |
+  us.trade.regis$weapon.des == "arm"
+  ] <- "missile-space"
+
+us.trade.regis$weapon.type[
+  str_detect(us.trade.regis$weapon.des, "radar") |
+    str_detect(us.trade.regis$weapon.des, "sonar") |
+    str_detect(us.trade.regis$weapon.des, "sigint system") |
+    str_detect(us.trade.regis$weapon.des, "aals") |
+    us.trade.regis$weapon.des == "arm"
+] <- "electronics"
+
+
+us.trade.regis$weapon.type[
+  str_detect(us.trade.regis$weapon.des, "ifv/afsv") |
+    str_detect(us.trade.regis$weapon.des, "ifv") |
+    str_detect(us.trade.regis$weapon.des, "tank") |
+    str_detect(us.trade.regis$weapon.des, "apc") |
+    str_detect(us.trade.regis$weapon.des, "aev") |
+    str_detect(us.trade.regis$weapon.des, "apv") |
+    str_detect(us.trade.regis$weapon.des, "spaag") |
+    str_detect(us.trade.regis$weapon.des, "self-propelled gun") |
+    str_detect(us.trade.regis$weapon.des, "self-propelled mrl") |
+    str_detect(us.trade.regis$weapon.des, "reconnaissance av") |
+    str_detect(us.trade.regis$weapon.des, "arv") |
+    str_detect(us.trade.regis$weapon.des, "alv") |
+    str_detect(us.trade.regis$weapon.des, "afsv") |
+    str_detect(us.trade.regis$weapon.des, "opv") |
+    str_detect(us.trade.regis$weapon.des, "armoured car")] <- "vehicles"
+
+
+us.trade.regis$weapon.type[
+  str_detect(us.trade.regis$weapon.des, "mortar") |
+    str_detect(us.trade.regis$weapon.des, "anti-tank missile") |
+    str_detect(us.trade.regis$weapon.des, "bomb") |
+    str_detect(us.trade.regis$weapon.des, "shell") |
+    str_detect(us.trade.regis$weapon.des, "aa gun") |
+    str_detect(us.trade.regis$weapon.des, "ciws") |
+    str_detect(us.trade.regis$weapon.des, "towed gun")] <- "weapons_ammo"
+
+
+us.trade.regis$weapon.type[
+  str_detect(us.trade.regis$weapon.des, "bomber aircraft")] <- "aircraft"
+
+# Results check
+table(us.trade.regis$weapon.type)
+sum(is.na(us.trade.regis$weapon.type))
+# missing is all engines and turbines, some air, some naval, some ground
+table(us.trade.regis$weapon.type, us.trade.regis$offset)
+table(us.trade.regis$weapon.type, us.trade.regis$aid)
+
+# summarize by category 
+us.trade.regis.sum <- us.trade.regis %>%
+                       group_by(weapon.type) %>%
+                       summarize(
+                         n = n(),
+                         mean.deliv.lag = mean(deliv.lag, na.rm = TRUE),
+                         mean.deliv.dur = mean(deliv.dur, na.rm = TRUE),
+                         prop.aid = sum(aid, na.rm = TRUE) / n,
+                         ordered = median(ordered, na.rm = TRUE),
+                         .groups = "keep"
+                       )
+
+
+# summarize by category 
+us.arms.cat <- us.trade.regis %>%
+  group_by(country, year, weapon.type) %>%
+  drop_na(weapon.type) %>% # drop engines
+  summarize(
+    deals = n(),
+    mean.deliv.lag = mean(deliv.lag, na.rm = TRUE),
+    mean.deliv.dur = mean(deliv.dur, na.rm = TRUE),
+    prop.aid = sum(aid, na.rm = TRUE) / deals,
+    ordered = median(ordered, na.rm = TRUE),
+    .groups = "keep"
+  ) 
+us.arms.cat$ccode <- countrycode(us.arms.cat$country, 
+                                 origin = "country.name",
+                                 destination = "cown")
+us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
+                                  ccode, year,
+                               atop_defense, cold_war,
+                               rep_pres, time_to_elec, 
+                               eu_member, ln_gdp_d,
+                               ln_pop_d, ln_distw,
+                               change_gdp_d, Comlang,
+                               Contig, Evercol,
+                               nz_us_arms)) %>%
+                 filter(year >= 1950)
+ggplot(us.arms.cat, aes(x = deals)) + geom_histogram()
+
+# TODO(JOSH): Think about this choice and the structure 
+# perhaps enough to show what is coming near elections- 
+# which side of left join is best
+us.arms.cat$deals[is.na(us.arms.cat$deals)] <- 0

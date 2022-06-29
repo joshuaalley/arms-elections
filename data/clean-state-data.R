@@ -367,31 +367,3 @@ state.data <- state.data %>%
     lag_diff_vote = lag(diff_vote_share)) %>%
   ungroup()
 
-
-
-
-### final sectoral data
-# state data- sector and partner
-state.cont.sector <- left_join(rep.655.cont, 
-                               drop_na(contracts.data.state, usml_cont)) %>%
-  left_join(state.exports.dyad)
-
-
-# annual data- allies and sector
-state.cont.ally <- left_join(us.agg.all, 
-                             state.data) 
-
-
-# annual data- year and sector
-state.cont.yr <- left_join(us.agg.yr, 
-                             state.data) 
-
-state.cont.yr <- state.cont.yr %>%
-  group_by(state) %>%
-  mutate_at(c("air", "arms", "electronics", "missile_space",
-              "other", "ships", "vehicles"), 
-            .funs = list(lag = lag,
-                         change = function(x) x - lag(x))) 
-
-# annual data- partner state totals
-state.cont.ally <- left_join(partner.655, state.data) 
