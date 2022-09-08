@@ -278,7 +278,7 @@ contracts.data.state$usml_cont <- NA
 contracts.data.state$usml_cont[contracts.data.state$program == "SHIPS"] <- "ships"
 
 contracts.data.state$usml_cont[str_detect(contracts.data.state$program, 
-                                          "AIR")] <- "air"
+                                          "AIR")] <- "aircraft"
 
 contracts.data.state$usml_cont[contracts.data.state$program == "MISSILE AND SPACE SYSTEMS"] <- "missile_space"
 
@@ -307,7 +307,7 @@ contracts.state.wide <- drop_na(contracts.data.state, usml_cont) %>%
               names_from = "usml_cont",
               values_from = "ln_obligations") %>%
   mutate(
-    ln_obligations = air + arms + electronics + missile_space +
+    ln_obligations = aircraft + arms + electronics + missile_space +
       other + ships + vehicles
   )
 
@@ -367,3 +367,36 @@ state.data <- state.data %>%
     lag_diff_vote = lag(diff_vote_share)) %>%
   ungroup()
 
+
+# State data w/ contracts by type
+state.data.ord <- left_join(state.data, arms.cat.all) %>%
+  group_by(state) %>%
+  mutate_at(c("aircraft", "arms", "electronics", "missile_space",
+              "other", "ships", "vehicles"), 
+            .funs = list(lag = lag,
+                         change = function(x) x - lag(x))) 
+
+
+
+
+# load 1976 to 2003 data: market level
+# contracts.data.76 <- read_dta("data/carril-duggan-market_V1.dta") 
+# 
+# contracts.76.yr <- contracts.data.76 %>%
+#   group_by(actfy) %>%
+#   summarize(
+#     obligations = sum(mktdollars, na.rm = TRUE)
+#   ) %>% 
+#   mutate( # obligations in billions
+#     obligations = obligations / 1000000000
+#   ) %>%
+#   rename(
+#     year = actfy
+#   )
+# 
+# 
+# # plot
+# ggplot(contracts.76.yr, aes(x = year, y = obligations)) +
+#   geom_vline(xintercept=c(pres.elections), linetype="dotted") +
+#   xlim(1976, 2004) +
+#   geom_line()   

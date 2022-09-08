@@ -114,7 +114,7 @@ summary(pres.ob.brm)
 
 
 # link orders with state contracts by sector
-sector.list <- c("air", "arms", "electronics", "missile_space",
+sector.list <- c("aircraft", "arms", "electronics", "missile_space",
                  "ships", "vehicles")
 formula.sector <- vector(mode = "list", length = length(sector.list))
   
@@ -123,24 +123,28 @@ for(i in 1:length(sector.list)){
     paste(
       sector.list[i], "~", 
       paste0(sector.list[i], "_lag"),
-      paste0(" + ", sector.list[i], "_or"),
-      paste0(" + ", sector.list[i], "_or_lag"),
+      #paste0(" + ", "all_", sector.list[i]),
+      paste0(" + ", "all_", sector.list[i], "_lag"),
+      #paste0(" + ", "nall_", sector.list[i]),
+      paste0(" + ", "nall_", sector.list[i], "_lag"),
       paste0(" + ", "factor(state)")
     ))
   }
 
-sector.state.sys <- systemfit(formula.sector, data = state.cont.yr)
+sector.state.sys <- systemfit(formula.sector, data = state.data.ord)
 summary(sector.state.sys)
 
-# changes: very close to unit roots in all series 
+# interact with pivot proximity  
 for(i in 1:length(sector.list)){
   formula.sector[[i]] <- as.formula(
     paste(
-      paste0(sector.list[i], "_change"), "~", 
-      paste0(" + ", sector.list[i], "_or_change"),
+      paste0(sector.list[i]), "~", 
+      paste0(sector.list[i], "_lag"),
+      paste0(" + ", "all_", sector.list[i], "_lag", "*lag_diff_vote"),
+      paste0(" + ", "nall_", sector.list[i], "_lag", "*lag_diff_vote"),
       paste0(" + ", "factor(state)")
     ))
 }
 
-sector.state.sys <- systemfit(formula.sector, data = state.cont.yr)
-summary(sector.state.sys)
+sector.state.lvote <- systemfit(formula.sector, data = state.data.ord)
+summary(sector.state.lvote)

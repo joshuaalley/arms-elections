@@ -28,31 +28,22 @@ latent.supp <- bind_rows(phi.us,
 # latent.supp$ccode2[latent.supp$year < 1991 & latent.supp$ccode2 == 255] <- 260
 
 
-# bring in state control of economy
+# bring in vdem
 vdem <- vdem %>%
          select(
            country_name, country_id, year, 
-           v2x_polyarchy, v2clstown
+           v2x_polyarchy
          ) %>% 
          filter(year >= 1950) 
 # cow country codes
 vdem$ccode2 <- countrycode(vdem$country_id,
                           origin = "vdem",
                           destination = "cown")
-# greater values mean less state control
-ggplot(vdem, aes(x = v2clstown)) + geom_histogram()
-
 
 # add to latent support
 latent.supp <- left_join(latent.supp,
                          select(vdem, -c(country_name,
-                                         country_id))) %>%
-                mutate( # reverse state control: positive = greater control 
-                  v2clstown = -1 * v2clstown
-                )
-
-# greater values mean less state control
-ggplot(latent.supp, aes(x = v2clstown)) + geom_histogram()
+                                         country_id)))
 
 
 # elections
@@ -347,7 +338,7 @@ us.trade.ally <- filter(dyadic.trade.major,
                       1, 0),
     change_pres = ifelse(rep_pres != lag(rep_pres), 1, 0),
     near_elec = ifelse(time_to_elec == 0 | time_to_elec == 1, 1, 0),
-    cold_war = ifelse(year >= 1989, 1, 0)
+    cold_war = ifelse(year <= 1989, 1, 0)
   ) %>%
   group_by(president, ccode) %>%
   mutate(
@@ -419,7 +410,7 @@ us.trade.year[us.trade.year == -Inf] <- NA
 
 
 
-# load contracts data
+### load contracts data ### 
 contracts.data <- read.csv("data/contracts-data.csv") %>%
   filter(year < 2021) # some 2020 obs from 2019- cut
 
@@ -489,17 +480,17 @@ contracts.data.clean <- contracts.data.wide %>%
   left_join(elections.data) %>%
   left_join(us.trade.year) %>%
   mutate(
-    air = air_engines + airframes + other_air,
-    lag_air = lag(air),
+    aircraft = air_engines + airframes + other_air,
+    lag_aircraft = lag(aircraft),
     vehicles = combat_vehicles + noncom_vehicles,
     lag_vehicles = lag(vehicles),
-    weapons_ammo = ammunition + weapons,
-    lag_weapons_ammo = lag(weapons_ammo),
+    arms = ammunition + weapons,
+    lag_arms = lag(arms),
     transport = railway + other_fuel + petrol,
     lag_transport = lag(transport),
-    arms_cont = air + ships + vehicles + weapons_ammo,
+    arms_cont = aircraft + ships + vehicles + arms,
     lag_arms_cont = lag(arms_cont),
-    non_arms = all_contracts - air - ships - vehicles - weapons_ammo,
+    non_arms = all_contracts - aircraft - ships - vehicles - arms,
     lag_non_arms = lag(non_arms),
     lag_ships = lag(ships),
     lag_missile_space = lag(missile_space),
@@ -511,7 +502,8 @@ contracts.data.clean <- contracts.data.wide %>%
 
 
 
-# clean specific orders data: SIPRI with a ton of manual cleaning
+### clean specific orders data ###
+# SIPRI with a ton of manual cleaning before import here 
 us.trade.regis <- read.csv("data/us-trade-register.csv")
 colnames(us.trade.regis)[1] <- "country"
 
@@ -628,14 +620,13 @@ us.trade.regis$weapon.type[
   str_detect(us.trade.regis$weapon.des, "bvraam") |
   str_detect(us.trade.regis$weapon.des, "coastal defence system") |
   us.trade.regis$weapon.des == "arm"
-  ] <- "missile-space"
+  ] <- "missile_space"
 
 us.trade.regis$weapon.type[
   str_detect(us.trade.regis$weapon.des, "radar") |
     str_detect(us.trade.regis$weapon.des, "sonar") |
     str_detect(us.trade.regis$weapon.des, "sigint system") |
-    str_detect(us.trade.regis$weapon.des, "aals") |
-    us.trade.regis$weapon.des == "arm"
+    str_detect(us.trade.regis$weapon.des, "aals") 
 ] <- "electronics"
 
 
@@ -664,7 +655,7 @@ us.trade.regis$weapon.type[
     str_detect(us.trade.regis$weapon.des, "shell") |
     str_detect(us.trade.regis$weapon.des, "aa gun") |
     str_detect(us.trade.regis$weapon.des, "ciws") |
-    str_detect(us.trade.regis$weapon.des, "towed gun")] <- "weapons_ammo"
+    str_detect(us.trade.regis$weapon.des, "towed gun")] <- "arms"
 
 
 us.trade.regis$weapon.type[
@@ -684,11 +675,36 @@ us.trade.regis.sum <- us.trade.regis %>%
                          n = n(),
                          mean.deliv.lag = mean(deliv.lag, na.rm = TRUE),
                          mean.deliv.dur = mean(deliv.dur, na.rm = TRUE),
+                         prop.second.hand = mean(second.hand, na.rm = TRUE),
                          prop.aid = sum(aid, na.rm = TRUE) / n,
                          ordered = median(ordered, na.rm = TRUE),
                          .groups = "keep"
                        )
 
+
+
+# summarize by category and year
+us.arms.sum.year <- us.trade.regis %>%
+  group_by(year, weapon.type) %>%
+  summarize(
+    deals = n(),
+    mean.deliv.lag = mean(deliv.lag, na.rm = TRUE),
+    mean.deliv.dur = mean(deliv.dur, na.rm = TRUE),
+    prop.aid = sum(aid, na.rm = TRUE) / deals,
+    prop.second.hand = sum(aid, na.rm = TRUE) / deals,
+    ordered = median(ordered, na.rm = TRUE),
+    .groups = "keep"
+  ) %>%
+  left_join(elections.data)
+
+ggplot(drop_na(us.arms.sum.year,
+               time_to_elec),
+       aes(x = time_to_elec,
+           color = factor(time_to_elec),
+           y = deals)) +
+  facet_wrap(~ weapon.type, scales = "free_y") +
+  geom_jitter() +
+  geom_boxplot(outlier.shape = NA)
 
 # summarize by category 
 us.arms.cat <- us.trade.regis %>%
@@ -705,6 +721,21 @@ us.arms.cat <- us.trade.regis %>%
 us.arms.cat$ccode <- countrycode(us.arms.cat$country, 
                                  origin = "country.name",
                                  destination = "cown")
+# wider for use elsewhere
+us.arms.cat.wide <- pivot_wider(us.arms.cat, 
+                      id_cols = c(ccode, country, year),
+                      names_from = weapon.type,
+                     values_from = deals,
+                    values_fill = NA) %>%
+           rename( # facilitate merging 
+            vehicles_dl = vehicles,
+            aircraft_dl = aircraft,
+            arms_dl = arms,
+            electronics_dl = electronics,
+           ships_dl = ships,
+           missile_space_dl = missile_space)
+
+
 us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
                                   ccode, year,
                                atop_defense, cold_war,
@@ -717,7 +748,59 @@ us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
                  filter(year >= 1950)
 ggplot(us.arms.cat, aes(x = deals)) + geom_histogram()
 
-# TODO(JOSH): Think about this choice and the structure 
-# perhaps enough to show what is coming near elections- 
-# which side of left join is best
-us.arms.cat$deals[is.na(us.arms.cat$deals)] <- 0
+
+
+# summarize by category 
+us.arms.cat.all <- us.arms.cat %>%
+  group_by(atop_defense, year, weapon.type) %>%
+  summarize(
+    deals = sum(deals),
+    prop.aid = mean(prop.aid, na.rm = TRUE),
+    ordered = mean(ordered, na.rm = TRUE),
+    .groups = "keep"
+  ) %>% 
+  left_join(elections.data) %>%
+  drop_na(time_to_elec, atop_defense)
+
+deal.all <- ggplot(us.arms.cat.all, aes(x = factor(time_to_elec,
+                                ordered = TRUE,
+                                levels = c("3", "2",
+                                        "1", "0")),
+                            y = deals,
+                            color = factor(atop_defense)
+                            )) +
+                facet_wrap(~ weapon.type, scales = "free_y") +
+                geom_boxplot(outlier.shape = NA)
+deal.all
+
+
+ggplot(us.arms.cat.all, aes(x = factor(time_to_elec,
+                                       ordered = TRUE,
+                                       levels = c("3", "2",
+                                                  "1", "0")),
+                            y = prop.aid,
+                            color = factor(atop_defense))) +
+  facet_wrap(~ weapon.type, scales = "free_y") +
+  geom_boxplot(outlier.shape = NA)
+
+# wide formatted data 
+arms.cat.all <- pivot_wider(us.arms.cat.all,
+                           id_cols = "year",
+                           names_from = c("atop_defense", "weapon.type"),
+                           values_from = c("deals"))
+arms.cat.all[is.na(arms.cat.all)] <- 0
+colnames(arms.cat.all) <- str_replace(colnames(arms.cat.all), "0", "nall")
+colnames(arms.cat.all) <- str_replace(colnames(arms.cat.all), "1", "all")
+
+arms.cat.all <- arms.cat.all %>%
+  ungroup() %>%
+  mutate_at(c("nall_aircraft", "nall_arms", "nall_electronics", "nall_missile_space",
+              "nall_ships", "nall_vehicles"), 
+            .funs = list(lag = lag,
+                         change = function(x) x - lag(x))) %>%
+  mutate_at(c("all_aircraft", "all_arms", "all_electronics", 
+              "all_missile_space",
+              "all_ships", "all_vehicles"), 
+            .funs = list(lag = lag,
+                         change = function(x) x - lag(x)))
+

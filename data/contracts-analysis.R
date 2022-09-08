@@ -32,7 +32,7 @@ contracts.elec.agg
 # cycles by type of contract
 contracts.data.key <- select(contracts.data.clean,
                              year, time_to_elec, missile_space,
-                             air, vehicles, weapons_ammo,
+                             aircraft, vehicles, arms,
                              electronics, ships) %>% 
                       pivot_longer(
                         -c(year, time_to_elec),
@@ -57,12 +57,12 @@ contracts.elec.sector <- ggplot(contracts.data.key, aes(x =  factor(time_to_elec
                                y = value)) +
                           facet_wrap(~ allocation, scales = "free_y",
                                      labeller = labeller(allocation = 
-                                         c("air" = "Aircraft",
+                                         c("aircraft" = "Aircraft",
                                          "missile_space" = "Missiles & Space",
                                          "electronics" = "Electronics",
                                          "ships" = "Ships",
                                          "vehicles" = "Vehicles",
-                                         "weapons_ammo"= "Weapons & Ammo"))
+                                         "arms"= "Weapons & Ammo"))
                                      ) +
                           geom_boxplot(outlier.shape = NA) +
                          labs(y = "Total Prime Contracts",
@@ -91,12 +91,12 @@ us.trade.contract <- left_join(us.trade.ally, select(contracts.data.clean,
                                                      year, lag_all_contracts, non_arms, 
                                                      arms_cont,
                                                      lag_arms_cont, lag_non_arms,
-                                                     air, vehicles, missile_space,
-                                                     weapons_ammo, 
+                                                     aircraft, vehicles, missile_space,
+                                                     arms, 
                                                      ships,
                                                      lag_missile_space,
-                                                     lag_air, lag_vehicles, 
-                                                     lag_weapons_ammo, 
+                                                     lag_aircraft, lag_vehicles, 
+                                                     lag_arms, 
                                                      lag_ships))
 
 
@@ -114,15 +114,15 @@ summary(ally.exports.contract)
 
 # model exports to allies 
 ally.exports.sector <- lm(change_ln_exports ~ 
-                             air +
+                             aircraft +
                              vehicles +
-                             weapons_ammo +
+                             arms +
                              ships +
                              missile_space +
                              non_arms +
-                             lag_air +
+                             lag_aircraft +
                              lag_vehicles +
-                             lag_weapons_ammo +
+                             lag_arms +
                              lag_ships +
                              lag_missile_space +
                              lag_non_arms +
@@ -146,115 +146,14 @@ summary(nonally.exports.contract)
 
 
 
-
-
-# model arms transfers to allies 
-arms.ex.cont <- left_join(us.arms.comp, select(contracts.data.clean,
-                                               year, lag_all_contracts, non_arms, 
-                                               arms_cont,
-                                               lag_arms_cont, lag_non_arms,
-                                               air, vehicles, missile_space,
-                                               weapons_ammo, 
-                                               ships,
-                                               lag_missile_space,
-                                               lag_air, lag_vehicles, 
-                                               lag_weapons_ammo, 
-                                               lag_ships))
-
-
-ally.arms.contract <- rlm(us_arms ~ lag_us_arms +
-                           arms_cont +
-                            lag_arms_cont + 
-                            non_arms +
-                            lag_non_arms +
-                               rep_pres +
-                               xm_qudsest2 +  cowmidongoing + dyadigos +
-                               change_gdp_d + Distw + eu_member +
-                               Comlang + pred_nz_arms,
-                             data = filter(arms.ex.cont, nz_us_arms == 1 &
-                                             atop_defense == 1))
-summary(ally.arms.contract)
-
-
-# specific sectors
-ally.arms.sector <- rlm(us_arms ~ lag_us_arms +
-                            air +
-                            vehicles +
-                            weapons_ammo +
-                            ships +
-                            missile_space +
-                            non_arms +
-                            lag_air +
-                            lag_vehicles +
-                            lag_weapons_ammo +
-                            lag_ships +
-                            lag_missile_space +
-                            lag_non_arms +
-                            xm_qudsest2 +  cowmidongoing + dyadigos +
-                            change_gdp_d + Distw + eu_member +
-                            Comlang + pred_nz_arms,
-                          data = filter(arms.ex.cont, nz_us_arms == 1 &
-                                          atop_defense == 1))
-summary(ally.arms.sector)
-
-
-# model arms  to non-allies 
-nonally.arms.contract <- lm(us_arms ~ lag_us_arms + 
-                                  lag_arms_cont +
-                                  lag_non_arms +
-                                  rep_pres +
-                                  xm_qudsest2 +  cowmidongoing + dyadigos +
-                                  change_gdp_o + change_gdp_d + Distw + eu_member +
-                                  Comlang + pred_nz_arms,
-                                data = filter(arms.ex.cont, nz_us_arms == 1 &
-                                                atop_defense == 0))
-summary(nonally.arms.contract)
-
-
-# model arms  to non-allies 
-nonally.arms.sector <- lm(us_arms ~ lag_us_arms + 
-                            air +
-                            vehicles +
-                            weapons_ammo +
-                            ships +
-                            missile_space +
-                            non_arms +
-                            lag_air +
-                            lag_vehicles +
-                            lag_weapons_ammo +
-                            lag_ships +
-                            lag_missile_space +
-                            lag_non_arms +
-                              rep_pres +
-                              xm_qudsest2 +  cowmidongoing + dyadigos +
-                              change_gdp_o + change_gdp_d + Distw + eu_member +
-                              Comlang + pred_nz_arms,
-                            data = filter(arms.ex.cont, nz_us_arms == 1 &
-                                            atop_defense == 0))
-summary(nonally.arms.sector)
+### Do contracts lead into more international orders?
+# model this with ML 
 
 
 
 
 
-# load 1976 to 2003 data: market level
-contracts.data.76 <- read_dta("data/carril-duggan-market_V1.dta") 
-
-contracts.76.yr <- contracts.data.76 %>%
-  group_by(actfy) %>%
-  summarize(
-    obligations = sum(mktdollars, na.rm = TRUE)
-  ) %>% 
-  mutate( # obligations in billions
-    obligations = obligations / 1000000000
-  ) %>%
-  rename(
-    year = actfy
-  )
 
 
-# plot
-ggplot(contracts.76.yr, aes(x = year, y = obligations)) +
-  geom_vline(xintercept=c(pres.elections), linetype="dotted") +
-  xlim(1976, 2004) +
-  geom_line()   
+
+
