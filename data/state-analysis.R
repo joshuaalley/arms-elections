@@ -91,7 +91,7 @@ summary(pres.ob.prox)
 
 
 
-pres.ob.brm <- brm(ln_obligations ~ time_to_pelec*lag_diff_vote +
+pres.ob.brm <- brm(ln_obligations ~ time_to_pelec*pivot_prox +
                     poptotal + ln_ngdp + 
                     (1 | state),
                   family = student(),
@@ -140,8 +140,8 @@ for(i in 1:length(sector.list)){
     paste(
       paste0(sector.list[i]), "~", 
       paste0(sector.list[i], "_lag"),
-      paste0(" + ", "all_", sector.list[i], "_lag", "*lag_diff_vote"),
-      paste0(" + ", "nall_", sector.list[i], "_lag", "*lag_diff_vote"),
+      paste0(" + ", "all_", sector.list[i], "_lag", "*pivot_prox"),
+      paste0(" + ", "nall_", sector.list[i], "_lag", "*pivot_prox"),
       paste0(" + ", "factor(state)")
     ))
 }
