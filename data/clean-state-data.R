@@ -38,7 +38,7 @@ state.exports.dyad <-  left_join(state.exports,
   left_join(select(ungroup(us.trade.ally),
                    ccode, year,
                    time_to_elec,
-                   ln_total_statements))
+                   ln_total_statements)) 
 # fix ATOP alliance 0s 
 state.exports.dyad$atop_defense[state.exports.dyad$year == 2019] <- NA
 state.exports.dyad$atop_defense[state.exports.dyad$year == 2020] <- NA
@@ -69,7 +69,7 @@ state.gdp <- read.csv("data/state-gdp.csv") %>%
   pivot_longer(-observation_date)
 state.gdp$name[state.gdp$name == "AKNGSP_20080605"] <- "AKNGSP"
 state.gdp$measure <- substr(state.gdp$name, 3, 6)
-state.gdp$st.abb <- substr(state.gdp$name, 1, 2)
+state.gdp$st <- substr(state.gdp$name, 1, 2)
 state.gdp$year <- as.numeric(substr(state.gdp$observation_date, 1, 4))
 
 # real gdp
@@ -79,13 +79,12 @@ state.gdp <- state.gdp %>%
     ln_ngdp = log(value)
   ) %>%
   select(
-    st.abb, year, ln_ngdp
+    st, year, ln_ngdp
   )
 
 
 # state data from CSPP 
-cspp.data <- get_cspp_data(vars =
-                             c("minwage", "foreign_born",
+cspp.data <- get_cspp_data(vars = c("foreign_born",
                                "poptotal", 
                                "labfree", "econfree", "regfree", # labor, econ, regulation freedoms
                                "atotspt", # total state and local spending
@@ -197,8 +196,9 @@ pivot.state <- function(data, year){
         elec_votes, natl_winner, state_winner,
       ) 
     data <- data[data$year ==  year[i], ]
+    winner <- unique(data$natl_winner)
     # break up ifelse for clarity
-    data <- if(data$natl_winner == "Rep"){
+    data <- if(winner == "Rep"){
       arrange(data, dem_vote_share) %>%
         mutate(votes_won = cumsum(elec_votes))
     } else{
@@ -314,6 +314,12 @@ contracts.state.wide <- drop_na(contracts.data.state, usml_cont) %>%
 # nothing leads to NA 
 contracts.state.wide[is.na(contracts.state.wide)] <- 0
 
+# add contracts to exports dyad
+state.exports.dyad <- left_join(state.exports.dyad, 
+                                contracts.state.wide %>%
+                                  mutate( # ensures proper merge 
+                                    state = str_to_sentence(state)
+                                  ))
 
 # senate
 state.sen.data <- left_join(contracts.state.wide, senate.data) %>%

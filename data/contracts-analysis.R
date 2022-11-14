@@ -97,7 +97,8 @@ us.trade.contract <- left_join(us.trade.ally, select(contracts.data.clean,
                                                      lag_missile_space,
                                                      lag_aircraft, lag_vehicles, 
                                                      lag_arms, 
-                                                     lag_ships))
+                                                     lag_ships)) %>% 
+                                        filter(year >= 2002) # clarify observations
 
 
 # model exports to allies 
@@ -149,13 +150,36 @@ summary(nonally.exports.contract)
 ### Do contracts lead into more international orders?
 # model this with ML in cmdstanr- can't write this in brms
 
-# start with simple aggregates by state before translating to sectors
-state.data.allcont <- select(state.data, ln_obligations, 
-                             time_to_selec, time_to_pelec,
-                             poptotal, ln_ngdp, state, year)
+
+# state component
+state.data.ml <- select(state.data, state, year,
+                        ln_obligations, 
+                        time_to_selec, time_to_pelec,
+                        ln_ngdp) %>% 
+  distinct() %>% 
+  group_by(state) %>%
+  mutate( # lag obligations- one year to NA 
+    lag_ln_obligations = lag(ln_obligations),
+    state.year.txt = paste0(state, ".", year)
+  ) %>% # remove missing for STAN
+  drop_na() 
+state.data.ml$state.year <- state.data.ml %>%
+  group_by(state, year) %>%
+  group_indices()
+state.data.ml$year.id <- state.data.ml %>%
+  group_by(year) %>%
+  group_indices()
+
+# clean up ordering
+state.data.ml <- state.data.ml %>%
+  select(state, year, state.year.txt, state.year, year.id,
+         ln_obligations, lag_ln_obligations,
+         everything()) %>%
+  filter(year <= 2014)
+class(state.data.ml) <- "data.frame"
 
 
-# orders: very simple model 
+# orders data  
 us.arms.deals <- us.arms.cat %>%
                   group_by(ccode, year) %>%
                   summarize(
@@ -164,25 +188,46 @@ us.arms.deals <- us.arms.cat %>%
                   ) %>% 
                   right_join(select(us.trade.ally,
                           ccode, year,
-                          atop_defense, cold_war,
+                          atop_defense,
                           xm_qudsest2, cowmidongoing, dyadigos,
                           change_gdp_o, change_gdp_d, 
-                          Distw, eu_member)) 
+                          Distw, eu_member)) %>%
+                 filter(year %in% state.data.ml$year)
 us.arms.deals[, 4:ncol(us.arms.deals)] <- lapply(us.arms.deals[, 4:ncol(us.arms.deals)],
                                               function(x) arm::rescale(x,
                                                   binary.inputs = "0/1"))
 # no deals are NA, make zero
 us.arms.deals$deals[is.na(us.arms.deals$deals)] <- 0
+# drop missing- cow and other key controls only through 2014
 us.arms.deals <- drop_na(us.arms.deals)
 class(us.arms.deals) <- "data.frame"
 
 # group indices 
 us.arms.deals$cntry.index <- us.arms.deals %>% group_by(ccode) %>%
                               group_indices()
+us.arms.deals$year.id <- us.arms.deals %>% group_by(year) %>%
+  group_indices()
 
 
 ggplot(us.arms.deals, aes(x = deals)) + geom_histogram()
 
+
+# create a matrix to index when state-year obs apply 
+# (double-indexing failed)
+state.yr.idmat <- left_join(
+    select(us.arms.deals, ccode, year),
+    select(state.data.ml, year, state.year.txt)
+   ) %>%
+  mutate(
+    present = 1, # to fill dummies
+  ) %>%
+  pivot_wider( # wider 
+    id_cols = c(ccode, year),
+    names_from = "state.year.txt",
+    values_from = "present"
+  ) %>%
+  select(-c(ccode, year))
+state.yr.idmat[is.na(state.yr.idmat)] <- 0
 
 # grab ZINB code from brms
 # make_stancode(deals ~ atop_defense, 
@@ -191,7 +236,7 @@ ggplot(us.arms.deals, aes(x = deals)) + geom_histogram()
 
 
 # compile stan code
-deals.mod <- cmdstan_model(stan_file = "data/ml-model-deals.stan",
+deals.mod <- cmdstan_model(stan_file = "data/ml-model-deals-nb.stan",
                            cpp_options = list(stan_threads = TRUE))
 
 
@@ -199,10 +244,15 @@ deals.mod <- cmdstan_model(stan_file = "data/ml-model-deals.stan",
 deals.data <- list(
                N = nrow(us.arms.deals),
                y = us.arms.deals$deals,
-               X = us.arms.deals[, 4:ncol(us.arms.deals) - 1],
-               K = ncol(us.arms.deals[, 4:ncol(us.arms.deals) - 1]),
+               X = us.arms.deals[, 4:ncol(us.arms.deals) - 2],
+               K = ncol(us.arms.deals[, 4:ncol(us.arms.deals) - 2]),
                cntry = us.arms.deals$cntry.index,
                C = max(us.arms.deals$cntry.index)
+               # S = nrow(state.data.ml),
+               # Z = as.matrix(state.yr.idmat)
+               # T = max(state.data.ml$year.id),
+               # yeard = us.arms.deals$year.id,
+               # yearc = state.data.ml$year.id,
          )
 
 # fit model 
@@ -212,10 +262,34 @@ fit.deals <- deals.mod$sample(
   parallel_chains = 4,
   threads_per_chain = 1,
   seed = 12,
+  max_treedepth = 20,
   refresh = 200
 )
 # diagnose 
 fit.deals$cmdstan_diagnose()
+
+diagnostics <- fit.deals$sampler_diagnostics(format = "cmdstanr_draws_format")
+draws <- fit.deals$draws(format = "df")
+
+ratios <- neff_ratio(fit.deals)
+mcmc_neff(ratios, size = 2)
+
+mcmc_nuts_treedepth(diagnostics)
+mcmc_nuts_energy(diagnostics)
+
+mcmc_acf(draws, pars = "alpha")
+mcmc_acf(draws, pars = "alpha_cntry[55]")
+
+mcmc_parcoord(fit.deals$draws("alpha_cntry"))
+
+
+# posterior prediction
+ppc_dens_overlay(y = us.arms.deals$deals,
+                 yrep = as.matrix(select(draws, starts_with("y_pred")))[1:50, ])
+
+ppc_hist(y = us.arms.deals$deals,
+                 yrep = as.matrix(select(draws, starts_with("y_pred")))[1:5, ])
+
 
 
 

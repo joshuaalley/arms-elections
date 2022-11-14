@@ -93,7 +93,7 @@ promises.annual <- promises.data %>%
 
 # use peacesciencer to 
 # generate dyad-year data on other dimensions
-dyadic.trade <- create_dyadyears(system = "cow",
+dyadic.cont <- create_dyadyears(system = "cow",
                                  mry = TRUE, 
                                  directed = FALSE) %>%
   add_cow_mids() %>%
@@ -103,8 +103,8 @@ dyadic.trade <- create_dyadyears(system = "cow",
   filter(year >= 1949)
 # flow1 is imports to ccode1 from ccode2
 # flow2 is vice-versa- imports by ccode2 from ccode1
-dyadic.trade$atop_defense[dyadic.trade$year == 2019] <- NA
-dyadic.trade$atop_defense[dyadic.trade$year == 2020] <- NA
+dyadic.cont$atop_defense[dyadic.cont$year == 2019] <- NA
+dyadic.cont$atop_defense[dyadic.cont$year == 2020] <- NA
 
 
 
@@ -243,7 +243,7 @@ nelda <- read_dta("data/nelda.dta") %>%
 
 # make the merger
 dyadic.trade.major <- trade.full %>%
-  left_join(dyadic.trade) %>%
+  left_join(dyadic.cont) %>%
   rename(ccode = ccode1)
 
 

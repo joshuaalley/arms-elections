@@ -64,8 +64,8 @@ table(us.arms.comp$nz_us_arms, us.arms.comp$cold_war)
 us.arms.comp$pred_nz_arms <- predict(us.arms.nz, type = "response")
 ggplot(us.arms.comp, aes(x = pred_nz_arms)) + geom_histogram()
 ggplot(us.arms.comp, aes(x = pred_nz_arms,
-                         group = nz_us_arms,
-                         fill = nz_us_arms)) + geom_histogram()
+                         group = factor(nz_us_arms),
+                         fill = factor(nz_us_arms))) + geom_histogram()
 
 # arms trade models
 us.arms.ex <- lm(us_arms ~ lag_us_arms +
