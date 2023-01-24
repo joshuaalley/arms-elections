@@ -23,19 +23,22 @@ data {
 
 parameters {
   vector[K] beta;  // population-level effects
+  vector[L] lambda; // state-year level effects
   real alpha;  // overall intercept
   vector[C] alpha_cntry_std; // country varying intercepts: standardized for NC
   real<lower = 0> sigma_cntry; // sd of country intercepts
   vector[S] alpha_stateyr_std; // standardized state-year intercepts
   //vector[S] alpha_stateyr; // state-year varying intercepts
-  vector[S] mu_stateyr; // state-year varying intercepts means
   real<lower = 0> sigma_stateyr; // sd of state-year intercepts
 }
 
 transformed parameters {
   vector[N] mu;
+  vector[S] mu_stateyr; // state-year varying intercepts means
   vector[C] alpha_cntry; // country varying intercepts
   vector[S] alpha_stateyr; // state-year varying intercepts
+  
+  mu_stateyr = G * lambda;
   
   // country varying intercepts
   alpha_cntry = 0 + sigma_cntry * alpha_cntry_std; // non-centered parameterization,
@@ -60,11 +63,12 @@ model {
   // priors including constants
   target += student_t_lpdf(alpha | 3, 0.7, 2.5);
   target += normal_lpdf(beta | 0, 1);
+  target += normal_lpdf(lambda | 0, 1);
   target += normal_lpdf(alpha_cntry_std | 0, 1);
   target += normal_lpdf(sigma_cntry | 0, 1);
   target += normal_lpdf(alpha_stateyr_std | 0, 1);
   target += normal_lpdf(sigma_stateyr | 0, 1);
-  target += normal_lpdf(mu_stateyr | 0, 1);
+  //target += normal_lpdf(mu_stateyr | 0, 1);
 }
 
 generated quantities{

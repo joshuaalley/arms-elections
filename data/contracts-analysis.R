@@ -17,25 +17,27 @@ contracts.ts.reg <- lm(all_contracts ~ lag_all_contracts +
 summary(contracts.ts.reg)
 
 
-# summarize by election proximity
-contracts.elec.agg <- ggplot(contracts.data.clean, aes(x =  factor(time_to_elec,
-                                             ordered = TRUE,
-                                             levels = c("3", "2",
-                                                        "1", "0")),
+# summarize by election proximity- look within cycles
+contracts.elec.agg <- ggplot(contracts.data.clean, aes(x = time_to_elec,
+                                 color = factor(elec.cycle),
                                  y = all_contracts)) +
-                      geom_boxplot(outlier.shape = NA) +
+                      geom_point() +
+                      geom_line() +
+                      scale_x_reverse() +
+                      scale_color_manual(values = wes_palette("Darjeeling1")) +
                      labs(y = "Total Prime Contracts",
                         x = "Years to Presidential Election",
-                        title = "Aggregate Defense Contracting")
+                        title = "Aggregate Defense Contracting",
+                        color = "Election Cycle")
 contracts.elec.agg
 
 # cycles by type of contract
 contracts.data.key <- select(contracts.data.clean,
                              year, time_to_elec, missile_space,
                              aircraft, vehicles, arms,
-                             electronics, ships) %>% 
+                             electronics, ships, elec.cycle) %>% 
                       pivot_longer(
-                        -c(year, time_to_elec),
+                        -c(year, time_to_elec, elec.cycle),
                         names_to = "allocation",
                         values_to = "value"
                       )
@@ -50,11 +52,12 @@ ggplot(contracts.data.key, aes(x =  year,
        x = "Year",
        title = "Defense Contracting Allocations over time")
 
-contracts.elec.sector <- ggplot(contracts.data.key, aes(x =  factor(time_to_elec,
-                                           ordered = TRUE,
-                                           levels = c("3", "2",
-                                                      "1", "0")),
-                               y = value)) +
+contracts.elec.sector <- ggplot(contracts.data.key, aes(x = time_to_elec,
+                                                        color = factor(elec.cycle),
+                                                        y = value)) +
+                          geom_point() +
+                          geom_line() +
+                          scale_x_reverse() +
                           facet_wrap(~ allocation, scales = "free_y",
                                      labeller = labeller(allocation = 
                                          c("aircraft" = "Aircraft",
@@ -64,10 +67,11 @@ contracts.elec.sector <- ggplot(contracts.data.key, aes(x =  factor(time_to_elec
                                          "vehicles" = "Vehicles",
                                          "arms"= "Weapons & Ammo"))
                                      ) +
-                          geom_boxplot(outlier.shape = NA) +
+                         scale_color_manual(values = wes_palette("Darjeeling1")) +
                          labs(y = "Total Prime Contracts",
                               x = "Years to Presidential Election",
-                              title = "Sectoral Defense Contracting")
+                              title = "Sectoral Defense Contracting",
+                              color = "Election Cycle")
 contracts.elec.sector
 
 # combine sectoral and aggregate plots
@@ -113,7 +117,7 @@ ally.exports.contract <- rlm(change_ln_exports ~
 summary(ally.exports.contract)
 
 
-# model exports to allies 
+# model exports to allies- specific sectors
 ally.exports.sector <- lm(change_ln_exports ~ 
                              aircraft +
                              vehicles +
@@ -148,7 +152,7 @@ summary(nonally.exports.contract)
 
 
 ### Do contracts lead into more international orders?
-# model this with ML in cmdstanr- can't write this in brms
+# model in cmdstanr- can't write ML model in brms
 
 
 # state component
@@ -175,8 +179,26 @@ state.data.ml <- state.data.ml %>%
   select(state, year, state.year.txt, state.year, year.id,
          ln_obligations, lag_ln_obligations,
          everything()) %>%
+  mutate(
+    intercept = 1
+  ) %>% 
   filter(year <= 2014)
 class(state.data.ml) <- "data.frame"
+
+
+# state data for analysis 
+state.yr.final <- state.data.ml %>%
+  select(intercept,
+         ln_obligations, lag_ln_obligations,
+         time_to_pelec, time_to_selec, ln_ngdp) 
+# rescale by 2sd 
+state.yr.final[, 2:ncol(state.yr.final)] <- apply(state.yr.final[, 2:ncol(state.yr.final)], 2,
+       function(x) arm::rescale(x,
+                                binary.inputs = "0/1"))
+# matrix for stan
+state.yr.final <- as.matrix(state.yr.final)
+
+
 
 
 # orders data  
@@ -193,6 +215,7 @@ us.arms.deals <- us.arms.cat %>%
                           change_gdp_o, change_gdp_d, 
                           Distw, eu_member)) %>%
                  filter(year %in% state.data.ml$year)
+# rescale for model input
 us.arms.deals[, 4:ncol(us.arms.deals)] <- lapply(us.arms.deals[, 4:ncol(us.arms.deals)],
                                               function(x) arm::rescale(x,
                                                   binary.inputs = "0/1"))
@@ -236,7 +259,7 @@ state.yr.idmat[is.na(state.yr.idmat)] <- 0
 
 
 # compile stan code
-deals.mod <- cmdstan_model(stan_file = "data/ml-model-deals-nb.stan",
+deals.mod <- cmdstan_model(stan_file = "data/ml-model-deals.stan",
                            cpp_options = list(stan_threads = TRUE))
 
 
@@ -247,12 +270,12 @@ deals.data <- list(
                X = us.arms.deals[, 4:ncol(us.arms.deals) - 2],
                K = ncol(us.arms.deals[, 4:ncol(us.arms.deals) - 2]),
                cntry = us.arms.deals$cntry.index,
-               C = max(us.arms.deals$cntry.index)
-               # S = nrow(state.data.ml),
-               # Z = as.matrix(state.yr.idmat)
-               # T = max(state.data.ml$year.id),
-               # yeard = us.arms.deals$year.id,
-               # yearc = state.data.ml$year.id,
+               C = max(us.arms.deals$cntry.index),
+               S = nrow(state.data.ml),
+               Z = as.matrix(state.yr.idmat),
+               T = max(state.data.ml$year.id),
+               G = state.yr.final,
+               L = ncol(state.yr.final)
          )
 
 # fit model 

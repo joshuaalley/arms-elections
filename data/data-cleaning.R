@@ -499,7 +499,9 @@ contracts.data.clean <- contracts.data.wide %>%
     change_all_contracts = all_contracts - lag_all_contracts
   ) 
 
-
+contracts.data.clean$elec.cycle <- c(rep(2004, 4), rep(2008, 4), 
+                                     rep(2012, 4), rep(2016, 4),
+                                     rep(2020, 4))
 
 
 ### clean specific orders data ###

@@ -19,14 +19,57 @@ us.trade.total <- us.trade.ally %>%
                      cold_war = max(cold_war),
                      .groups = "keep"
                    ) %>% # remove pure NA w/ sum = 0
-                  filter(year > 1950 & year < 2020) %>%
+                  filter(year > 1950 & year < 2020) %>% 
+                  ungroup() %>%   
+                 # election cycle indicator
+                 mutate(
+                 elec.cycle = c(c(rep(1952, 2)), 
+                    rep(
+                      seq(from = 1956, to = 2016, by = 4), 
+                      each = 4),
+                    c(rep(2020, 3)))
+                 ) %>%
                   pivot_longer(
-                    cols = -c(year, time_to_elec, cold_war),
+                    cols = -c(year, time_to_elec, cold_war, elec.cycle),
                     names_to = "trade",
                     values_to = "value"
-                  )
+                  ) 
+
+# plot by cycle- too much pasta here
+ggplot(us.trade.total, aes(x = time_to_elec,
+                           color = factor(elec.cycle),
+                           y = value)) +
+  geom_point() +
+  geom_line() +
+  scale_x_reverse() +
+  facet_wrap(~ trade,
+             labeller = labeller(trade = c("total_exports_change" = "Exports",
+                                           "total_imports_change" = "Imports",
+                                           "total_trade_change" = "Total Trade"))) +
+  labs(y = "Annual Trade Change",
+       x = "Years to Presidential Election")
+
+# small multiples by year 
+ggplot(us.trade.total, aes(x = time_to_elec,
+                           color = factor(trade),
+                           y = value)) +
+  geom_point() +
+  geom_line() +
+  scale_x_reverse() +
+  facet_wrap(~ elec.cycle, scales = "free_y") +
+  scale_color_manual(values = wes_palette("GrandBudapest1"),
+                     labels = c("total_exports_change" = "Exports",
+                                "total_imports_change" = "Imports",
+                                "total_trade_change" = "Total Trade")) +
+  labs(y = "Annual Trade Change",
+       x = "Years to Presidential Election",
+       color = "Trade\nFlow",
+       title = "Trade Changes by Presidential Election Cycle")
 
 
+
+
+# aggregate cycles in box plot
 ggplot(us.trade.total, aes(x = factor(time_to_elec,
                                       ordered = TRUE,
                                     levels = c("3", "2",
