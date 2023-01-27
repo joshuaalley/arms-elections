@@ -76,13 +76,14 @@ ggplot(state.data,
   theme(legend.position = "bottom")
 
 
+# prior vote share and contracting 
 pres.ob.vote <- lm(ln_obligations ~ time_to_pelec*lag_diff_vote +
                       poptotal + ln_ngdp + factor(state),
                   data = state.data) 
 summary(pres.ob.vote)
 
 
-# Presidential vote 
+# contracting from time to presidential elections and pivot proximity
 pres.ob.prox <- lm(ln_obligations ~ time_to_pelec*pivot_prox +
                       poptotal + ln_ngdp + factor(state),
                    data = state.data) 

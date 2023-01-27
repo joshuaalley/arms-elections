@@ -154,10 +154,9 @@ summary(nonally.exports.contract)
 ### Do contracts lead into more international orders?
 # model in cmdstanr- can't write ML model in brms
 
-
 # state component
 state.data.ml <- select(state.data, state, year,
-                        ln_obligations, 
+                        ln_obligations, diff_vote_share,
                         time_to_selec, time_to_pelec,
                         ln_ngdp) %>% 
   distinct() %>% 
@@ -174,6 +173,9 @@ state.data.ml$year.id <- state.data.ml %>%
   group_by(year) %>%
   group_indices()
 
+# plot obligations
+ggplot(state.data.ml, aes(x = ln_obligations)) + geom_histogram()
+
 # clean up ordering
 state.data.ml <- state.data.ml %>%
   select(state, year, state.year.txt, state.year, year.id,
@@ -189,10 +191,12 @@ class(state.data.ml) <- "data.frame"
 # state data for analysis 
 state.yr.final <- state.data.ml %>%
   select(intercept,
-         ln_obligations, lag_ln_obligations,
-         time_to_pelec, time_to_selec, ln_ngdp) 
-# rescale by 2sd 
-state.yr.final[, 2:ncol(state.yr.final)] <- apply(state.yr.final[, 2:ncol(state.yr.final)], 2,
+         ln_obligations, lag_ln_obligations, 
+         ln_ngdp,
+         diff_vote_share,
+         time_to_pelec, time_to_selec) 
+# rescale obligations and GDP by 2sd 
+state.yr.final[, 2:3] <- apply(state.yr.final[, 2:3], 2,
        function(x) arm::rescale(x,
                                 binary.inputs = "0/1"))
 # matrix for stan
@@ -252,11 +256,6 @@ state.yr.idmat <- left_join(
   select(-c(ccode, year))
 state.yr.idmat[is.na(state.yr.idmat)] <- 0
 
-# grab ZINB code from brms
-# make_stancode(deals ~ atop_defense, 
-#               family = zero_inflated_negbinomial(),
-#                 data = us.arms.deals)
-
 
 # compile stan code
 deals.mod <- cmdstan_model(stan_file = "data/ml-model-deals.stan",
@@ -267,8 +266,8 @@ deals.mod <- cmdstan_model(stan_file = "data/ml-model-deals.stan",
 deals.data <- list(
                N = nrow(us.arms.deals),
                y = us.arms.deals$deals,
-               X = us.arms.deals[, 4:ncol(us.arms.deals) - 2],
-               K = ncol(us.arms.deals[, 4:ncol(us.arms.deals) - 2]),
+               X = us.arms.deals[, 4:(ncol(us.arms.deals) - 2)],
+               K = ncol(us.arms.deals[, 4:(ncol(us.arms.deals) - 2)]),
                cntry = us.arms.deals$cntry.index,
                C = max(us.arms.deals$cntry.index),
                S = nrow(state.data.ml),
@@ -285,24 +284,26 @@ fit.deals <- deals.mod$sample(
   parallel_chains = 4,
   threads_per_chain = 1,
   seed = 12,
-  max_treedepth = 20,
+  max_treedepth = 15,
   refresh = 200
 )
+# save fit model
+fit.deals$save_object(file = "data/ml-model-deals-fit.RDS")
 # diagnose 
 fit.deals$cmdstan_diagnose()
 
-diagnostics <- fit.deals$sampler_diagnostics(format = "cmdstanr_draws_format")
+diagnostics <- fit.deals$diagnostic_summary()
 draws <- fit.deals$draws(format = "df")
 
+print(diagnostics)
+# n/eff ratios and posterior ACFs 
 ratios <- neff_ratio(fit.deals)
 mcmc_neff(ratios, size = 2)
-
-mcmc_nuts_treedepth(diagnostics)
-mcmc_nuts_energy(diagnostics)
 
 mcmc_acf(draws, pars = "alpha")
 mcmc_acf(draws, pars = "alpha_cntry[55]")
 
+# parallel coordinates plot
 mcmc_parcoord(fit.deals$draws("alpha_cntry"))
 
 
@@ -315,5 +316,32 @@ ppc_hist(y = us.arms.deals$deals,
 
 
 
+# look at parameter estimates: start with alpha_stateyr
+draws.state.yr <- select(draws, starts_with("alpha_stateyr")) %>%
+                    # no std from non-centered paramterization
+                    select(!starts_with("alpha_stateyr_std")) 
+mcmc_intervals(draws.state.yr) # little messy
 
+# get summary 
+state.yr.int <- mcmc_intervals_data(draws.state.yr) %>%
+                 bind_cols(
+                     select(state.data.ml, state, year,
+                            state.year.txt,
+                            ln_obligations, ln_ngdp,
+                            time_to_pelec, time_to_selec)
+                 )
+
+# plot
+ggplot(state.yr.int, aes(x = year, y = m,
+                         color = factor(time_to_pelec))) +
+  geom_point()
+                  
+
+# state-year level parameters
+mcmc_intervals(draws, regex_pars = "lambda\\[[1-9]\\]") +
+  scale_y_discrete(labels = colnames(deals.data$G))
+
+# country-year level parameters
+mcmc_intervals(draws, regex_pars = "beta\\[[\\[1-9]\\]") +
+  scale_y_discrete(labels = colnames(deals.data$X))
 

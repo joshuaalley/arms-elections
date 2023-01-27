@@ -128,6 +128,12 @@ state.exports.dyad <- state.exports.dyad %>%
 
 # add electoral votes
 electoral.votes <- read.csv("data/electoral-votes.csv")
+
+votes.90s <- select(electoral.votes,
+                    state, EV90) %>% 
+  rename(elec_votes = EV90)
+votes.90s$year <- 2000
+
 votes.00s <- select(electoral.votes,
                     state, EV00) %>% 
   rename(elec_votes = EV00) %>%
@@ -141,7 +147,7 @@ votes.10s <- select(electoral.votes,
   # two reps of each obs
   slice(rep(1:n(), each = 3))
 votes.10s$year <- rep(c(2012, 2016, 2020))
-evotes.state <- bind_rows(votes.00s, votes.10s)
+evotes.state <- bind_rows(votes.90s, votes.00s, votes.10s)
 
 # join with elections data below
 
@@ -169,13 +175,14 @@ election.res <- read.csv("data/pres-election-res.csv") %>%
     state_winner = ifelse(rep_vote_share > dem_vote_share,
                           "Rep", "Dem")
   ) %>%
-  filter(year >= 2002 & state != "District Of Columbia") %>% # match exports sample
+  filter(year >= 1999 & state != "District Of Columbia") %>% # match exports sample
   left_join(evotes.state) %>%
   ungroup()
 glimpse(election.res)
 
 # create pivotal rank
 election.res$natl_winner <- NA
+election.res$natl_winner[election.res$year == 2000] <- "Rep"
 election.res$natl_winner[election.res$year == 2004] <- "Rep"
 election.res$natl_winner[election.res$year == 2008] <- "Dem"
 election.res$natl_winner[election.res$year == 2012] <- "Dem"
@@ -354,7 +361,10 @@ state.data <- left_join(state.sen.data, cspp.data) %>%
 
 
 # add presidential elections data
-state.data <- left_join(state.data, election.res) %>% 
+election.res.join <- election.res
+# change this to merge- otherwise misses 2000
+election.res.join$year[election.res.join$year == 2000] <- 2001
+state.data <- left_join(state.data, election.res.join) %>% 
   left_join(elections.data, by = "year") %>%
   rename(
     sen_election = election.x,
@@ -369,8 +379,6 @@ state.data <- state.data %>%
        pivot_prox,
        .direction = "down") %>%
   group_by(state) %>%
-  mutate(
-    lag_diff_vote = lag(diff_vote_share)) %>%
   ungroup()
 
 

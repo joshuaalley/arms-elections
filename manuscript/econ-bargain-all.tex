@@ -72,7 +72,7 @@ Alliance proteges' positive economic and security statecraft thus helps U.S. lea
 I examine these claims with three analyses of trade, arms transfers and defense contracting in the United States. 
 First, I show that U.S. trade cycles track elections, with substantial increases in overall trade and exports to allies near elections.
 I then detail corresponding electoral cycles in arms exports from the United States to allies. 
-Finally, I provide link defense contract awards around elections directly to arms exports.
+Finally, I link defense contract awards around elections directly to arms exports.
 The results suggest that security and economic ties provide political elites in alliance patrons with avenues for electoral gain. 
 \end{abstract} 
 
@@ -92,7 +92,7 @@ While these countries occupied similar regions and shared similar trade relation
 
 
 % give another example: Turkey and Egypt 1984
-Two Middle Eastern states experienced similar trade changes in 1984 when Ronald Reagan stood for a second term.
+Two Middle Eastern states experienced similar trade changes in 1984 when Ronald Reagan sought a second term.
 U.S. trade with Turkey and Egypt grew, but exports to Turkey increased more than exports to Egypt. 
 Like Denmark, Turkey had a formal U.S. security guarantee and thus received greater arms transfers and thus higher exports than Egypt, which did not have an alliance with the United States. 
 
@@ -105,8 +105,8 @@ I argue that U.S. allies receive more exports because they provide an easy outle
 
 % arms exports logic
 Security cooperation facilitates electoral cycles in arms exports. 
-U.S. leaders produce additional arms by using defense contracting to create domestic political business cycles \citep{Tufte1978, Mintz1988, Mayer1995, DerouenHeo2000, Becker2021}.
-Alliance proteges provide a key market for exports from defense contracting cycles.
+Leaders produce additional arms when they use defense contracting to create domestic political business cycles \citep{Tufte1978, Mintz1988, Mayer1995, DerouenHeo2000, Becker2021}.
+Alliance proteges provide a key market for exports from defense contracting cycles in part because leaders can easily justify transfers.
 Allies receive more arms from their patrons near elections because they control import decisions and receive security benefits. 
 These arms export cycles reinforce cooperative relationships between U.S. leaders and alliance proteges.
 
@@ -416,14 +416,13 @@ Therefore, the argument and analysis focus on the United States.
 Other states may have weaker cycles, or electoral cycles in different goods.
 
 
-The first hypothesis predicts general electoral cycles in trade, especially exports to allies. 
-As presidential elections approach, I expect greater imports and increasing exports from the United States to alliance proteges.
+The first prediction tests the expected relationship between defense contracts and arms exports. 
+I expect electoral cycles in defense contacting, and a positive correlation between these cycles and U.S. arms exports.
 
 
 \begin{quote}
-\textsc{Trade Cycles Hypothesis: As time to a presidential election decreases, U.S. imports and exports will increase, and exports to allies will increase more than exports to non-allies.}
+\textsc{Defense Contracts Hypothesis: As defense contracting increases around elections, U.S. arms exports will increase.}
 \end{quote}
-
 
 
 The second hypothesis predicts corresponding cycles in arms exports.
@@ -436,159 +435,68 @@ Proximity to presidential elections will increase arms transfers from the United
 \end{quote}
 
 
-The third prediction tests the expected relationship between defense contracts and arms exports. 
-I expect electoral cycles in defense contacting, and a positive correlation between these cycles and U.S. arms exports.
+The third hypothesis predicts general electoral cycles in trade, especially exports to allies. 
+As presidential elections approach, I expect greater imports and increasing exports from the United States to alliance proteges.
 
 
 \begin{quote}
-\textsc{Defense Contracts Hypothesis: As defense contracting increases around elections, U.S. arms exports will increase.}
+\textsc{Trade Cycles Hypothesis: As time to a presidential election decreases, U.S. imports and exports will increase, and exports to allies will increase more than exports to non-allies.}
 \end{quote}
 
 
-% TODO(Josh): Rework this totally
-In the following, I describe how I scrutinize each of these hypotheses. 
-In the first analysis, I establish the role of allies in electoral export cycles. 
-The second analysis shows increasing exports to allies track with the U.S. electoral cycles, and are of comparable magnitude to trade cycles.
-Finally, I offer a preliminary examination of the final link in the argument with descriptive data on defense contracting from 2000 to 2020, which does not fully test the defense contracts hypothesis.
+
+% What's next
+In the following, I examine each of these hypotheses. 
+In the first analysis, I use a series of descriptive data and univariate statistical models to illustrate each step in the process.
+This starts with descriptive data on defense contracting from 2000 to 2020, then shows how arms exports to allies track U.S. electoral cycles, and ends with a model of electoral cycles in U.S. trade. 
+After that, I unify the different outcomes in Bayesian model that captures the process where contract allocations to electorally important states filter up into arms exports, ultimately driving increased exports.
 
 
+\section{Defense Contracting Cycles}
 
 
-\section{Electoral Cycles in U.S. Exports to Allies}
-
-To test the first hypothesis, I analyze U.S. trade from 1950 to 2014. 
-This analysis establishes that allied states see larger electoral export cycles than non-allies, while U.S. imports increase regardless of security ties. 
-The key independent variable measures years until a presidential election year.
-The years to election variable ranges from zero in election years to three in the year immediately after an election. 
-The second key variable is a dummy indicator of a defensive alliance between the United States and each state, drawn from the ATOP database \citep{Leedsetal2002}.
-%employ elections data from the National Elections across Democracy and Autocracy (NELDA) dataset \citep{HydeMarinov2012} to
-Finally, I interact the defensive alliance dummy with the years to election variable.
+To show electoral cycles in defense contracting, I draw on Department of Defense prime contract award data from the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
+This archive contains data on individual contract awards from to 2000 fiscal year on.
+I collected all Department of Defense contracts from 2000 to 2020.
 
 
-The key outcomes are annual changes in the natural log of exports, changes in log imports, changes in total trade, and trade balance changes.
-The total trade changes and trade balance changes measures assess the net impact of export and import changes.
-I use changes because models in levels with a lagged dependent variable suggest non-stationarity in many panels. 
-Lagged trade flows have unit roots or near unit root coefficients, so models in levels risk spurious inferences \citep{GrangerNewbold1974}.
-I draw on exports and imports data from the IMF's direction of trade statistics database.
+In addition to aggregating the total federal dollar obligation of all contracts in every year, I differentiate contracts by sector to assess which sectors drive contracting cycles. 
+I measure total contracts for aircraft, ships, vehicles, electronics, missiles/space, and weapons/ammunition. 
+While large contracts for components of major combat platforms have greater economic heft, full platforms can take years to deliver. 
+Missiles, weapons and ammunition may lead to more immediate exports of defense goods, as their production schedules are more flexible.
 
 
-For U.S. exports, my argument makes three predictions about the interaction between alliances and years to election in the exports model. 
-First a positive constituent term on the defensive alliance variable, which indicates that allies take more exports than non-allies in election years, when time to an election is zero.
-Second, I expect a negative constituent term on years to election as non-allied states respond to political business cycles with increases in other trade. 
-Last, a negative interaction between alliances and time to the election would indicate that exports to allies are more responsive to elections than exports to states without a defensive alliances with the United States.
-
-
-I expect no interaction between alliances and election proximity for U.S. imports, because imports reflect general economic growth.
-Foreign firms will respond to increased U.S. demand regardless of alliance cooperation.  
-Allies may export more to the United States than other countries, but they will not be more responsive to elections.
-
-
-In addition to the interaction of time to elections and a defensive alliance, I include a series of control variables that may be correlated with alliances and trade. 
-Key trade variables include for changes in the GDP of both states, population-weighted distance, contiguity, common language and former colonial ties \citep{FouquinHugot2016}.
-I also adjust for democracy \citep{Marquez2016}, the presence of a militarized interstate dispute \citep{Gibleretal2016}, and shared IGO membership \citep{Pevehouseetal2020}.\footnote{Some dyadic data from the \textit{peacesciencer} \textsf{R} package \citep{peacesciencer-package}.}
-
-
-Some trade flow changes are unusual. 
-This creates heavy-tailed residuals, so I employ a robust regression estimator; M-estimation with Tukey's biweight function \citep{RaineyBaissa2020}.
-Robust regression places less weight on unusual observations, making it more efficient than OLS for this particular outcome.
-
-
-
-\subsection{Results}
-
-
-Raw trade data shows differences between allies and non-allies for electoral cycles in U.S. exports, imports and total trade. 
-\autoref{fig:us-trade-cycles-all} presents the distribution of changes in logged exports, imports and overall trade in years with differing proximity to presidential elections.
-Box plots summarize the distribution of U.S. trade with all states in those years. 
-The dark line in each box plot marks the median value. 
-
-
-\begin{figure}
-\centering
-\includegraphics[width=0.95\textwidth]{../figures/us-trade-cycles-all.png}
-\caption{Electoral cycles in U.S. trade between 1950 and 2014. Each box plot summarizes the distribution of changes in logged exports, imports, and overall trade as a presidential election approaches. Colors mark trade with allies and non-allies. The thick black line in each box plot marks the median value.}
-\label{fig:us-trade-cycles-all}
-\end{figure}
-
-
-Median export changes are higher for allies than non-allies near presidential elections. 
-Export changes for non-allies still rise, but less than exports to allies. 
-Imports from non-allies and allies are equally responsive to election timing. 
-As a result, total U.S. trade increases regardless of formal security ties.
-
-
-\autoref{fig:us-trade-cycles} shows electoral cycles in U.S. trade, but it is possible that other factors confound this relationship.
-\autoref{fig:us-trade-coefs} presents coefficient estimates from the robust regression models of the four trade outcomes, along with 95\% confidence intervals. 
-These estimates suggest that allies receive substantial U.S. export cycles, but all states respond to elections with increased exports to the United States. 
-
-
-\begin{figure}
-\centering
-\includegraphics[width=0.95\textwidth]{../figures/us-trade-coefs.png}
-\caption{Robust regression coefficients from models of U.S. trade, 1950 to 2014. Points mark coefficient estimates and error bars encapsulate 95\% confidence intervals. All continuous predictors rescaled by two standard deviations.}
-\label{fig:us-trade-coefs}
-\end{figure}
-
-
-As expected, the interaction between the defensive alliance dummy and years to election is negative in the exports model, which implies that allies receive more U.S. exports as presidential elections approach.
-Allies receive more U.S. exports in election years, and respond especially strongly to election timing.
-The smaller constituent term on the election years constituent term in the exports model implies a smaller electoral cycle in exports to non-allies.
-
-
-The interaction term for imports suggests no clear difference in U.S. imports around elections between allies and non-allied states. 
-Moreover, the time to election constituent term is negative for all outcomes, except the trade balance. 
-This is indicative of similar electoral cycles between allies and non-allies.
-Trade changes approximate the track of exports. 
-Simultaneous increases in imports and exports have an unclear impact on trade balances, however. 
- 
-
-
-% predicted
-The sign and confidence intervals of the interaction terms are inadequate evidence of a conditional relationship \citep{BramborClarkGolder2006}, so I plot predicted changes in trade flows in \autoref{fig:us-elec-pred}.
-This figure presents predicted changes in trade across time to election for states with and without a U.S. defense pact. 
-Given non-linear relationships from logged trade flows and a robust estimator, these predictions are more straightforward to interpret than marginal effects.\footnote{I present marginal effects in the appendix.} 
+If defense contracting drives electoral export cycles, we should observe electoral cycles in defense contracting.
+\autoref{fig:contract-cycles} shows defense contracting cycles around presidential elections. 
+As presidential elections approach, aggregate defense contract awards increase. 
+There is a notable spike of \$25-30 billion in the median of overall defense contracts from two years into a presidential term to one year before an election. 
+Median defense contracting levels rise further in election years.
 
 
 \begin{figure}[htpb]
 	\centering
-		\includegraphics[width=0.95\textwidth]{../figures/us-elec-pred.png}
-	\caption{Predicted changes in trade between the the United States and other states. Points mark the predictions and error bars summarize the 95\% confidence interval.}
-	\label{fig:us-elec-pred}
+		\includegraphics[width=0.95\textwidth]{../figures/contract-cycles.png}
+	\caption{Distribution of prime defense contract awards by presidential election proximity, 2000-2020. The dark line in the box plot marks the median value of total contract awards in each year.}
+	\label{fig:contract-cycles}
 \end{figure}
 
 
-Predicted changes in exports, imports, total trade and the trade balance are consistent with inferences from the coefficient estimates. 
-While U.S. exports to non-allies rise somewhat with election proximity, exports to allied states increase more. 
-Allied and non-allied export changes are comparable until the year before and year of U.S. presidential elections, and after that, exports to U.S. allies increase by far more. 
+Particular sectors drive the aggregate increase in defense contracting. 
+Aircraft contracts increase dramatically, as do missile and space outlays. 
+Naval contacts and prime awards for weapons and ammunition also increase, but retain a high level in the first year of many administrations, which changes those cycles. 
+Electronics contracting also rise significantly, and there is a slight increase in vehicle contracting. 
+Outside of aircraft, most of the specific platform cycles change the median contract outlay by less than \$10 billion.
 
 
-% time to election
-U.S. imports increase as presidential elections approach, and there is little difference in the trend between allies and other states. 
-This is the result of political budget cycles boosting domestic consumption, which do not target specific goods.
-Imports from allies are consistently greater than imports from non-allies, however, which is consistent with prior work on alliances and trade promotion \citep{GowaMansfield2004}. 
-
-
-Differences in exports produce distinct electoral trade cycles between states with a U.S. defense treaty and those without. 
-Non-allies increase imports and exports in similar ways as elections approach. 
-As a result, their total trade changes increase with election proximity, but less so than allies. 
-Allied trade with the United States rises more than trade with other states in presidential election years. 
-
-
-Trade balances, a key concern for some policymakers, show less evidence of electoral cycles. 
-U.S. trade deficits with allies narrow somewhat around elections, but expand with non-allies, as imports rise more than exports. 
-Uncertainty estimates makes distinguishing predictions between and within the two groups difficult.
-
-
-% improved trade balance
-These results are consistent with the export cycles hypothesis. 
-Exports to allies increase more near elections than exports to non-allies.
-In the next section, I show that differences in arms transfers to allies track electoral export cycles.
-
+Therefore, there is some evidence that defense contracting cycles follow presidential elections.
+Along with prior research \citep{DerouenHeo2000}, this suggests that defense contracting is a plausible source of electoral cycles in arms exports from the United States to its allies.
+Efforts to manipulate economic conditions through defense contracting have international ramifications. 
 
 
 \section{Arms Transfers and Presidential Elections}
 
 
+The next step in the argument suggests corresponding electoral cycles in U.S. arms exports. 
 I model U.S. arms transfers from 1951 to 2014 using data from the SIPRI Arms Transfer Database \citep{SIPRI2021}.
 The outcome in this analysis is annual logged arms transfers, based on SIPRI's trend indicator value methodology for major conventional weapons.
 I model arms transfer levels because these shifts are less autocorrelated than overall exports.
@@ -722,59 +630,159 @@ Leaders may also face more scrutiny over arms transfers outside alliances as ele
 
 
 These growing arms exports to allies near elections are the result of electoral cycles in defense contracting. 
-The next piece of evidence demonstrates the presence of electoral cycles in defense contracting.  
-Future iterations of the paper will analyze this final stage of the process more fully. 
+The next analysis shows electoral cycles in U.S. trade, especially exports to allies. 
 
 
 
-\section{Defense Contracting Cycles}
+
+\section{Electoral Cycles in U.S. Exports to Allies}
+
+To test the trade cycles hypothesis, I analyze U.S. trade from 1950 to 2014. 
+This analysis establishes that allied states see larger electoral export cycles than non-allies, while U.S. imports increase regardless of security ties. 
+The key independent variable measures years until a presidential election year.
+The years to election variable ranges from zero in election years to three in the year immediately after an election. 
+The second key variable is a dummy indicator of a defensive alliance between the United States and each state, drawn from the ATOP database \citep{Leedsetal2002}.
+Finally, I interact the defensive alliance dummy with the years to election variable.
 
 
-To show electoral cycles in defense contracting, I draw on Department of Defense prime contract award data from the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
-This archive contains data on individual contract awards from to 2000 fiscal year on.
-I collected all Department of Defense contracts from 2000 to 2020.
+The key outcomes are annual changes in the natural log of exports, changes in log imports, changes in total trade, and trade balance changes.
+The total trade changes and trade balance changes measures assess the net impact of export and import changes.
+I use changes because models in levels with a lagged dependent variable suggest non-stationarity in many panels. 
+Lagged trade flows have unit roots or near unit root coefficients, so models in levels risk spurious inferences \citep{GrangerNewbold1974}.
+I draw on exports and imports data from the IMF's direction of trade statistics database.
 
 
-In addition to aggregating the total federal dollar obligation of all contracts in every year, I differentiate contracts by sector to assess which sectors drive contracting cycles. 
-I measure total contracts for aircraft, ships, vehicles, electronics, missiles/space, and weapons/ammunition. 
-While large contracts for components of major combat platforms have greater economic heft, full platforms can take years to deliver. 
-Missiles, weapons and ammunition may lead to more immediate exports of defense goods, as their production schedules are more flexible.
+For U.S. exports, my argument makes three predictions about the interaction between alliances and years to election in the exports model. 
+First a positive constituent term on the defensive alliance variable, which indicates that allies take more exports than non-allies in election years, when time to an election is zero.
+Second, I expect a negative constituent term on years to election as non-allied states respond to political business cycles with increases in other trade. 
+Last, a negative interaction between alliances and time to the election would indicate that exports to allies are more responsive to elections than exports to states without a defensive alliances with the United States.
 
 
-If defense contracting drives electoral export cycles, we should observe electoral cycles in defense contracting.
-\autoref{fig:contract-cycles} shows defense contracting cycles around presidential elections. 
-As presidential elections approach, aggregate defense contract awards increase. 
-There is a notable spike of \$25-30 billion in the median of overall defense contracts from two years into a presidential term to one year before an election. 
-Median defense contracting levels rise further in election years.
+I expect no interaction between alliances and election proximity for U.S. imports, because imports reflect general economic growth.
+Foreign firms will respond to increased U.S. demand regardless of alliance cooperation.  
+Allies may export more to the United States than other countries, but they will not be more responsive to elections.
+
+
+In addition to the interaction of time to elections and a defensive alliance, I include a series of control variables that may be correlated with alliances and trade. 
+Key trade variables include for changes in the GDP of both states, population-weighted distance, contiguity, common language and former colonial ties \citep{FouquinHugot2016}.
+I also adjust for democracy \citep{Marquez2016}, the presence of a militarized interstate dispute \citep{Gibleretal2016}, and shared IGO membership \citep{Pevehouseetal2020}.\footnote{Some dyadic data from the \textit{peacesciencer} \textsf{R} package \citep{peacesciencer-package}.}
+
+
+Some trade flow changes are unusual. 
+This creates heavy-tailed residuals, so I employ a robust regression estimator; M-estimation with Tukey's biweight function \citep{RaineyBaissa2020}.
+Robust regression places less weight on unusual observations, making it more efficient than OLS for this particular outcome.
+
+
+
+\subsection{Results}
+
+
+Raw trade data shows differences between allies and non-allies for electoral cycles in U.S. exports, imports and total trade. 
+\autoref{fig:us-trade-cycles-all} presents the distribution of changes in logged exports, imports and overall trade in years with differing proximity to presidential elections.
+Box plots summarize the distribution of U.S. trade with all states in those years. 
+The dark line in each box plot marks the median value. 
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.95\textwidth]{../figures/us-trade-cycles-all.png}
+\caption{Electoral cycles in U.S. trade between 1950 and 2014. Each box plot summarizes the distribution of changes in logged exports, imports, and overall trade as a presidential election approaches. Colors mark trade with allies and non-allies. The thick black line in each box plot marks the median value.}
+\label{fig:us-trade-cycles-all}
+\end{figure}
+
+
+Median export changes are higher for allies than non-allies near presidential elections. 
+Export changes for non-allies still rise, but less than exports to allies. 
+Imports from non-allies and allies are equally responsive to election timing. 
+As a result, total U.S. trade increases regardless of formal security ties.
+
+
+\autoref{fig:us-trade-cycles} shows electoral cycles in U.S. trade, but it is possible that other factors confound this relationship.
+\autoref{fig:us-trade-coefs} presents coefficient estimates from the robust regression models of the four trade outcomes, along with 95\% confidence intervals. 
+These estimates suggest that allies receive substantial U.S. export cycles, but all states respond to elections with increased exports to the United States. 
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.95\textwidth]{../figures/us-trade-coefs.png}
+\caption{Robust regression coefficients from models of U.S. trade, 1950 to 2014. Points mark coefficient estimates and error bars encapsulate 95\% confidence intervals. All continuous predictors rescaled by two standard deviations.}
+\label{fig:us-trade-coefs}
+\end{figure}
+
+
+As expected, the interaction between the defensive alliance dummy and years to election is negative in the exports model, which implies that allies receive more U.S. exports as presidential elections approach.
+Allies receive more U.S. exports in election years, and respond especially strongly to election timing.
+The smaller constituent term on the election years constituent term in the exports model implies a smaller electoral cycle in exports to non-allies.
+
+
+The interaction term for imports suggests no clear difference in U.S. imports around elections between allies and non-allied states. 
+Moreover, the time to election constituent term is negative for all outcomes, except the trade balance. 
+This is indicative of similar electoral cycles between allies and non-allies.
+Trade changes approximate the track of exports. 
+Simultaneous increases in imports and exports have an unclear impact on trade balances, however. 
+ 
+
+
+% predicted
+The sign and confidence intervals of the interaction terms are inadequate evidence of a conditional relationship \citep{BramborClarkGolder2006}, so I plot predicted changes in trade flows in \autoref{fig:us-elec-pred}.
+This figure presents predicted changes in trade across time to election for states with and without a U.S. defense pact. 
+Given non-linear relationships from logged trade flows and a robust estimator, these predictions are more straightforward to interpret than marginal effects.\footnote{I present marginal effects in the appendix.} 
 
 
 \begin{figure}[htpb]
 	\centering
-		\includegraphics[width=0.95\textwidth]{../figures/contract-cycles.png}
-	\caption{Distribution of prime defense contract awards by presidential election proximity, 2000-2020. The dark line in the box plot marks the median value of total contract awards in each year.}
-	\label{fig:contract-cycles}
+		\includegraphics[width=0.95\textwidth]{../figures/us-elec-pred.png}
+	\caption{Predicted changes in trade between the the United States and other states. Points mark the predictions and error bars summarize the 95\% confidence interval.}
+	\label{fig:us-elec-pred}
 \end{figure}
 
 
-Particular sectors drive the aggregate increase in defense contracting. 
-Aircraft contracts increase dramatically, as do missile and space outlays. 
-Naval contacts and prime awards for weapons and ammunition also increase, but retain a high level in the first year of many administrations, which changes those cycles. 
-Electronics contracting also rise significantly, and there is a slight increase in vehicle contracting. 
-Outside of aircraft, most of the specific platform cycles change the median contract outlay by less than \$10 billion.
+Predicted changes in exports, imports, total trade and the trade balance are consistent with inferences from the coefficient estimates. 
+While U.S. exports to non-allies rise somewhat with election proximity, exports to allied states increase more. 
+Allied and non-allied export changes are comparable until the year before and year of U.S. presidential elections, and after that, exports to U.S. allies increase by far more. 
 
 
-Therefore, there is some evidence that defense contracting cycles follow presidential elections.
-Along with prior research \citep{DerouenHeo2000}, this suggests that defense contracting is a plausible source of electoral cycles in arms exports from the United States to its allies.
-Efforts to manipulate economic conditions through defense contracting have international ramifications. 
+% time to election
+U.S. imports increase as presidential elections approach, and there is little difference in the trend between allies and other states. 
+This is the result of political budget cycles boosting domestic consumption, which do not target specific goods.
+Imports from allies are consistently greater than imports from non-allies, however, which is consistent with prior work on alliances and trade promotion \citep{GowaMansfield2004}. 
+
+
+Differences in exports produce distinct electoral trade cycles between states with a U.S. defense treaty and those without. 
+Non-allies increase imports and exports in similar ways as elections approach. 
+As a result, their total trade changes increase with election proximity, but less so than allies. 
+Allied trade with the United States rises more than trade with other states in presidential election years. 
+
+
+Trade balances, a key concern for some policymakers, show less evidence of electoral cycles. 
+U.S. trade deficits with allies narrow somewhat around elections, but expand with non-allies, as imports rise more than exports. 
+Uncertainty estimates makes distinguishing predictions between and within the two groups difficult.
+
+
+% improved trade balance
+These results are consistent with the export cycles hypothesis. 
+Exports to allies increase more near elections than exports to non-allies.
+In the next section, I incorporate all of the above evidence into a single statistical model. 
+
+
+
+\section{A Bayesian Model of Contracts, Arms Exports, and Trade}
+
+
+The three individual analyses provide initial support for the argument, but they also treat each part of the process in isolation. 
+To show the full process, I employ a generative model where each stage of the process informs the next level.
+This move 
+I employ this approach because standard multiple-equation models in political science cannot easily accommodate divergent levels of analysis.
+Flexible structure and Bayesian estimation can capture a wide variety of complex data-generating structures, subject to careful model validation \citep{Betancourt2021}. 
+
+
 
 
 
 \section{Discussion and Conclusion}
 
 
-All three results are consistent with political budget and defense contracting cycles driving expanding international trade and arms exports to U.S. allies. 
-%check for non-linear relationships and adequate support in the interactions \citep{Hainmuelleretal2019}. 
-%I also present inferences from Bayesian models that adjust for dyadic clustering through varying intercepts.
+The argument and results suggest that political budget and defense contracting cycles expand international trade, especially arms exports to U.S. allies. 
 Economic efforts to bolster presidential electoral prospects have international consequences. 
 Additional goods from defense contracting cycles produce arms flows outside the United States.
 This bolsters cooperative relations between the United States and its allies.
