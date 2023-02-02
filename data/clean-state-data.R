@@ -390,27 +390,3 @@ state.data.ord <- left_join(state.data, arms.cat.all) %>%
             .funs = list(lag = lag,
                          change = function(x) x - lag(x))) 
 
-
-
-
-# load 1976 to 2003 data: market level
-# contracts.data.76 <- read_dta("data/carril-duggan-market_V1.dta") 
-# 
-# contracts.76.yr <- contracts.data.76 %>%
-#   group_by(actfy) %>%
-#   summarize(
-#     obligations = sum(mktdollars, na.rm = TRUE)
-#   ) %>% 
-#   mutate( # obligations in billions
-#     obligations = obligations / 1000000000
-#   ) %>%
-#   rename(
-#     year = actfy
-#   )
-# 
-# 
-# # plot
-# ggplot(contracts.76.yr, aes(x = year, y = obligations)) +
-#   geom_vline(xintercept=c(pres.elections), linetype="dotted") +
-#   xlim(1976, 2004) +
-#   geom_line()   

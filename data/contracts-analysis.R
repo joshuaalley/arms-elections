@@ -156,7 +156,7 @@ summary(nonally.exports.contract)
 
 # state component
 state.data.ml <- select(state.data, state, year,
-                        ln_obligations, diff_vote_share,
+                        ln_obligations, diff_vote_share, pivot_prox,
                         time_to_selec, time_to_pelec,
                         ln_ngdp) %>% 
   distinct() %>% 
@@ -179,7 +179,7 @@ ggplot(state.data.ml, aes(x = ln_obligations)) + geom_histogram()
 # clean up ordering
 state.data.ml <- state.data.ml %>%
   select(state, year, state.year.txt, state.year, year.id,
-         ln_obligations, lag_ln_obligations,
+         ln_obligations,
          everything()) %>%
   mutate(
     intercept = 1
@@ -190,11 +190,16 @@ class(state.data.ml) <- "data.frame"
 
 # state data for analysis 
 state.yr.final <- state.data.ml %>%
+  mutate(
+    iraq_war = ifelse(year >= 2003 & year <= 2010, 
+                      1, 0)
+  ) %>%
   select(intercept,
-         ln_obligations, lag_ln_obligations, 
+         ln_obligations, 
          ln_ngdp,
-         diff_vote_share,
-         time_to_pelec, time_to_selec) 
+         pivot_prox,
+         time_to_pelec, time_to_selec,
+         iraq_war) 
 # rescale obligations and GDP by 2sd 
 state.yr.final[, 2:3] <- apply(state.yr.final[, 2:3], 2,
        function(x) arm::rescale(x,
