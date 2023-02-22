@@ -415,17 +415,13 @@ me.us.elec <- function(model, formula, rm.wt, data){
                   newdata = typical.func.us(model))
   
   me.def.plot <- plot_cme(model, variables = "atop_defense", 
-           condition = "time_to_elec")
+           condition = "time_to_elec", draw = FALSE)
   
   # predicted outcomes
-  pred.out <- bind_cols(as.data.frame(
-                          predict(model, 
-                          newdata = typical.func.us(model),
-                          interval = "confidence")
-                          ),
-                          typical.func.us(model))
+  pred.out <- predictions(model, 
+                          newdata = typical.func.us(model))
   
-  res <- list(me.est, pred.out)
+  res <- list(me.est, pred.out, me.def.plot)
 }
 
 # exports 

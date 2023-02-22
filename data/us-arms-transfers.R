@@ -223,45 +223,6 @@ us.deals$nz_deals[is.na(us.deals$nz_deals)] <- 0
 # complete cases
 us.deals.comp <- drop_na(us.deals)
 
-# time trend squared and cubed
-us.deals.comp <- us.deals.comp %>% 
-  mutate(tmpG = cumsum(c(FALSE, as.logical(diff(nz_deals))))) %>%
-  group_by(ccode) %>%
-  mutate(tmp_a = c(0, diff(year)) * !nz_deals) %>%
-  group_by(tmpG) %>%
-  mutate(time_tr = cumsum(tmp_a)) %>%
-  ungroup() %>%
-  select(-c(tmp_a, tmpG))
-
-us.deals.comp$time_tr <- parameters::demean(us.deals.comp, "time_tr", "ccode")$time_tr_within  
-
-us.deals.comp <- us.deals.comp %>%
-  mutate(
-    time_tr2 =  time_tr^2,
-    time_tr3 = time_tr^3
-  )
-
-
-# logistic regression of non-zero arms deals
-# time terms separate badly within countries- more consistency in deals
-logit.nz.deals <- glm(nz_deals ~ atop_defense + 
-                        cold_war + eu_member +
-                        xm_qudsest2 +  cowmidongoing + dyadigos +
-                        rep_pres + 
-                        ln_gdp_d + 
-                        ln_pop_d + ln_distw + 
-                        Comlang,
-                      family = binomial(link = "logit"),
-                      data = us.deals.comp)
-summary(logit.nz.deals)
-# predicted prob of nz deals as a variable 
-us.deals.comp$pred_nz_deals <- predict(logit.nz.deals, type = "response")
-
-# check fit
-ggplot(us.deals.comp, aes(x = pred_nz_deals,
-                         group = factor(nz_deals),
-                         fill = factor(nz_deals))) + geom_histogram()
-
 # poisson model of deals 
 pois.deals <- glm(deals ~ atop_defense*time_to_elec +
                   cold_war + eu_member +
@@ -276,4 +237,47 @@ pois.deals <- glm(deals ~ atop_defense*time_to_elec +
 summary(pois.deals)
 plot_cme(pois.deals, variables = "time_to_elec", condition = "atop_defense")
 plot_cme(pois.deals, condition = "time_to_elec", variables = "atop_defense") 
-  
+
+# poisson model predictions 
+pois.deals.est <- me.us.elec(pois.deals, data = us.deals.comp)  
+
+pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate, 
+                         x = time_to_elec,
+                         group = factor(atop_defense),
+                         color = factor(atop_defense))) +
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line() +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1)) +
+  scale_color_grey("Defense Pact", 
+                   start = 0.7,
+                   end = 0.1,
+                   labels = c(`0` = "No", `1` = "Yes")) +
+  labs(title = "Elections and Arms Deals",
+       y = "Predicted Arms Deals",
+       x = "Years to Presidential Election")
+pred.us.deals
+
+# marginal effects w/ same style
+me.us.deals <- ggplot(pois.deals.est[[3]], 
+                              aes(y = estimate, 
+                                x = time_to_elec)) +
+  scale_x_reverse() + # decreasing time to election +
+  geom_line(linewidth = 1) + 
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
+              alpha = .4) +
+  scale_color_grey("Defense Pact", 
+                   start = 0.7,
+                   end = 0.1,
+                   labels = c(`0` = "No", `1` = "Yes")) +
+  labs(title = "Marginal Impact of Alliance on Arms Deals",
+       y = "Marginal Effect of Allaince",
+       x = "Years to Presidential Election")
+me.us.deals
+
+# combine and export
+grid.arrange(pred.us.deals, me.us.deals, nrow = 1)
+us.arms.plots <- arrangeGrob(pred.us.deals, me.us.deals, nrow = 1)
+ggsave("figures/us-arms-plots.png", us.arms.plots, height = 6, width = 8)
+i
