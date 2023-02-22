@@ -1,5 +1,5 @@
 # Joshua Alley
-# Senate elections and state cycles
+# Elections and state cycles in defense contracting
 
 
 ### raw data 
@@ -21,41 +21,31 @@ ggplot(drop_na(state.data, incumbent),
   geom_boxplot()
 
 
+ggplot(state.data, 
+       aes(color = factor(time_to_selec,
+                      ordered = TRUE,
+                      levels = c("3", "2",
+                                 "1", "0")),
+           y = ln_obligations,
+           x = s_comp)) +
+  geom_point() 
+
 
 # Senate incumbent models
 # simple model: OLS
 # robust
-sen.ob.rlm <- lm(ln_obligations ~ time_to_selec*incumbent +
-                    poptotal + ln_ngdp + pres_election,
+sen.ob.rlm <- rlm(ln_obligations ~ s_comp + incumbent +
+                    time_to_selec +
+                    diff_vote_share + time_to_pelec +
+                    poptotal + ln_ngdp + iraq_war,
                  data = state.data) 
 summary(sen.ob.rlm)
 
 
-sen.ob.brm <- brm(ln_obligations ~ sen_election*incumbent +
-                    poptotal + ln_ngdp + pres_election +
-                    (1 | state),
-                  family = student(),
-                  backend = "cmdstanr",
-                  control = list(
-                    max_treedepth = 20
-                  ),
-                  data = state.data,
-                  cores = 4,
-                  threads = 4,
-                  prior = c(
-                    prior(normal(0, .5), class = b),
-                    prior(normal(0, 1), class = sd),
-                    prior(normal(0, 1), class = sigma)
-                  ))
-summary(sen.ob.brm)
-
-
-
-
 
 sen.vote.log <- glm(incumb.win ~ ln_obligations +
-                   poptotal + ln_ngdp + pres_election,
-                 data = filter(state.data, incumbent == 1),
+                   poptotal + ln_ngdp + pres_election + iraq_war,
+                 data = state.data,
                  family = binomial(link = "logit"))
 summary(sen.vote.log)
 
@@ -63,58 +53,73 @@ summary(sen.vote.log)
 
 # Presidential vote 
 
-
-# plot obligations
+# plot obligations: loess 
 ggplot(state.data, 
-       aes(color = factor(time_to_pelec,
+       aes(group = factor(time_to_pelec,
+                          ordered = TRUE,
+                          levels = c("3", "2",
+                                     "1", "0")),
+           color = factor(time_to_pelec,
                           ordered = TRUE,
                           levels = c("3", "2",
                                      "1", "0")),
            y = ln_obligations,
-           x = pivot_prox)) +
+           x = diff_vote_share)) +
   geom_point() +
+  geom_smooth() +
+  theme(legend.position = "bottom")
+
+
+# plot obligations: linear
+ggplot(state.data, 
+       aes(group = factor(time_to_pelec,
+                          ordered = TRUE,
+                          levels = c("3", "2",
+                                     "1", "0")),
+           color = factor(time_to_pelec,
+                          ordered = TRUE,
+                          levels = c("3", "2",
+                                     "1", "0")),
+           y = ln_obligations,
+           x = diff_vote_share)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme(legend.position = "bottom")
+
+
+# by election timing 
+# plot obligations
+ggplot(state.data, 
+       aes(y = ln_obligations,
+           x = diff_vote_share)) +
+  facet_wrap(~ time_to_pelec) +
+  geom_point() +
+  geom_smooth() +
   theme(legend.position = "bottom")
 
 
 # prior vote share and contracting 
-pres.ob.vote <- lm(ln_obligations ~ time_to_pelec*lag_diff_vote +
-                      poptotal + ln_ngdp + factor(state),
+pres.ob.vote <- rlm(ln_obligations ~ s_comp + 
+                      diff_vote_share +
+                      time_to_pelec +
+                      iraq_war +
+                      poptotal + ln_ngdp, #+ factor(state),
                   data = state.data) 
 summary(pres.ob.vote)
 
 
 # contracting from time to presidential elections and pivot proximity
-pres.ob.prox <- lm(ln_obligations ~ time_to_pelec*pivot_prox +
-                      poptotal + ln_ngdp + factor(state),
+pres.ob.prox <- lm(ln_obligations ~ time_to_pelec + pivot_prox +
+                     iraq_war +
+                      poptotal + ln_ngdp,
                    data = state.data) 
 summary(pres.ob.prox)
 
 
 
 
-pres.ob.brm <- brm(ln_obligations ~ time_to_pelec*pivot_prox +
-                    poptotal + ln_ngdp + 
-                    (1 | state),
-                  family = student(),
-                  backend = "cmdstanr",
-                  control = list(
-                    max_treedepth = 20
-                  ),
-                  data = state.data,
-                  cores = 4,
-                  threads = 4,
-                  prior = c(
-                    prior(normal(0, .5), class = b),
-                    prior(normal(0, 1), class = sd),
-                    prior(normal(0, 1), class = sigma)
-                  ))
-summary(pres.ob.brm)
-
-
-
-
-
 # link orders with state contracts by sector
+# this puts orders before contracts
 sector.list <- c("aircraft", "arms", "electronics", "missile_space",
                  "ships", "vehicles")
 formula.sector <- vector(mode = "list", length = length(sector.list))
@@ -122,13 +127,16 @@ formula.sector <- vector(mode = "list", length = length(sector.list))
 for(i in 1:length(sector.list)){
   formula.sector[[i]] <- as.formula(
     paste(
-      sector.list[i], "~", 
-      paste0(sector.list[i], "_lag"),
-      #paste0(" + ", "all_", sector.list[i]),
-      paste0(" + ", "all_", sector.list[i], "_lag"),
-      #paste0(" + ", "nall_", sector.list[i]),
-      paste0(" + ", "nall_", sector.list[i], "_lag"),
-      paste0(" + ", "factor(state)")
+      paste0(sector.list[i], "_change ", "~"), 
+      # paste0(sector.list[i]), "~",
+      # paste0(sector.list[i], "_lag"),
+      paste0(" + ", "s_comp"),
+      paste0(" + ", "diff_vote_share + time_to_pelec"),
+      # paste0(" + ", "all_", sector.list[i], "_lag"),
+      # paste0(" + ", "nall_", sector.list[i], "_lag"),
+      paste0("+ iraq_war")
+      #paste0(" + ", "factor(election.cycle)")
+      #paste0(" + ", "factor(state)")
     ))
   }
 
@@ -137,13 +145,13 @@ summary(sector.state.sys)
 
 # interact with pivot proximity  
 for(i in 1:length(sector.list)){
-  formula.sector[[i]] <- as.formula(
+  formula.sector[[i]] <- as.formula-(
     paste(
-      paste0(sector.list[i]), "~", 
-      paste0(sector.list[i], "_lag"),
+      paste0(sector.list[i]), "_change", "~", 
+      #paste0(sector.list[i], "_lag"),
       paste0(" + ", "all_", sector.list[i], "_lag", "*pivot_prox"),
       paste0(" + ", "nall_", sector.list[i], "_lag", "*pivot_prox"),
-      paste0(" + ", "factor(state)")
+      paste0(" + ", "iraq_war")
     ))
 }
 

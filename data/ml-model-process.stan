@@ -19,16 +19,22 @@ data {
 }
 
 parameters {
-  vector[K] beta;  // population-level effects
+  vector[K] beta;  // population-level effects- arms
   vector[L] lambda; // state-year level effects
   real alpha;  // overall intercept
   vector[C] alpha_cntry_std; // country varying intercepts: standardized for NC
   real<lower = 0> sigma_cntry; // sd of country intercepts
-  real<lower = 0> sigma_stateyr; // sd of state-year intercepts
+  real<lower = 0> sigma_stateyr; // sd of state-year parameters
+  //real<lower = 4> nu_ob; // d.f. for state-year parameters
 }
 
 transformed parameters {
   vector[C] alpha_cntry; // country varying intercepts
+  vector[S] mu_stateyr; // state-year parameter means
+  
+    
+  // linear predictor for arms
+    mu_stateyr = G * lambda;
   
   // country varying intercepts
   alpha_cntry = 0 + sigma_cntry * alpha_cntry_std; // non-centered parameterization,
@@ -39,25 +45,23 @@ transformed parameters {
  }
 
 model {
-  
+
   vector[N] mu;
-  vector[S] mu_stateyr; // state-year varying intercepts means
   
-  // linear predictor for arms
-    mu_stateyr = G * lambda;
   
-  // likelihood: contracts-
-  // TODO(JOSH): Move this to a t-dist eventually
+  // likelihood: contracts- t distributed
       for (s in 1:S) {
       target += normal_lpdf(y_ob[s] | mu_stateyr[s], sigma_stateyr);
     }
     
   // initialize linear predictor term: arms
     mu = alpha_cntry[cntry] + 
-                  Z * mu_stateyr + // brings in arms 
+                  Z * mu_stateyr + // brings in arms- 
+                  // can add alliance inter w/ index
+                  //(Z * mu_stateyr)[alliance]
                   X * beta;
 
-  // likelihood: exports
+  // likelihood: arms exports- poisson
     for (n in 1:N) {
       target += poisson_log_lpmf(y_arms[n] | mu[n]);
     }
@@ -68,6 +72,8 @@ model {
   target += normal_lpdf(alpha_cntry_std | 0, 1);
   target += normal_lpdf(sigma_cntry | 0, 1);
   target += normal_lpdf(sigma_stateyr | 0, 1);
+  //target += gamma_lpdf(nu_ob | 2, 0.1);
+  
 }
 
 generated quantities{

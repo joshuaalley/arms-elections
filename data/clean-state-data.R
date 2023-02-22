@@ -260,9 +260,6 @@ state.exports.dyad <- filter(state.exports.dyad, duplicates == FALSE)
 
 
 ### state and election covariates
-# load senate data here:
-senate.data <- read.csv("data/senate-data.csv")
-glimpse(senate.data)
 
 # annual by state, year, and program 
 contracts.data.state <- contracts.data %>%
@@ -328,13 +325,19 @@ state.exports.dyad <- left_join(state.exports.dyad,
                                     state = str_to_sentence(state)
                                   ))
 
-# senate
+# senate data
+# load senate data here:
+senate.data <- read.csv("data/senate-data.csv")
+glimpse(senate.data)
+
+
 state.sen.data <- left_join(contracts.state.wide, senate.data) %>%
   group_by(state) %>%
   mutate(
     incumbent = ifelse(str_detect(incumb, "incumb"),
                        1, 0),
     election.year = ifelse(election == 1, year, NA),
+    s_comp = abs(vote.share - .5),
     incumb.win = ifelse((incumb == "GOP incumb" & 
                            party_simplified == "REPUBLICAN") |
                           (incumb == "Dem incumb" & 
@@ -353,10 +356,12 @@ state.sen.data$election[is.na(state.sen.data$election)] <- 0
 # merge with state data 
 state.sen.data$state <- str_to_title(state.sen.data$state)
 state.data <- left_join(state.sen.data, cspp.data) %>%
-  filter(year <= 2019) %>%
+  filter(year <= 2020) %>%
   mutate(
     poptotal = arm::rescale(poptotal), 
-    ln_ngdp = arm::rescale(ln_ngdp)
+    ln_ngdp = arm::rescale(ln_ngdp),
+    iraq_war = ifelse(year >= 2003 & year <= 2010, 
+                      1, 0)
   )
 
 
@@ -374,12 +379,20 @@ state.data <- left_join(state.data, election.res.join) %>%
   )
 
 # fill in election data for intervening years
+# back fill- next election is what matters
 state.data <- state.data %>%
   fill(diff_vote_share, lag_close_state,
-       pivot_prox,
-       .direction = "down") %>%
+       pivot_prox, s_comp,
+       .direction = "up") %>%
   group_by(state) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(
+    election.cycle = ifelse(year <= 2004, 2004,
+                             ifelse(year <= 2008, 2008,
+                                    ifelse(year <= 2012, 2012,
+                                           ifelse(year <= 2016, 2016,
+                                           2020))))
+  )
 
 
 # State data w/ contracts by type
@@ -390,3 +403,19 @@ state.data.ord <- left_join(state.data, arms.cat.all) %>%
             .funs = list(lag = lag,
                          change = function(x) x - lag(x))) 
 
+
+
+# Variation in pivot_prox and vote share by state
+state.elec.sum <- election.res.join %>% 
+                   group_by(state) %>%
+                   summarize(
+                     mean.prox = mean(pivot_prox, na.rm = TRUE), 
+                     mean.diff = mean(diff_vote_share, na.rm = TRUE),
+                     sd.prox = sd(pivot_prox, na.rm = TRUE),
+                     sd.diff = sd(diff_vote_share, na.rm = TRUE)
+                   )
+ggplot(state.elec.sum, aes(x = mean.prox, y = sd.prox)) +
+  geom_point()
+
+ggplot(state.elec.sum, aes(x = mean.diff, y = sd.diff)) +
+  geom_point()

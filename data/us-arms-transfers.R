@@ -189,3 +189,10 @@ summary(us.arms.ex.ncw)
 
 
 
+
+### model arms deals instead 
+
+# poisson model
+
+
+

@@ -558,10 +558,12 @@ us.trade.regis <- unite(us.trade.regis,
                 ) %>%
                 rowwise() %>%
                 mutate(
-                 cost = mean(c(cost.low, cost.high), na.rm = TRUE)
+                 cost = mean(c(cost.low, cost.high), na.rm = TRUE),
+                 cost.est = ifelse(cost > 0, 1, 0),
                 ) %>%
                 ungroup()
 us.trade.regis$cost[is.nan(us.trade.regis$cost)] <- NA
+us.trade.regis$cost.est[is.na(us.trade.regis$cost.est)] <- 0
 
 us.trade.regis$cost[us.trade.regis$cost.size == "b" & !is.na(us.trade.regis$cost.size)] <- us.trade.regis$cost[
                         us.trade.regis$cost.size == "b" &
@@ -677,12 +679,39 @@ us.trade.regis.sum <- us.trade.regis %>%
                          n = n(),
                          mean.deliv.lag = mean(deliv.lag, na.rm = TRUE),
                          mean.deliv.dur = mean(deliv.dur, na.rm = TRUE),
+                         second.hand = sum(second.hand, na.rm = TRUE),
+                         aid = sum(aid, na.rm = TRUE),
                          prop.second.hand = mean(second.hand, na.rm = TRUE),
                          prop.aid = sum(aid, na.rm = TRUE) / n,
-                         ordered = median(ordered, na.rm = TRUE),
+                         med.ordered = median(ordered, na.rm = TRUE),
                          .groups = "keep"
                        )
+us.trade.regis.sum
 
+
+# deals by year
+# summarize by category and year
+arms.deals.year <- us.trade.regis %>%
+  group_by(year) %>%
+  summarize(
+    deals = n(),
+    second.hand = sum(second.hand, na.rm = TRUE),
+    aid = sum(aid, na.rm = TRUE),
+    .groups = "keep"
+  ) %>%
+  left_join(elections.data) %>%
+  pivot_longer(
+    cols = c(deals, aid, second.hand)
+  )
+
+ggplot(drop_na(arms.deals.year,
+               time_to_elec),
+       aes(x = factor(time_to_elec),
+           color = factor(time_to_elec),
+           y = value)) +
+  facet_wrap(~ name, scales = "free_y") +
+  scale_x_discrete(limits  = rev) +
+  geom_boxplot(outlier.shape = NA)
 
 
 # summarize by category and year
@@ -692,23 +721,46 @@ us.arms.sum.year <- us.trade.regis %>%
     deals = n(),
     mean.deliv.lag = mean(deliv.lag, na.rm = TRUE),
     mean.deliv.dur = mean(deliv.dur, na.rm = TRUE),
-    prop.aid = sum(aid, na.rm = TRUE) / deals,
-    prop.second.hand = sum(aid, na.rm = TRUE) / deals,
+    second.hand = sum(second.hand, na.rm = TRUE),
+    aid = sum(aid, na.rm = TRUE),
+    prop.aid = aid / deals,
+    prop.second.hand =  second.hand / deals,
     ordered = median(ordered, na.rm = TRUE),
     .groups = "keep"
   ) %>%
   left_join(elections.data)
 
+# plot raw cycles- deals
 ggplot(drop_na(us.arms.sum.year,
                time_to_elec),
-       aes(x = time_to_elec,
+       aes(x = factor(time_to_elec),
            color = factor(time_to_elec),
-           y = deals)) +
+           y = aid)) +
+  scale_x_discrete(limits  = rev) +
   facet_wrap(~ weapon.type, scales = "free_y") +
-  geom_jitter() +
   geom_boxplot(outlier.shape = NA)
 
-# summarize by category 
+# plot raw cycles- aid
+ggplot(drop_na(us.arms.sum.year,
+               time_to_elec),
+       aes(x = factor(time_to_elec),
+           color = factor(time_to_elec),
+           y = aid)) +
+  scale_x_discrete(limits  = rev) +
+  facet_wrap(~ weapon.type, scales = "free_y") +
+  geom_boxplot(outlier.shape = NA)
+
+# second-hand
+ggplot(drop_na(us.arms.sum.year,
+               time_to_elec),
+       aes(x = factor(time_to_elec),
+           y = aid)) +
+  scale_x_discrete(limits  = rev) +
+  facet_wrap(~ weapon.type, scales = "free_y") +
+  geom_boxplot(outlier.shape = NA)
+
+
+# summarize by category and recipient
 us.arms.cat <- us.trade.regis %>%
   group_by(country, year, weapon.type) %>%
   drop_na(weapon.type) %>% # drop engines
@@ -716,10 +768,16 @@ us.arms.cat <- us.trade.regis %>%
     deals = n(),
     mean.deliv.lag = mean(deliv.lag, na.rm = TRUE),
     mean.deliv.dur = mean(deliv.dur, na.rm = TRUE),
+    second.hand = sum(second.hand, na.rm = TRUE),
+    aid = sum(aid, na.rm = TRUE),
     prop.aid = sum(aid, na.rm = TRUE) / deals,
     ordered = median(ordered, na.rm = TRUE),
     .groups = "keep"
-  ) 
+  ) %>%
+  mutate(
+    aid.second = sum(aid, na.rm = TRUE) +
+      sum(second.hand, na.rm = TRUE),
+  )
 us.arms.cat$ccode <- countrycode(us.arms.cat$country, 
                                  origin = "country.name",
                                  destination = "cown")
@@ -737,7 +795,7 @@ us.arms.cat.wide <- pivot_wider(us.arms.cat,
            ships_dl = ships,
            missile_space_dl = missile_space)
 
-
+# add other variables
 us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
                                   ccode, year,
                                atop_defense, cold_war,
@@ -749,6 +807,8 @@ us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
                                nz_us_arms)) %>%
                  filter(year >= 1950)
 ggplot(us.arms.cat, aes(x = deals)) + geom_histogram()
+ggplot(us.arms.cat, aes(x = aid)) + geom_histogram()
+ggplot(us.arms.cat, aes(x = second.hand)) + geom_histogram()
 
 
 

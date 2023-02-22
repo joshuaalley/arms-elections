@@ -17,6 +17,18 @@ contracts.ts.reg <- lm(all_contracts ~ lag_all_contracts +
 summary(contracts.ts.reg)
 
 
+ggplot(contracts.data.clean, aes(x = year,
+                                 color = factor(elec.cycle),
+                                 y = all_contracts)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  labs(y = "Total Prime Contracts",
+       x = "Year",
+       title = "Aggregate Defense Contracting",
+       color = "Election Cycle")
+summary(contracts.data.clean$all_contracts)
+
 # summarize by election proximity- look within cycles
 contracts.elec.agg <- ggplot(contracts.data.clean, aes(x = time_to_elec,
                                  color = factor(elec.cycle),
@@ -47,7 +59,7 @@ ggplot(contracts.data.key, aes(x =  year,
                                  y = value,
                                  group = allocation,
                                  color = allocation)) +
-  geom_line() +
+  geom_line(linewidth = 2) +
   labs(y = "Total Defense Contracts",
        x = "Year",
        title = "Defense Contracting Allocations over time")
@@ -156,9 +168,10 @@ summary(nonally.exports.contract)
 
 # state component
 state.data.ml <- select(state.data, state, year,
-                        ln_obligations, diff_vote_share, pivot_prox,
+                        ln_obligations, s_comp, diff_vote_share, 
+                        pivot_prox,
                         time_to_selec, time_to_pelec,
-                        ln_ngdp) %>% 
+                        ln_ngdp, iraq_war) %>% 
   distinct() %>% 
   group_by(state) %>%
   mutate( # lag obligations- one year to NA 
@@ -181,10 +194,10 @@ state.data.ml <- state.data.ml %>%
   select(state, year, state.year.txt, state.year, year.id,
          ln_obligations,
          everything()) %>%
-  mutate(
-    intercept = 1
-  ) %>% 
-  filter(year <= 2014)
+  filter(year <= 2014) %>% 
+  group_by(year, state.year.txt) %>%
+  mutate(n = n(), .groups = "drop") %>%
+  filter(n == 1) 
 class(state.data.ml) <- "data.frame"
 
 
@@ -192,12 +205,13 @@ class(state.data.ml) <- "data.frame"
 state.yr.final <- state.data.ml %>%
   mutate(
     iraq_war = ifelse(year >= 2003 & year <= 2010, 
-                      1, 0)
+                      1, 0),
+    intercept = 1
   ) %>%
   select(intercept,
          ln_obligations, 
          ln_ngdp,
-         pivot_prox,
+         s_comp, diff_vote_share, 
          time_to_pelec, time_to_selec,
          iraq_war) 
 # rescale obligations and GDP by 2sd 
@@ -218,7 +232,7 @@ us.arms.deals <- us.arms.cat %>%
                     .groups = "keep"
                   ) %>% 
                   right_join(select(us.trade.ally,
-                          ccode, year,
+                          ccode, year, change_ln_exports,
                           atop_defense,
                           xm_qudsest2, cowmidongoing, dyadigos,
                           change_gdp_o, change_gdp_d, 
@@ -239,6 +253,8 @@ us.arms.deals$cntry.index <- us.arms.deals %>% group_by(ccode) %>%
                               group_indices()
 us.arms.deals$year.id <- us.arms.deals %>% group_by(year) %>%
   group_indices()
+us.arms.deals$ally.id <- us.arms.deals %>% group_by(atop_defense) %>%
+  group_indices()
 
 
 ggplot(us.arms.deals, aes(x = deals)) + geom_histogram()
@@ -250,6 +266,9 @@ state.yr.idmat <- left_join(
     select(us.arms.deals, ccode, year),
     select(state.data.ml, year, state.year.txt)
    ) %>%
+  group_by(ccode, year, state.year.txt) %>%
+  summarise(n = dplyr::n(), .groups = "drop") %>%
+  filter(n == 1L) %>% 
   mutate(
     present = 1, # to fill dummies
   ) %>%

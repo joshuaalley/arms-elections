@@ -2,7 +2,54 @@
 # Models of allies, trade, and electoral cycles
 
 
-### US Only ### 
+### US Only ###
+
+
+# check the raw data
+ggplot(us.trade.ally, aes(x = total_trade)) + geom_histogram()
+ggplot(us.trade.ally, aes(x = change_trade)) + geom_histogram()
+ggplot(us.trade.ally, aes(x = trade_balance)) + geom_histogram()
+ggplot(us.trade.ally, aes(x = ln_exports)) + geom_histogram()
+
+
+# big spaghetti
+ggplot(us.trade.ally, aes(x = year,
+                          y = ln_exports,
+                          color = factor(ccode))) + 
+  geom_line() +
+  theme(legend.position = NULL)
+
+
+ggplot(us.trade.ally, aes(x = year,
+                          y = ln_exports,
+                          color = factor(ccode))) + 
+  facet_wrap(~ ccode) +
+  geom_line()
+
+
+ggplot(us.trade.ally, aes(x = year,
+                          y = ln_exports,
+                          color = factor(ccode))) + 
+  facet_wrap(~ atop_defense) +
+  geom_line() +
+  theme(legend.position = NULL)
+
+# changes by ally/not
+ggplot(us.trade.ally, aes(x = year,
+                          y = change_ln_exports,
+                          group = factor(ccode))) + 
+  facet_wrap(~ atop_defense) +
+  geom_line() +
+  theme(legend.position = NULL)
+
+# changes in loess without color
+ggplot(us.trade.ally, aes(x = year,
+                          y = change_ln_exports,)) + 
+  facet_wrap(~ atop_defense) +
+  geom_line(alpha = .5) +
+  geom_smooth() +
+  theme(legend.position = NULL)
+
 
 
 # total trade: show cycles
