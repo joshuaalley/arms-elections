@@ -140,14 +140,14 @@ us.arms.me <- bind_rows(
 )
 
 # plot
-me.usarms <- ggplot(us.arms.res[[1]], aes(y = dydx, 
+me.usarms <- ggplot(us.arms.res[[1]], aes(y = estimate, 
                        x = time_to_elec)) +
    scale_x_reverse() +
    geom_hline(yintercept = 0) +
    geom_line() +
    geom_pointrange(aes(
-      ymin = dydx - 1.96*std.error,
-      ymax = dydx + 1.96*std.error),
+      ymin = estimate - 1.96*std.error,
+      ymax = estimate + 1.96*std.error),
       position = position_dodge(width = .1)
       ) +
    labs(title = "Marginal Impact of Alliance on Arms Transfers",
@@ -192,7 +192,88 @@ summary(us.arms.ex.ncw)
 
 ### model arms deals instead 
 
-# poisson model
+# total deals- summarize at country-year level and add covariates
+us.deals <- us.arms.cat %>%
+                group_by(ccode, year) %>%
+                select(
+                  country, ccode, year, deals
+                ) %>%
+                summarize(
+                  deals = sum(deals, na.rm = TRUE),
+                  .groups = "keep"
+                ) %>%
+                right_join(select(us.trade.ally,
+                                               ccode, year,
+                                               atop_defense, cold_war,
+                                               xm_qudsest2, cowmidongoing,
+                                               dyadigos,
+                                               rep_pres, time_to_elec, 
+                                               eu_member, ln_gdp_d,
+                                               ln_pop_d, ln_distw,
+                                               change_gdp_d, Comlang,
+                                               Contig, Evercol)) %>%
+               filter(year >= 1950) %>%
+               mutate(
+                 nz_deals = ifelse(deals > 0, 1, 0)
+               ) %>% # pakistan/east pak duplicate gives warning- drop
+               distinct()
+# NA from right join- move to zero
+us.deals$deals[is.na(us.deals$deals)] <- 0
+us.deals$nz_deals[is.na(us.deals$nz_deals)] <- 0
+# complete cases
+us.deals.comp <- drop_na(us.deals)
+
+# time trend squared and cubed
+us.deals.comp <- us.deals.comp %>% 
+  mutate(tmpG = cumsum(c(FALSE, as.logical(diff(nz_deals))))) %>%
+  group_by(ccode) %>%
+  mutate(tmp_a = c(0, diff(year)) * !nz_deals) %>%
+  group_by(tmpG) %>%
+  mutate(time_tr = cumsum(tmp_a)) %>%
+  ungroup() %>%
+  select(-c(tmp_a, tmpG))
+
+us.deals.comp$time_tr <- parameters::demean(us.deals.comp, "time_tr", "ccode")$time_tr_within  
+
+us.deals.comp <- us.deals.comp %>%
+  mutate(
+    time_tr2 =  time_tr^2,
+    time_tr3 = time_tr^3
+  )
 
 
+# logistic regression of non-zero arms deals
+# time terms separate badly within countries- more consistency in deals
+logit.nz.deals <- glm(nz_deals ~ atop_defense + 
+                        cold_war + eu_member +
+                        xm_qudsest2 +  cowmidongoing + dyadigos +
+                        rep_pres + 
+                        ln_gdp_d + 
+                        ln_pop_d + ln_distw + 
+                        Comlang,
+                      family = binomial(link = "logit"),
+                      data = us.deals.comp)
+summary(logit.nz.deals)
+# predicted prob of nz deals as a variable 
+us.deals.comp$pred_nz_deals <- predict(logit.nz.deals, type = "response")
 
+# check fit
+ggplot(us.deals.comp, aes(x = pred_nz_deals,
+                         group = factor(nz_deals),
+                         fill = factor(nz_deals))) + geom_histogram()
+
+# poisson model of deals 
+pois.deals <- glm(deals ~ atop_defense*time_to_elec +
+                  cold_war + eu_member +
+                    xm_qudsest2 +  cowmidongoing + dyadigos +
+                  rep_pres + 
+                  ln_gdp_d + 
+                  ln_pop_d + ln_distw + 
+                    Comlang,
+                  data = us.deals.comp,
+  family = poisson(link = "log"))
+
+summary(pois.deals)
+plot_cme(pois.deals, variables = "time_to_elec", condition = "atop_defense")
+plot_cme(pois.deals, condition = "time_to_elec", variables = "atop_defense") 
+  

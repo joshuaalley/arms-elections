@@ -399,7 +399,7 @@ ggplot(filter(us.coef.est, variable == "Years to Election" |
 
 # typical observations for US
 typical.func.us <- function(x){
-  dat <- typical(model = x, time_to_elec = c(0, 1, 2, 3),
+  dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
                  atop_defense = c(0, 1)) 
   dat$rep_pres <- 0
   dat 
@@ -414,7 +414,7 @@ me.us.elec <- function(model, formula, rm.wt, data){
                   variables = "atop_defense",
                   newdata = typical.func.us(model))
   
-  me.def.plot <- plot_cme(model, effect = "atop_defense", 
+  me.def.plot <- plot_cme(model, variables = "atop_defense", 
            condition = "time_to_elec")
   
   # predicted outcomes
