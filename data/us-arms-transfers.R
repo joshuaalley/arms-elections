@@ -2,42 +2,74 @@
 # Analyze arms deals 
 
 
-### model arms deals 
 
+### raw by country
 # total deals- summarize at country-year level and add covariates
 us.deals <- us.arms.cat %>%
-                group_by(ccode, year) %>%
-                select(
-                  country, ccode, year, deals
-                ) %>%
-                summarize(
-                  deals = sum(deals, na.rm = TRUE),
-                  .groups = "keep"
-                ) %>%
-                right_join(select(us.trade.ally,
-                                               ccode, year,
-                                               atop_defense, ally, ally_democ,
-                                               cold_war, democ_bin,
-                                               xm_qudsest2, cowmidongoing,
-                                               dyadigos,
-                                               rep_pres, time_to_elec, 
-                                               eu_member, ln_gdp_d,
-                                               ln_pop_d, ln_distw,
-                                               change_gdp_d, Comlang,
-                                               Contig, Evercol)) %>%
-               filter(year >= 1950) %>%
-               mutate(
-                 nz_deals = ifelse(deals > 0, 1, 0)
-               ) %>% # pakistan/east pak duplicate gives warning- drop
-               distinct()
+  group_by(ccode, year) %>%
+  select(
+    country, ccode, year, deals
+  ) %>%
+  summarize(
+    deals = sum(deals, na.rm = TRUE),
+    .groups = "keep"
+  ) %>%
+  right_join(select(us.trade.ally,
+                    ccode, year,
+                    atop_defense, ally, ally_democ,
+                    cold_war, democ_bin,
+                    xm_qudsest2, cowmidongoing,
+                    dyadigos,
+                    rep_pres, time_to_elec, 
+                    eu_member, ln_gdp_d,
+                    ln_pop_d, ln_distw,
+                    change_gdp_d, Comlang,
+                    Contig, Evercol)) %>%
+  filter(year >= 1950) %>%
+  mutate(
+    nz_deals = ifelse(deals > 0, 1, 0)
+  ) %>% # pakistan/east pak duplicate gives warning- drop
+  distinct()
 # NA from right join- move to zero
 us.deals$deals[is.na(us.deals$deals)] <- 0
 us.deals$nz_deals[is.na(us.deals$nz_deals)] <- 0
 # complete cases
 us.deals.comp <- drop_na(us.deals)
 
+
+# time-series of deals
+ggplot(filter(us.deals, deals > 0), 
+       aes(x = factor(time_to_elec), y = deals)) +
+  geom_boxplot(outlier.shape = NA) +
+  ylim(0, 5)
+
+
+# time-series of deals
+ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin)), 
+       aes(x = factor(time_to_elec,
+                      ordered = TRUE,
+                      levels = c("3", "2",
+                                 "1", "0")),
+           y = deals,
+           color = factor(democ_bin))) +
+  facet_wrap(~ ccode) +
+  geom_boxplot(outlier.shape = NA) 
+
+# line plots in Asia/ME
+# time-series of deals
+ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin) &
+                ccode > 600), 
+       aes(x = year,
+           y = deals,
+           color = factor(democ_bin))) +
+  facet_wrap(~ ccode) +
+  geom_point(aes(shape = factor(time_to_elec))) 
+
+
+### model arms deals 
+
 # poisson model of deals 
-pois.deals <- brm(deals ~ #time_to_elec*ally_democ +
+pois.deals <- brm(deals ~ 
                     time_to_elec*ally*democ_bin +
                   cold_war + eu_member +
                    cowmidongoing + dyadigos +
@@ -79,7 +111,7 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election")
 pred.us.deals
-ggsave("figures/us-arms-plots.png", us.arms.plots, height = 6, width = 8)
+ggsave("figures/us-arms-plots.png", height = 6, width = 8)
 
 # marginal effects w/ same style- less helpful
 me.us.deals <- ggplot(pois.deals.est[[1]], 
@@ -128,58 +160,6 @@ plot_cme(nb.deals, condition = "time_to_elec", variables = c("ally", "democ_bin"
 
 
 
-# Negative binomial model predictions 
-nb.deals.est <- me.us.elec(nb.deals, data = us.deals.comp)  
-
-pred.us.deals <- ggplot(nb.deals.est[[2]], aes(y = estimate, 
-                                                 x = time_to_elec,
-                                                 group = factor(ally),
-                                                 color = factor(ally))) +
-  facet_wrap(~ democ_bin) + 
-  scale_x_reverse() + # decreasing time to election
-  geom_hline(yintercept = 0) +
-  geom_line() +
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
-  scale_color_grey("US Ally", 
-                   start = 0.7,
-                   end = 0.1,
-                   labels = c(`0` = "No", `1` = "Yes")) +
-  labs(title = "Elections and Arms Deals",
-       y = "Predicted Arms Deals",
-       x = "Years to Presidential Election")
-pred.us.deals
-
-# marginal effects w/ same style
-me.us.deals <- ggplot(nb.deals.est[[1]], 
-                      aes(y = estimate, 
-                          x = time_to_elec,
-                          group = term,
-                          color = term)) +
-  facet_wrap(~ ally + democ_bin) +
-  scale_x_reverse() + # decreasing time to election +
-  geom_line(linewidth = 1) + 
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
-              alpha = .4) +
-  scale_color_grey("Defense Pact", 
-                   start = 0.7,
-                   end = 0.1,
-                   labels = c(`0` = "No", `1` = "Yes")) +
-  labs(title = "Marginal Impact of Alliance on Arms Deals",
-       y = "Marginal Effect of Allaince",
-       x = "Years to Presidential Election")
-me.us.deals
-
-
-# combine and export
-modelplot(list(pois.deals, nb.deals),
-          coef_map = coef.names.map)
-
-
-
-
-
-
 ### Arms transfers: SIRPI TIV
 # log normal hurdle model
 us.arms.comp <- select(us.trade.ally,
@@ -187,7 +167,7 @@ us.arms.comp <- select(us.trade.ally,
                        us_arms, lag_us_arms, nz_us_arms,
                        change_us_arms,
                        time_to_elec, near_elec,
-                       atop_defense, 
+                       atop_defense, ally, democ_bin,
                        rep_pres, cold_war,
                        xm_qudsest2,  cowmidongoing, dyadigos,
                        GDP_o, GDP_d, Distw, eu_member,
@@ -224,7 +204,7 @@ us.arms.comp <- us.arms.comp %>%
 
 # non-zero arms
 us.arms.nz <- glm(nz_us_arms ~ 
-                    atop_defense + cold_war +
+                    ally + cold_war +
                     rep_pres + eu_member +
                     xm_qudsest2 +  cowmidongoing + dyadigos +
                     GDP_o + GDP_d + Distw + 
@@ -248,9 +228,9 @@ ggplot(us.arms.comp, aes(x = pred_nz_arms,
 
 # arms trade models
 us.arms.ex <- lm(us_arms ~ lag_us_arms +
-                   time_to_elec*atop_defense + 
+                   time_to_elec*ally*democ_bin + 
                    rep_pres + cold_war +
-                   xm_qudsest2 +  cowmidongoing + dyadigos +
+                   cowmidongoing + dyadigos +
                    GDP_o + GDP_d + Distw + eu_member +
                    Comlang + Contig + Evercol + pred_nz_arms,
                  data = filter(us.arms.comp, nz_us_arms == 1))
@@ -258,7 +238,7 @@ summary(us.arms.ex)
 
 # changes in arms exports: gives odd results on alliance constituent term
 us.arms.chex <- rlm(change_us_arms ~ 
-                      time_to_elec*atop_defense + 
+                      time_to_elec*ally*democ_bin + 
                       rep_pres + cold_war +
                       xm_qudsest2 +  cowmidongoing + dyadigos +
                       change_gdp_o + change_gdp_d + Distw + eu_member +
@@ -295,19 +275,20 @@ us.arms.pred <- bind_rows(
 # plot
 pred.usarms <- ggplot(us.arms.res[[2]], aes(y = estimate, 
                                             x = time_to_elec,
-                                            group = factor(atop_defense),
-                                            color = factor(atop_defense))) +
+                                            group = factor(ally),
+                                            color = factor(ally))) +
+  facet_wrap(~ democ_bin, labeller = democ.all.labs) + 
   scale_x_reverse() + # decreasing time to election
-  #geom_hline(yintercept = 0) +
+  geom_hline(yintercept = 0) +
   geom_line() +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
                   position = position_dodge(width = .1)) +
-  scale_color_grey("Defense Pact", 
+  scale_color_grey("US Ally", 
                    start = 0.7,
                    end = 0.1,
                    labels = c(`0` = "No", `1` = "Yes")) +
-  labs(title = "Elections and Arms Exports",
-       y = "Predicted Log Arms Exports",
+  labs(title = "Elections and Arms Deals",
+       y = "Arms Transfers Value",
        x = "Years to Presidential Election")
 pred.usarms
 
@@ -336,7 +317,6 @@ me.usarms
 # combine and export
 grid.arrange(pred.usarms, me.usarms, nrow = 2)
 us.arms.plots <- arrangeGrob(pred.usarms, me.usarms, nrow = 2)
-ggsave("figures/us-arms-plots.png", us.arms.plots, height = 6, width = 8)
 
 
 # Cold War vs not
