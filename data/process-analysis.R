@@ -11,38 +11,27 @@ process.mod <- cmdstan_model(stan_file = "data/ml-model-process.stan",
 
 # state-year data
 state.yr.proc <- select(as.data.frame(state.yr.final), -ln_obligations) 
-# %>%
-#                    mutate(
-#                      # pivot proximity- rescaled and
-#                      pivot_prox = pivot_prox / 10,
-#                      # this is top 10- pivot_prox is in absolute value
-#                      #pivot_prox = ifelse(pivot_prox <= 5, 1, 0),
-#                      # interacted with election timing
-#                      #prox_pelec = pivot_prox * time_to_pelec
-#                    )
 
 # separate data for allies/not- easy first cut
-us.arms.deals.all <- us.arms.deals %>%
-                      filter(atop_defense == 1) %>%
-                      select(-atop_defense)
+us.arms.deals.all <- us.arms.deals 
 
-state.yr.idmat.all <- left_join(
-  select(us.arms.deals.all, ccode, year),
-  select(state.data.ml, year, state.year.txt)
-) %>%
-  group_by(ccode, year, state.year.txt) %>%
-  summarise(n = n(), .groups = "drop") %>%
-  filter(n == 1) %>% 
-  mutate(
-    present = 1, # to fill dummies
-  ) %>%
-  pivot_wider( # wider 
-    id_cols = c(ccode, year),
-    names_from = "state.year.txt",
-    values_from = "present"
-  ) %>%
-  select(-c(ccode, year))
-state.yr.idmat.all[is.na(state.yr.idmat.all)] <- 0
+# state.yr.idmat.all <- left_join(
+#   select(us.arms.deals.all, ccode, year),
+#   select(state.data.ml, year, state.year.txt)
+# ) %>%
+#   group_by(ccode, year, state.year.txt) %>%
+#   summarise(n = n(), .groups = "drop") %>%
+#   filter(n == 1) %>% 
+#   mutate(
+#     present = 1, # to fill dummies
+#   ) %>%
+#   pivot_wider( # wider 
+#     id_cols = c(ccode, year),
+#     names_from = "state.year.txt",
+#     values_from = "present"
+#   ) %>%
+#   select(-c(ccode, year))
+# state.yr.idmat.all[is.na(state.yr.idmat.all)] <- 0
 
 # data 
 process.data <- list(
@@ -54,7 +43,7 @@ process.data <- list(
   C = max(us.arms.deals.all$cntry.index),
   S = nrow(state.data.ml),
   y_ob = state.data.ml$ln_obligations,
-  Z = as.matrix(state.yr.idmat.all),
+  Z = as.matrix(state.yr.idmat),
   G = state.yr.proc,
   L = ncol(state.yr.proc)
 )
@@ -90,8 +79,6 @@ mcmc_acf(draws, pars = "alpha_cntry[12]")
 
 # parallel coordinates plot
 mcmc_parcoord(fit.process$draws("lambda"))
-mcmc_parcoord(fit.process$draws("alpha_cntry"))
-mcmc_parcoord(fit.process$draws("mu_stateyr"))
 
 # look at parameter estimates: start with alpha_stateyr
 draws.state.yr <- select(draws, starts_with("mu_stateyr")) 
@@ -132,8 +119,8 @@ process.data.full <- list(
   N = nrow(us.arms.deals),
   y_arms = us.arms.deals$deals,
   y_trade = us.arms.deals$change_ln_exports,
-  X = us.arms.deals[, 5:(ncol(us.arms.deals) - 2)],
-  K = ncol(us.arms.deals[, 5:(ncol(us.arms.deals) - 2)]),
+  X = us.arms.deals[, 5:(ncol(us.arms.deals) - 3)],
+  K = ncol(us.arms.deals[, 5:(ncol(us.arms.deals) - 3)]),
   cntry = us.arms.deals$cntry.index,
   C = max(us.arms.deals$cntry.index),
   S = nrow(state.data.ml),

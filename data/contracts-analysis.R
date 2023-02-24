@@ -233,13 +233,14 @@ us.arms.deals <- us.arms.cat %>%
                   ) %>% 
                   right_join(select(us.trade.ally,
                           ccode, year, change_ln_exports,
-                          atop_defense,
-                          xm_qudsest2, cowmidongoing, dyadigos,
+                          ally,
+                          democ_bin, cowmidongoing, dyadigos,
                           change_gdp_o, change_gdp_d, 
                           Distw, eu_member)) %>%
-                 filter(year %in% state.data.ml$year)
+                 filter(year %in% state.data.ml$year) %>% # pakistan/east pak duplicate gives warning- drop
+                distinct()
 # rescale for model input
-us.arms.deals[, 4:ncol(us.arms.deals)] <- lapply(us.arms.deals[, 4:ncol(us.arms.deals)],
+us.arms.deals[, 5:ncol(us.arms.deals)] <- lapply(us.arms.deals[, 5:ncol(us.arms.deals)],
                                               function(x) arm::rescale(x,
                                                   binary.inputs = "0/1"))
 # no deals are NA, make zero
@@ -253,7 +254,7 @@ us.arms.deals$cntry.index <- us.arms.deals %>% group_by(ccode) %>%
                               group_indices()
 us.arms.deals$year.id <- us.arms.deals %>% group_by(year) %>%
   group_indices()
-us.arms.deals$ally.id <- us.arms.deals %>% group_by(atop_defense) %>%
+us.arms.deals$ally.id <- us.arms.deals %>% group_by(ally) %>%
   group_indices()
 
 
@@ -266,6 +267,7 @@ state.yr.idmat <- left_join(
     select(us.arms.deals, ccode, year),
     select(state.data.ml, year, state.year.txt)
    ) %>%
+  distinct() %>%
   group_by(ccode, year, state.year.txt) %>%
   summarise(n = dplyr::n(), .groups = "drop") %>%
   filter(n == 1L) %>% 

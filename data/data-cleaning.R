@@ -240,49 +240,6 @@ dyadic.trade.major <- dyadic.trade.major %>%
 # dyad id
 dyadic.trade.major$dyad.id <- group_indices(dyadic.trade.major, ccode1, ccode2) 
 
-# full data cleaning: cut down to MP allies
-dyadic.mp.ally <- vdem %>%
-  left_join(dyadic.trade.major) %>%
-  ungroup() %>%
-  mutate(
-    # prior support and changes
-    prior_leader_supp = ifelse(leader != lag(leader),
-                               lag_median, NA)
-  ) %>%
-  fill(c(prior_leader_supp, atop_defense),
-       .direction = "down") %>%
-  # filter for alliances only
-  filter(atop_defense == 1) %>%
-  mutate(
-    change_leader_supp = median - prior_leader_supp
-  ) %>%
-  group_by(ccode1, ccode2, leader) %>%
-  mutate(
-    # running mean support
-    mean_leader_supp = rollapply(median, 2, mean,
-                                 align ='right', fill = lag_median),
-    # running sum of changes
-    total_change_supp = rollapply(change_leader_supp,
-                                  2, sum,
-                                  align ='right',
-                                  fill = lag(change_leader_supp))
-  ) %>%
-  select(ccode1, ccode2, year, electionid, leader, atop_defense, mean_leader_supp,
-         lag_median, prior_leader_supp, change_leader_supp,
-         total_change_supp,
-         everything())
-  
-# w/ original measure, add: 
-# %>% filter(atop_defense == 1 &
-#    (ccode == 2 | ccode == 200 | ccode == 220))
-
-
-# dyad id
-dyadic.mp.ally$dyad.id <- group_indices(dyadic.mp.ally, ccode1, ccode2) 
-
-
-
-
 
 # get us exports
 us.trade.ally <- filter(dyadic.trade.major, 
@@ -323,6 +280,16 @@ us.trade.ally$ally <- us.trade.ally$atop_defense
 us.trade.ally$ally[us.trade.ally$ccode == 666] <- 1 # israel
 us.trade.ally$ally[us.trade.ally$ccode == 670] <- 1 # saudi arabia
 us.trade.ally$ally[us.trade.ally$ccode == 713] <- 1 # taiwan
+
+
+# democratic allies
+# above average unified democ score
+us.trade.ally$democ_bin <- ifelse(us.trade.ally$xm_qudsest2 > 
+                                    mean(us.trade.ally$xm_qudsest2, na.rm = T),
+                                  1, 0)
+# allies w/ above average democ score
+us.trade.ally$ally_democ <- us.trade.ally$ally * us.trade.ally$democ_bin
+table(us.trade.ally$ally, us.trade.ally$ally_democ)
 
 # pull in US arms trade data 
 us.arms.sipri <- read.csv("data/us-arms-exports.csv")%>%

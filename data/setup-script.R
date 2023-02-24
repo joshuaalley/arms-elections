@@ -123,3 +123,33 @@ coef.names.map = c("lag_exports" = "Lag Exports",
                    "change_ln_exports" = "Change Ln(Exports",
                    "lag_us_arms" = "Lag Ln(Arms Transfers)",
                    "pred_nz_arms" = "Pred. Prob. of Arms Transfer")
+
+
+
+# typical observations for US
+typical.func.us <- function(x){
+  dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
+                  ally = c(0, 1),
+                  democ_bin = c(0, 1)) 
+  dat$rep_pres <- 0
+  dat 
+}
+
+# Marginal effects function 
+me.us.elec <- function(model, formula, rm.wt, data){
+  
+  # no dyad robust for US 
+  # marginal effects 
+  me.est <- marginaleffects(model,
+                            variables = c("ally", "democ_bin"),
+                            newdata = typical.func.us(model))
+  
+  me.def.plot <- plot_cme(model, variables = c("ally", "democ_bin"),
+                          condition = "time_to_elec", draw = FALSE)
+  
+  # predicted outcomes
+  pred.out <- predictions(model, 
+                          newdata = typical.func.us(model))
+  
+  res <- list(me.est, pred.out, me.def.plot)
+}
