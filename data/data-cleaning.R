@@ -2,33 +2,7 @@
 # data cleaning 
 
 
-
-# combine latent support with trade data
-# first create it with modified scripts
- # source("data/revise-latent-supp/Generate US Support.R")
- # source("data/revise-latent-supp/Generate UK Support.R")
- # source("data/revise-latent-supp/Generate France Support.R")
-# combine results
-latent.supp <- bind_rows(phi.us,
-                         phi.fr,
-                         phi.uk) %>%
-  drop_na(year) %>%
-  mutate(
-    lag_median = lag(median),
-    change_median = median - lag_median,
-    ccode2 = countrycode(country,
-                         origin = "country.name",
-                         destination = "cown"))
-# w/ original
-# latent.supp <- read.csv("data/Major Protege Dataset v1.1.csv")%>%
-#                  drop_na(year) %>%
-#                  mutate(
-#                    lag_median = lag(median),
-#                    change_median = median - lag_median)
-# latent.supp$ccode2[latent.supp$year < 1991 & latent.supp$ccode2 == 255] <- 260
-
-
-# bring in vdem
+# start with vdem data
 vdem <- vdem %>%
          select(
            country_name, country_id, year, 
@@ -39,11 +13,6 @@ vdem <- vdem %>%
 vdem$ccode2 <- countrycode(vdem$country_id,
                           origin = "vdem",
                           destination = "cown")
-
-# add to latent support
-latent.supp <- left_join(latent.supp,
-                         select(vdem, -c(country_name,
-                                         country_id)))
 
 
 # elections
@@ -272,7 +241,7 @@ dyadic.trade.major <- dyadic.trade.major %>%
 dyadic.trade.major$dyad.id <- group_indices(dyadic.trade.major, ccode1, ccode2) 
 
 # full data cleaning: cut down to MP allies
-dyadic.mp.ally <- latent.supp %>%
+dyadic.mp.ally <- vdem %>%
   left_join(dyadic.trade.major) %>%
   ungroup() %>%
   mutate(
@@ -349,6 +318,11 @@ us.trade.ally <- filter(dyadic.trade.major,
   )
 us.trade.ally$dyad.id <- group_indices(us.trade.ally, us.code, ccode) 
 
+# alliances- add Taiwan, Israel, KSA
+us.trade.ally$ally <- us.trade.ally$atop_defense
+us.trade.ally$ally[us.trade.ally$ccode == 666] <- 1 # israel
+us.trade.ally$ally[us.trade.ally$ccode == 670] <- 1 # saudi arabia
+us.trade.ally$ally[us.trade.ally$ccode == 713] <- 1 # taiwan
 
 # pull in US arms trade data 
 us.arms.sipri <- read.csv("data/us-arms-exports.csv")%>%
