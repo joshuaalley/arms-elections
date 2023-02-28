@@ -18,12 +18,11 @@ us.deals <- us.arms.cat %>%
                     ccode, year,
                     atop_defense, ally, ally_democ,
                     cold_war, democ_bin,
-                    xm_qudsest2, cowmidongoing,
-                    dyadigos,
+                    v2x_polyarchy2, 
                     rep_pres, time_to_elec, 
-                    eu_member, ln_gdp_d,
-                    ln_pop_d, ln_distw,
-                    change_gdp_d, Comlang,
+                    eu_member, ln_rgdp,
+                    ln_pop, ln_distw,
+                    Comlang,
                     Contig, Evercol)) %>%
   filter(year >= 1950) %>%
   mutate(
@@ -55,6 +54,17 @@ ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin)),
   facet_wrap(~ ccode) +
   geom_boxplot(outlier.shape = NA) 
 
+
+# line plots in latin america
+# time-series of deals
+ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin) &
+                ccode < 200), 
+       aes(x = year,
+           y = deals,
+           color = factor(democ_bin))) +
+  facet_wrap(~ ccode) +
+  geom_point(aes(shape = factor(time_to_elec))) 
+
 # line plots in Asia/ME
 # time-series of deals
 ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin) &
@@ -70,20 +80,21 @@ ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin) &
 
 # poisson model of deals 
 pois.deals <- brm(deals ~ 
-                    time_to_elec*ally*democ_bin +
-                  cold_war + eu_member +
-                   cowmidongoing + dyadigos +
+                    time_to_elec*ally*v2x_polyarchy2 +
+                  cold_war + 
+                  eu_member +
                   rep_pres + 
-                  ln_gdp_d + 
-                  ln_pop_d + ln_distw + 
+                  ln_rgdp + 
+                  ln_pop + ln_distw + 
                     Comlang,
                   family = poisson(link = "log"),
                   backend = "cmdstanr",
+                  prior = c(prior(normal(0, .5), class = "b")),
                   cores = 4,
                   data = us.deals.comp)
 summary(pois.deals)
 plot_cme(pois.deals, variables = "time_to_elec", condition = "ally")
-plot_cme(pois.deals, condition = "time_to_elec", variables = c("ally", "democ_bin")) +
+plot_cme(pois.deals, condition = "time_to_elec", variables = c("ally", "v2x_polyarchy2")) +
   scale_x_reverse() # decreasing time to election
 
 # poisson model predictions 
@@ -91,13 +102,18 @@ pois.deals.est <- me.us.elec(pois.deals, data = us.deals.comp)
 
 # nice labeller
 democ.all.labs <- labeller(democ_bin = c(`1` = "Democracy", `0` = "Nondemocracy"),
+                           v2x_polyarchy2 = c(`0.013` = "Minimum Democracy",
+                                          `0.186` = "1st Quartile\nDemocracy",
+                                          `0.39` = "Median Democracy",
+                                          `0.745` = "3rd Quartile\nDemocracy",
+                                          `0.924` = "Maximum Democracy"),
                              ally = c(`1` = "US Ally", `0` = "Not Ally"))
 
 pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate, 
                          x = time_to_elec,
                          group = factor(ally),
                          color = factor(ally))) +
-  facet_wrap(~ democ_bin, labeller = democ.all.labs) + 
+  facet_wrap(~ v2x_polyarchy2, labeller = democ.all.labs) + 
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
   geom_line() +
@@ -114,46 +130,55 @@ pred.us.deals
 ggsave("figures/us-arms-plots.png", height = 6, width = 8)
 
 # marginal effects w/ same style- less helpful
-me.us.deals <- ggplot(pois.deals.est[[1]], 
-                              aes(y = estimate, 
-                                x = time_to_elec,
-                                group = term,
-                                color = term)) +
-  facet_wrap(~ ally + democ_bin, labeller = democ.all.labs) +
+# don't need a line and points- need a grid of democ/time to elec, 
+# split by ally/not
+ggplot(pois.deals.est[[1]], 
+                              aes(x = time_to_elec, 
+                                y = v2x_polyarchy2,
+                                fill = estimate)) +
+  #facet_wrap(~ ally, labeller = democ.all.labs) +
   scale_x_reverse() + # decreasing time to election +
-  geom_line(linewidth = 1) + 
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
-              alpha = .4) +
-  scale_color_grey("Defense Pact", 
-                   start = 0.7,
-                   end = 0.1,
-                   labels = c(`0` = "No", `1` = "Yes")) +
+  geom_tile() + 
+  scale_fill_viridis_b() +
   labs(title = "Marginal Impact of Alliance on Arms Deals",
-       y = "Marginal Effect of Allaince",
+       y = "Partner Democracy",
+       x = "Years to Presidential Election")
+
+
+me.us.deals <- ggplot(pois.deals.est[[1]], aes(y = estimate, 
+                                x = time_to_elec)) +
+  facet_wrap(~ v2x_polyarchy2, labeller = democ.all.labs) + 
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line() +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1)) +
+  labs(title = "Marginal Effect of Alliance",
+       y = "Marginal Effect of Alliance",
        x = "Years to Presidential Election")
 me.us.deals
 
 # combine and export
-grid.arrange(pred.us.deals, me.us.deals, nrow = 1)
+grid.arrange(pred.us.deals, me.us.deals, nrow = 2)
 us.arms.plots <- arrangeGrob(pred.us.deals, me.us.deals, nrow = 1)
 
 
 # negative binomial deals
 # poisson model of deals 
-nb.deals <- brm(deals ~  time_to_elec*ally*democ_bin +
-                    cold_war + 
-                    eu_member +
-                    cowmidongoing + dyadigos +
-                    rep_pres + 
-                    ln_gdp_d + 
-                    ln_pop_d + ln_distw + 
-                    Comlang,
+nb.deals <- brm(deals ~  #time_to_elec*ally*democ_bin +
+                  time_to_elec*ally*v2x_polyarchy2 +
+                  cold_war + 
+                  eu_member +
+                  rep_pres + 
+                  ln_rgdp + 
+                  ln_pop + ln_distw + 
+                  Comlang,
                   family = negbinomial(link = "log",
                                        link_shape = "log"),
                  cores = 4,
                   prior = c(prior(normal(0, .5), class = "b")),
                   backend = "cmdstanr",
-                  data = us.deals.comp)
+                data = us.deals.comp)
 summary(nb.deals)
 plot_cme(nb.deals, variables = "time_to_elec", condition = "ally")
 plot_cme(nb.deals, condition = "time_to_elec", variables = c("ally", "democ_bin"))
@@ -169,7 +194,7 @@ us.arms.comp <- select(us.trade.ally,
                        time_to_elec, near_elec,
                        atop_defense, ally, democ_bin,
                        rep_pres, cold_war,
-                       xm_qudsest2,  cowmidongoing, dyadigos,
+                       v2x_polyarchy2,  cowmidongoing, dyadigos,
                        GDP_o, GDP_d, Distw, eu_member,
                        change_gdp_o, change_gdp_d,
                        Comlang, Contig, Evercol) %>%
@@ -206,7 +231,7 @@ us.arms.comp <- us.arms.comp %>%
 us.arms.nz <- glm(nz_us_arms ~ 
                     ally + cold_war +
                     rep_pres + eu_member +
-                    xm_qudsest2 +  cowmidongoing + dyadigos +
+                    v2x_polyarchy2 +  cowmidongoing + dyadigos +
                     GDP_o + GDP_d + Distw + 
                     Contig + Comlang + Evercol +
                     time_tr + time_tr2 + time_tr3,
@@ -240,7 +265,7 @@ summary(us.arms.ex)
 us.arms.chex <- rlm(change_us_arms ~ 
                       time_to_elec*ally*democ_bin + 
                       rep_pres + cold_war +
-                      xm_qudsest2 +  cowmidongoing + dyadigos +
+                      v2x_polyarchy2 +  cowmidongoing + dyadigos +
                       change_gdp_o + change_gdp_d + Distw + eu_member +
                       Comlang + Contig + Evercol +
                       pred_nz_arms,
@@ -324,7 +349,7 @@ us.arms.plots <- arrangeGrob(pred.usarms, me.usarms, nrow = 2)
 us.arms.ex.cw <- rlm(us_arms ~ lag_us_arms +
                        time_to_elec*atop_defense + 
                        rep_pres +
-                       xm_qudsest2 +  cowmidongoing + dyadigos +
+                       v2x_polyarchy2 +  cowmidongoing + dyadigos +
                        GDP_o + GDP_d + Distw + eu_member +
                        Comlang + Contig + Evercol + pred_nz_arms,
                      maxit = 40,
@@ -337,7 +362,7 @@ summary(us.arms.ex.cw)
 us.arms.ex.ncw <- rlm(us_arms ~ lag_us_arms +
                         time_to_elec*atop_defense + 
                         rep_pres +
-                        xm_qudsest2 +  cowmidongoing + dyadigos +
+                        v2x_polyarchy2 +  cowmidongoing + dyadigos +
                         GDP_o + GDP_d + Distw + eu_member +
                         Comlang + Contig + Evercol + pred_nz_arms,
                       maxit = 40,

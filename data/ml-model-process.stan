@@ -56,9 +56,7 @@ model {
     
   // initialize linear predictor term: arms
     mu = alpha_cntry[cntry] + 
-                  Z * mu_stateyr + // brings in arms- 
-                  // can add alliance inter w/ index
-                  //(Z * mu_stateyr)[alliance]
+                  Z * mu_stateyr + // brings in arms contracts
                   X * beta;
 
   // likelihood: arms exports- poisson

@@ -46,14 +46,6 @@ state.exports.dyad <- fill(state.exports.dyad, atop_defense, .direction = "down"
 
 
 
-# bring in PWT data
-pwt.key <- read.csv("data/pwt-100.csv") %>%
-  select(country, year, 
-         rgdpe, pop, xr, csh_g)
-pwt.key$ccode <- countrycode(origin = "country.name",
-                             sourcevar = pwt.key$country,
-                             destination = "cown")
-
 state.exports.dyad <- left_join(state.exports.dyad,
                                 pwt.key) %>%
   drop_na(ccode)  %>% # otherwise matches all ccode NAs

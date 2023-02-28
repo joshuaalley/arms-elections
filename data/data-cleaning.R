@@ -78,14 +78,12 @@ dyadic.cont$atop_defense[dyadic.cont$year == 2020] <- NA
 
 
 
-# pull better trade data
+# pull trade data with some useful controls
 cepii.data <- read_dta("data/TRADHIST_v4.dta") %>%
   filter(year > 1948) %>%
   select(
     iso_o, iso_d, year,
-    GDP_o, GDP_d,
-    POP_o, POP_d,
-    Distw, Comlang, Contig,
+    Dist_d, Comlang, Contig,
     Evercol
   ) %>%
   mutate(
@@ -94,26 +92,17 @@ cepii.data <- read_dta("data/TRADHIST_v4.dta") %>%
     ccode2 = countrycode(iso_d, origin = "iso3c",
                          destination = "cown")
   ) %>% # dem major powers
-  filter(ccode1 == 2 | ccode1 == 200 |
-           ccode1 == 220) %>%
+  filter(ccode1 == 2) %>%
   group_by(ccode1, ccode2) %>% 
   mutate(
     # key controls
-    change_gdp_o = GDP_o - lag(GDP_o),
-    change_gdp_d = GDP_d - lag(GDP_d),
-    ln_distw = log(Distw),
-    
-    ln_gdp_o = log(GDP_o),
-    ln_gdp_d = log(GDP_d),
-    ln_pop_o = log(POP_o),
-    ln_pop_d = log(POP_d))
+    ln_distw = log(Dist_d)
+  )
     
     
 # save this chunk for IMF data 
 imf.dot <- read.csv("data/imf-dot.csv") %>%
-            filter(origin == "France" | 
-                     origin == "United Kingdom" |
-                     origin == "United States") %>%
+            filter(origin == "United States") %>%
            pivot_longer(-c(origin, flow_type, destination,
                            origin_imf_code, 
                            destination_imf_code)) %>%
@@ -172,8 +161,10 @@ imf.dot$ccode2[imf.dot$destination == "Eastern Germany"] <- 265
 # missing ccodes are now aggregates
 imf.dot <- drop_na(imf.dot, ccode2)
 
-# join with cepii data
-trade.full <- left_join(imf.dot, cepii.data)
+# join with cepii data and full cepii controls
+trade.full <- left_join(imf.dot, cepii.data) %>%
+               group_by(ccode1, ccode2) %>%
+               fill(34:38)
 
 
 
@@ -272,7 +263,9 @@ us.trade.ally <- filter(dyadic.trade.major,
     total_statements = rollapply(statements_americas, 2, sum,
                                  align ='right', fill = 0),
     ln_total_statements = log(total_statements + 1)
-  )
+  ) %>%
+  group_by(ccode) %>%
+  fill(atop_defense, .direction = "down")
 us.trade.ally$dyad.id <- group_indices(us.trade.ally, us.code, ccode) 
 
 # alliances- add Taiwan, Israel, KSA
@@ -284,12 +277,31 @@ us.trade.ally$ally[us.trade.ally$ccode == 713] <- 1 # taiwan
 
 # democratic allies
 # above average unified democ score
-us.trade.ally$democ_bin <- ifelse(us.trade.ally$xm_qudsest2 > 
-                                    mean(us.trade.ally$xm_qudsest2, na.rm = T),
+us.trade.ally$democ_bin <- ifelse(us.trade.ally$v2x_polyarchy2 > 
+                                    mean(us.trade.ally$v2x_polyarchy2, na.rm = T),
                                   1, 0)
 # allies w/ above average democ score
 us.trade.ally$ally_democ <- us.trade.ally$ally * us.trade.ally$democ_bin
 table(us.trade.ally$ally, us.trade.ally$ally_democ)
+
+
+# add allied GDP data from PWT
+# bring in PWT data
+pwt.key <- read.csv("data/pwt-100.csv") %>%
+  select(country, year, 
+         rgdpe, pop, xr, csh_g) %>%
+  mutate(
+    ln_rgdp = log(rgdpe),
+    ln_pop = log(pop)
+  )
+pwt.key$ccode <- countrycode(origin = "country.name",
+                             sourcevar = pwt.key$country,
+                             destination = "cown")
+
+# join pwt
+us.trade.ally <- left_join(us.trade.ally, pwt.key)
+
+
 
 # pull in US arms trade data 
 us.arms.sipri <- read.csv("data/us-arms-exports.csv")%>%
@@ -339,8 +351,6 @@ us.arms.year <- us.arms.sipri %>%
 us.trade.year <- us.trade.ally %>%
   group_by(year) %>%
   summarize(
-    GDP_o = max(GDP_o, na.rm = TRUE),
-    change_gdp_o = max(GDP_o, na.rm = TRUE),
     total_exports = sum(ln_exports, na.rm = TRUE)
   ) %>%
   ungroup() %>%
@@ -741,9 +751,9 @@ us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
                                   ccode, year,
                                atop_defense, cold_war,
                                rep_pres, time_to_elec, 
-                               eu_member, ln_gdp_d,
-                               ln_pop_d, ln_distw,
-                               change_gdp_d, Comlang,
+                               eu_member, ln_rgdp,
+                               ln_pop, ln_distw,
+                               Comlang,
                                Contig, Evercol,
                                nz_us_arms)) %>%
                  filter(year >= 1950)

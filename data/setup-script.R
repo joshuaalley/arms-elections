@@ -133,7 +133,7 @@ coef.names.map = c("lag_exports" = "Lag Exports",
 typical.func.us <- function(x){
   dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
                   ally = c(0, 1),
-                  democ_bin = c(0, 1)) 
+                  v2x_polyarchy2 = fivenum)
   dat$rep_pres <- 0
   dat 
 }
@@ -143,11 +143,12 @@ me.us.elec <- function(model, formula, rm.wt, data){
   
   # no dyad robust for US 
   # marginal effects 
-  me.est <- marginaleffects(model,
-                            variables = c("ally", "democ_bin"),
-                            newdata = typical.func.us(model))
+  me.est <- slopes(model, variables = c("ally"),
+                            newdata = datagrid(model = model, 
+                                               time_to_elec = c(0, 1, 2, 3),
+                                               v2x_polyarchy2 = fivenum))
   
-  me.def.plot <- plot_cme(model, variables = c("ally", "democ_bin"),
+  me.def.plot <- plot_cme(model, variables = c("ally", "v2x_polyarchy2"),
                           condition = "time_to_elec", draw = FALSE)
   
   # predicted outcomes

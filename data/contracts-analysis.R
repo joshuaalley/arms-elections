@@ -194,7 +194,7 @@ state.data.ml <- state.data.ml %>%
   select(state, year, state.year.txt, state.year, year.id,
          ln_obligations,
          everything()) %>%
-  filter(year <= 2014) %>% 
+  filter(year <= 2018) %>% # match missing in COW 
   group_by(year, state.year.txt) %>%
   mutate(n = n(), .groups = "drop") %>%
   filter(n == 1) 
@@ -232,11 +232,10 @@ us.arms.deals <- us.arms.cat %>%
                     .groups = "keep"
                   ) %>% 
                   right_join(select(us.trade.ally,
-                          ccode, year, change_ln_exports,
+                          ccode, year,
                           ally,
-                          democ_bin, cowmidongoing, dyadigos,
-                          change_gdp_o, change_gdp_d, 
-                          Distw, eu_member)) %>%
+                          democ_bin, ln_rgdp, 
+                          ln_distw, eu_member)) %>%
                  filter(year %in% state.data.ml$year) %>% # pakistan/east pak duplicate gives warning- drop
                 distinct()
 # rescale for model input
