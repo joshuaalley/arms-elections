@@ -15,10 +15,9 @@ state.yr.proc <- select(as.data.frame(state.yr.final), -ln_obligations)
 # separate data- select variables
 us.arms.deals.iv <- us.arms.deals %>% 
                       select(
-                        ally, democ_bin, 
-                        cowmidongoing, dyadigos,
-                        change_gdp_o, change_gdp_d, 
-                        Distw, eu_member
+                        ally, v2x_polyarchy2, 
+                        Comlang, ln_rgdp, 
+                        ln_distw, eu_member
                       )
 
 # data 

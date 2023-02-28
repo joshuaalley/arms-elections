@@ -233,15 +233,14 @@ us.arms.deals <- us.arms.cat %>%
                   ) %>% 
                   right_join(select(us.trade.ally,
                           ccode, year,
-                          ally,
-                          democ_bin, ln_rgdp, 
+                          ally, v2x_polyarchy2,
+                          Comlang, ln_rgdp, 
                           ln_distw, eu_member)) %>%
                  filter(year %in% state.data.ml$year) %>% # pakistan/east pak duplicate gives warning- drop
                 distinct()
 # rescale for model input
-us.arms.deals[, 5:ncol(us.arms.deals)] <- lapply(us.arms.deals[, 5:ncol(us.arms.deals)],
-                                              function(x) arm::rescale(x,
-                                                  binary.inputs = "0/1"))
+us.arms.deals$ln_rgdp <- arm::rescale(us.arms.deals$ln_rgdp, binary.inputs = "0/1")
+us.arms.deals$ln_distw <- arm::rescale(us.arms.deals$ln_distw, binary.inputs = "0/1")
 # no deals are NA, make zero
 us.arms.deals$deals[is.na(us.arms.deals$deals)] <- 0
 # drop missing- cow and other key controls only through 2014
