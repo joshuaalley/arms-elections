@@ -644,21 +644,38 @@ us.trade.regis.sum
 # summarize by category and year
 arms.deals.year <- us.trade.regis %>%
   group_by(year) %>%
+  filter(year >= 1950 & year <= 2020) %>%
   summarize(
     deals = n(),
     second.hand = sum(second.hand, na.rm = TRUE),
     aid = sum(aid, na.rm = TRUE),
     .groups = "keep"
-  ) %>%
+  ) 
+
+arms.deals.year.elec <- drop_na(arms.deals.year) %>%
+  left_join(elections.data)
+
+# deals
+ggplot(arms.deals.year.elec,
+       aes(x = factor(time_to_elec),
+           y = deals)) +
+  scale_x_discrete(limits  = rev) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(x = "Time to Presidential Election",
+       y = "Arms Deals")
+t.test(deals ~ election, data = arms.deals.year.elec)
+
+
+# long to look at aid and second-hand
+arms.deals.year.long <- arms.deals.year %>%
   left_join(elections.data) %>%
   pivot_longer(
     cols = c(deals, aid, second.hand)
   )
 
-ggplot(drop_na(arms.deals.year,
+ggplot(drop_na(arms.deals.year.long,
                time_to_elec),
        aes(x = factor(time_to_elec),
-           color = factor(time_to_elec),
            y = value)) +
   facet_wrap(~ name, scales = "free_y") +
   scale_x_discrete(limits  = rev) +
@@ -749,7 +766,7 @@ us.arms.cat.wide <- pivot_wider(us.arms.cat,
 # add other variables
 us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
                                   ccode, year,
-                               atop_defense, cold_war,
+                               ally, cold_war,
                                rep_pres, time_to_elec, 
                                eu_member, ln_rgdp,
                                ln_pop, ln_distw,
@@ -763,9 +780,9 @@ ggplot(us.arms.cat, aes(x = second.hand)) + geom_histogram()
 
 
 
-# summarize by category 
+# summarize by category and ally
 us.arms.cat.all <- us.arms.cat %>%
-  group_by(atop_defense, year, weapon.type) %>%
+  group_by(ally, year, weapon.type) %>%
   summarize(
     deals = sum(deals),
     prop.aid = mean(prop.aid, na.rm = TRUE),
@@ -773,14 +790,14 @@ us.arms.cat.all <- us.arms.cat %>%
     .groups = "keep"
   ) %>% 
   left_join(elections.data) %>%
-  drop_na(time_to_elec, atop_defense)
+  drop_na(time_to_elec, ally)
 
 deal.all <- ggplot(us.arms.cat.all, aes(x = factor(time_to_elec,
                                 ordered = TRUE,
                                 levels = c("3", "2",
                                         "1", "0")),
                             y = deals,
-                            color = factor(atop_defense)
+                            color = factor(ally)
                             )) +
                 facet_wrap(~ weapon.type, scales = "free_y") +
                 geom_boxplot(outlier.shape = NA)
@@ -792,14 +809,14 @@ ggplot(us.arms.cat.all, aes(x = factor(time_to_elec,
                                        levels = c("3", "2",
                                                   "1", "0")),
                             y = prop.aid,
-                            color = factor(atop_defense))) +
+                            color = factor(ally))) +
   facet_wrap(~ weapon.type, scales = "free_y") +
   geom_boxplot(outlier.shape = NA)
 
 # wide formatted data 
 arms.cat.all <- pivot_wider(us.arms.cat.all,
                            id_cols = "year",
-                           names_from = c("atop_defense", "weapon.type"),
+                           names_from = c("ally", "weapon.type"),
                            values_from = c("deals"))
 arms.cat.all[is.na(arms.cat.all)] <- 0
 colnames(arms.cat.all) <- str_replace(colnames(arms.cat.all), "0", "nall")
@@ -815,5 +832,13 @@ arms.cat.all <- arms.cat.all %>%
               "all_missile_space",
               "all_ships", "all_vehicles"), 
             .funs = list(lag = lag,
-                         change = function(x) x - lag(x)))
+                         change = function(x) x - lag(x))) %>%
+  mutate(
+    deals_vehicles = nall_vehicles + all_vehicles,
+    deals_ships = nall_ships + all_ships,
+    deals_missile_space = nall_missile_space + all_missile_space,
+    deals_electronics = nall_electronics + all_electronics,
+    deals_arms = nall_arms + all_arms,
+    deals_aircraft = nall_aircraft + all_aircraft
+  )
 

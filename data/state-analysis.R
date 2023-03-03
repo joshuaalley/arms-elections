@@ -31,6 +31,97 @@ ggplot(state.data,
   geom_point() 
 
 
+# elections and contracts: expected negative coef
+contracts.ts.reg <- lm(all_contracts ~ lag_all_contracts +
+                         time_to_elec,
+                       data = contracts.data.clean)
+summary(contracts.ts.reg)
+
+
+ggplot(contracts.data.clean, aes(x = year,
+                                 color = factor(elec.cycle),
+                                 y = all_contracts)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  labs(y = "Total Prime Contracts",
+       x = "Year",
+       title = "Aggregate Defense Contracting",
+       color = "Election Cycle")
+summary(contracts.data.clean$all_contracts)
+
+# summarize by election proximity- look within cycles
+contracts.elec.agg <- ggplot(contracts.data.clean, aes(x = time_to_elec,
+                                                       color = factor(elec.cycle),
+                                                       y = all_contracts)) +
+  geom_point() +
+  geom_line() +
+  scale_x_reverse() +
+  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  labs(y = "Total Prime Contracts",
+       x = "Years to Presidential Election",
+       title = "Aggregate Defense Contracting",
+       color = "Election Cycle")
+contracts.elec.agg
+
+# cycles by type of contract
+contracts.data.key <- select(contracts.data.clean,
+                             year, time_to_elec, missile_space,
+                             aircraft, vehicles, arms,
+                             electronics, ships, elec.cycle) %>% 
+  pivot_longer(
+    -c(year, time_to_elec, elec.cycle),
+    names_to = "allocation",
+    values_to = "value"
+  )
+
+# plot over time
+ggplot(contracts.data.key, aes(x =  year,
+                               y = value,
+                               group = allocation,
+                               color = allocation)) +
+  geom_line(linewidth = 2) +
+  labs(y = "Total Defense Contracts",
+       x = "Year",
+       title = "Defense Contracting Allocations over time")
+
+contracts.elec.sector <- ggplot(contracts.data.key, aes(x = time_to_elec,
+                                                        color = factor(elec.cycle),
+                                                        y = value)) +
+  geom_point() +
+  geom_line() +
+  scale_x_reverse() +
+  facet_wrap(~ allocation, scales = "free_y",
+             labeller = labeller(allocation = 
+                                   c("aircraft" = "Aircraft",
+                                     "missile_space" = "Missiles & Space",
+                                     "electronics" = "Electronics",
+                                     "ships" = "Ships",
+                                     "vehicles" = "Vehicles",
+                                     "arms"= "Weapons & Ammo"))
+  ) +
+  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  labs(y = "Total Prime Contracts",
+       x = "Years to Presidential Election",
+       title = "Sectoral Defense Contracting",
+       color = "Election Cycle")
+contracts.elec.sector
+
+# combine sectoral and aggregate plots
+grid.arrange(contracts.elec.agg, contracts.elec.sector,
+             nrow = 1,
+             layout_matrix = rbind(c(1, 1, 2, 2, 2),
+                                   c(1, 1, 2, 2, 2),
+                                   c(1, 1, 2, 2, 2)))
+contract.cycles <- arrangeGrob(contracts.elec.agg, contracts.elec.sector,
+                               nrow = 1,
+                               layout_matrix = rbind(c(1, 1, 2, 2, 2),
+                                                     c(1, 1, 2, 2, 2),
+                                                     c(1, 1, 2, 2, 2)))
+ggsave("figures/contract-cycles.png", contract.cycles, height = 6, width = 8)
+
+
+
 # Senate incumbent models
 # simple model: OLS
 # robust
@@ -116,6 +207,27 @@ pres.ob.prox <- lm(ln_obligations ~ time_to_pelec + pivot_prox +
 summary(pres.ob.prox)
 
 
+### state data with arms deals
+state.data.deals <- left_join(state.data, 
+                              select(arms.deals.year,
+                                     year, deals))
+
+ggplot(state.data.deals, aes(x = factor(time_to_pelec),
+                             y = deals)) +
+  geom_boxplot()
+  
+
+# add deals to model
+# contracting from time to presidential elections and pivot proximity
+deals.state <- lm(ln_obligations ~ deals +
+                    s_comp + 
+                    diff_vote_share +
+                    time_to_pelec +
+                     iraq_war +
+                     poptotal + ln_ngdp,
+                   data = state.data.deals) 
+summary(deals.state)
+
 
 
 # link orders with state contracts by sector
@@ -127,13 +239,14 @@ formula.sector <- vector(mode = "list", length = length(sector.list))
 for(i in 1:length(sector.list)){
   formula.sector[[i]] <- as.formula(
     paste(
-      paste0(sector.list[i], "_change ", "~"), 
-      # paste0(sector.list[i]), "~",
-      # paste0(sector.list[i], "_lag"),
+      #paste0(sector.list[i], "_change ", "~"), 
+      paste0(sector.list[i]), "~",
+      paste0(sector.list[i], "_lag"),
+      paste0(" + ", "deals_", sector.list[i]),
+      # paste0(" + ", "all_", sector.list[i]),
+      # paste0(" + ", "nall_", sector.list[i]),
       paste0(" + ", "s_comp"),
       paste0(" + ", "diff_vote_share + time_to_pelec"),
-      # paste0(" + ", "all_", sector.list[i], "_lag"),
-      # paste0(" + ", "nall_", sector.list[i], "_lag"),
       paste0("+ iraq_war")
       #paste0(" + ", "factor(election.cycle)")
       #paste0(" + ", "factor(state)")
@@ -143,15 +256,17 @@ for(i in 1:length(sector.list)){
 sector.state.sys <- systemfit(formula.sector, data = state.data.ord)
 summary(sector.state.sys)
 
-# interact with pivot proximity  
+# interact with vote share 
 for(i in 1:length(sector.list)){
-  formula.sector[[i]] <- as.formula-(
+  formula.sector[[i]] <- as.formula(
     paste(
-      paste0(sector.list[i]), "_change", "~", 
-      #paste0(sector.list[i], "_lag"),
-      paste0(" + ", "all_", sector.list[i], "_lag", "*pivot_prox"),
-      paste0(" + ", "nall_", sector.list[i], "_lag", "*pivot_prox"),
-      paste0(" + ", "iraq_war")
+      #paste0(sector.list[i], "_change ", "~"), 
+      paste0(sector.list[i]), "~",
+      paste0(sector.list[i], "_lag"),
+      paste0(" + ", "deals_", sector.list[i], "*diff_vote_share"),
+      # paste0(" + ", "nall_", sector.list[i], "*diff_vote_share"),
+      # paste0(" + ", "nall_", sector.list[i], "*diff_vote_share"),
+      paste0(" + ", "time_to_pelec + s_comp + iraq_war")
     ))
 }
 
