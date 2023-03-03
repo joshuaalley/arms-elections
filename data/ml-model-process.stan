@@ -33,7 +33,7 @@ transformed parameters {
   vector[S] mu_stateyr; // state-year parameter means
   
     
-  // linear predictor for arms
+  // linear predictor for contracts
     mu_stateyr = G * lambda;
   
   // country varying intercepts

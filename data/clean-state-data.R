@@ -304,7 +304,9 @@ contracts.state.wide <- drop_na(contracts.data.state, usml_cont) %>%
               values_from = "ln_obligations") %>%
   mutate(
     ln_obligations = aircraft + arms + electronics + missile_space +
-      other + ships + vehicles
+      ships + vehicles,
+    ln_obligations_other = aircraft + arms + electronics + missile_space +
+      ships + vehicles + other
   )
 
 # nothing leads to NA 

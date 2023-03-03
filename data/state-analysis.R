@@ -122,6 +122,17 @@ ggsave("figures/contract-cycles.png", contract.cycles, height = 6, width = 8)
 
 
 
+# state data 
+ggplot(contracts.data.state %>% 
+         left_join(elections.data) %>%
+         filter(usml_cont != "other"),
+       aes(x = year, y = ln_obligations,
+           group = usml_cont,
+           color = usml_cont)) +
+  facet_wrap(~ state, scales = "free_y") +
+  geom_line()
+
+
 # Senate incumbent models
 # simple model: OLS
 # robust
@@ -178,16 +189,6 @@ ggplot(state.data,
   theme(legend.position = "bottom")
 
 
-# by election timing 
-# plot obligations
-ggplot(state.data, 
-       aes(y = ln_obligations,
-           x = diff_vote_share)) +
-  facet_wrap(~ time_to_pelec) +
-  geom_point() +
-  geom_smooth() +
-  theme(legend.position = "bottom")
-
 
 # prior vote share and contracting 
 pres.ob.vote <- rlm(ln_obligations ~ s_comp + 
@@ -243,13 +244,9 @@ for(i in 1:length(sector.list)){
       paste0(sector.list[i]), "~",
       paste0(sector.list[i], "_lag"),
       paste0(" + ", "deals_", sector.list[i]),
-      # paste0(" + ", "all_", sector.list[i]),
-      # paste0(" + ", "nall_", sector.list[i]),
       paste0(" + ", "s_comp"),
       paste0(" + ", "diff_vote_share + time_to_pelec"),
       paste0("+ iraq_war")
-      #paste0(" + ", "factor(election.cycle)")
-      #paste0(" + ", "factor(state)")
     ))
   }
 
@@ -264,8 +261,6 @@ for(i in 1:length(sector.list)){
       paste0(sector.list[i]), "~",
       paste0(sector.list[i], "_lag"),
       paste0(" + ", "deals_", sector.list[i], "*diff_vote_share"),
-      # paste0(" + ", "nall_", sector.list[i], "*diff_vote_share"),
-      # paste0(" + ", "nall_", sector.list[i], "*diff_vote_share"),
       paste0(" + ", "time_to_pelec + s_comp + iraq_war")
     ))
 }

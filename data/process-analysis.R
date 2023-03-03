@@ -17,7 +17,7 @@ fit.process <- process.mod$sample(
   parallel_chains = 4,
   threads_per_chain = 1,
   seed = 12,
-  max_treedepth = 15,
+  max_treedepth = 20,
   refresh = 200
 )
 
@@ -37,7 +37,7 @@ ratios <- neff_ratio(fit.process)
 mcmc_neff(ratios, size = 2)
 
 mcmc_acf(draws, pars = "alpha")
-mcmc_acf(draws, pars = "alpha_cntry[12]")
+#mcmc_acf(draws, pars = "alpha_cntry[12]")
 
 # parallel coordinates plot
 mcmc_parcoord(fit.process$draws("lambda"))
@@ -66,7 +66,8 @@ mcmc_intervals(draws, regex_pars = "lambda\\[[1-9]\\]") +
   scale_y_discrete(labels = colnames(process.data$G))
 
 # country-year level parameters
-mcmc_intervals(draws, regex_pars = "beta\\[[\\[1-9]\\]") +
+draws.beta <- select(draws, starts_with("beta"))
+mcmc_intervals(draws.beta) +
   scale_y_discrete(labels = colnames(process.data$X))
 
 
