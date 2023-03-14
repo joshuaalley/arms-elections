@@ -41,7 +41,7 @@
 \title{\textbf{Elections, Arms Deals and Autocratic Allies}}
 \author{Joshua Alley \\
 Assistant Professor \\
-University College Dublin\thanks{Thanks to Brian Blankenship, Jonathan Caverley, Jonathan Chu, Ben Fordham, Lauren Peritz, Erik Lin-Greenberg, Zachary Markovitch, Pieter Wezeman as well as participants in the Boston University Political Economy of Security Online Workshop Series and 2022 Meeting of the International Studies Association for helpful comments.} \\
+University College Dublin\thanks{Thanks to Brian Blankenship, Jonathan Caverley, Jonathan Chu, Ben Fordham, Erik Lin-Greenberg, Zachary Markovitch, Pieter Wezeman as well as participants in the Boston University Political Economy of Security Online Workshop Series and 2022 Meeting of the International Studies Association for helpful comments.} \\
 joshua.alley@ucd.edu
 }
 
@@ -260,10 +260,6 @@ Presidents gain capacity to manipulate economic conditions with defense contract
 Defense contracting cycles increase prosperity in key electoral areas, which increases a leader's odds of winning office for themselves or their party.\footnote{\citet{Yarhi-Miloetal2016} argue that arms transfers sometimes substitute for formal alliances so patrons can provide security while managing entrapment risk.}
 
 
-%Many alliances also include explicit or implicit promises of economic cooperation \citep{GowaMansfield2004, LongLeeds2006, Davis2008, Poast2012}.\footnote{Conflict and economic integration are linked in general (see for example, \citep{GartzkeLi2003, Chen2021}).}
-%Prior research indicates that alliances promote trade \citep{Gowa1995, GowaMansfield2004, Haim2016} or protect existing trade ties \citep{Fordham2010}.
-
-
 % potential markets: allies
 % take new or used stuff to make room
 U.S. allies are an obvious market for outputs from political cycles in defense contracting, in part because arms transfer channels are well-established, so negotiations have fewer start-up costs and can build on prior deals.\footnote{I focus here on formal and informal allies, because formal treaties like NATO are not the only U.S. security commitments. Taiwan, Israel and Saudi Arabia have informal security guarantees, and often receive U.S. arms.}
@@ -391,7 +387,7 @@ Proximity to presidential elections will increase arms transfers from the United
 
 
 \begin{quote}
-\textsc{Arms Exports Hypothesis: As time to a presidential election decreases, U.S. arms exports to autocratic allies will increase.}
+\textsc{Arms Deals Hypothesis: As time to a presidential election decreases, U.S. arms deals with autocratic allies will increase.}
 \end{quote}
 
 
@@ -402,7 +398,6 @@ I expect electoral cycles in defense contacting, and a positive correlation betw
 \begin{quote}
 \textsc{Defense Contracts Hypothesis: As electoral competition in a state increases, prime defense contract awards increase.}
 \end{quote}
-
 
 
 
@@ -417,10 +412,11 @@ After that, I unify the different outcomes in Bayesian model that captures the p
 \section{Arms Transfers and Presidential Elections}
 
 
-The next step in the argument suggests corresponding electoral cycles in U.S. arms deals. 
-I model U.S. arms deals from 1951 to 2014 using deals data from the SIPRI Arms Transfer Database \citep{SIPRI2021}.
-The outcome in this analysis is annual count of deals, based on SIPRI's trend indicator value methodology for major conventional weapons.
+The arms deals hypothesis predicts electoral cycles in U.S. arms deals with autocratic allies.
+To test this hypothesis, I model U.S. arms deals from 1951 to 2014 using deals data from the SIPRI Arms Transfer Database \citep{SIPRI2021}.
+The outcome in this panel dataset of all states outside the United States is the annual count of deals, based on SIPRI's trade register. 
 This section presents count data regression estimates of annual arms deals. 
+
 
 % Why focus on deals
 I analyze arms deals rather than observed arms transfers for three reasons.
@@ -429,71 +425,68 @@ Secondly, deliveries can take years after a deal is announced, even for second-h
 Finally, deliveries often space out the total value of a shipment over several years, especially for deals with many weapons or larger platforms. 
 
 
+% key independent variables- ally/partner, 
+The argument suggests that three variables driving U.S. arms deals. 
+The first is electoral competition, which I measure with an indicator of the number of years to a presidential election. 
+The second key factor is whether a country is a U.S. ally. 
+I measure alliance status with a binary indicator of whether a country is a formal U.S. treaty ally using data from the ATOP project \citep{Leedsetal2002}, as well as one of three states that have not always had a formal treaty commitment but are widely seen as U.S. allies with implicit security guarantees; Israel, Taiwan and Saudi Arabia. 
+I include informal allies because in some of these cases arms substitute for a formal alliance, but the United States is still attempting to ensure partner security \citep{Yarhi-Miloetal2016}. 
+Finally, I measure country democracy using the VDem project's polyarchy measure \citep{Coppedgeetal2008}. 
+I interact all three of these variables to predict arms deals. 
+
+
 % models
+To estimate how alliances, democracy and election timing shape arms deals, I use a Poisson model.
+This fits the annual count of arms deals well.
+To preserve compatibility with a later joint model, I use Bayesian estimation with the brms package for \textsf{R} \citep{Buerkner2017}. 
+I show in the appendix that OTHER MODELS HERE give similar inferences. 
+
+
+Along with the three key independent variables, I adjust for other factors that are correlated with arms deals, alliances, and democracy. 
+The first control variable is a binary indicator of Cold War years, as more U.S. allies were autocratic during this period. 
+I also adjust for EU membership as a potential constraint on some states. 
+Further country-level controls include logged GDP, population, and distance the from United States, as well as a binary indicator of common language. 
+Finally, I adjust for presidential partisanship with a dummy indicator of years with a Republican president.  
+
 
 
 \subsection{Results}
 
 
-These results proceed in two parts.
-First, I present the coefficient estimates from the Poisson regression. 
-I then summarize the interaction of alliances and presidential election proximity in \autoref{fig:us-arms-plots}.
-
-
-At the arms transfer hurdle stage, defense pacts increase the likelihood of any arms transfer, as does contiguity, shared IGO membership, and former colonial ties.
-Increasing partner GDP increases the likelihood of arms transfers.
-More distant states are also more likely to receive arms transfers, as the United States sells many arms outside the Western Hemisphere. 
-After accounting for alliances, increasing democracy and U.S. GDP make arms transfers less likely, as did the Cold War. 
-The negative Cold War coefficient reflects dispersion in U.S. arms transfers across more states after the USSR collapsed.
-
-
-In the regression of arms transfer levels, states with a U.S. defense pact receive more arms in presidential election years. 
-As with overall exports, the difference between allies and non-allies increases as time to an election decreases.
-The key difference with the overall exports finding is that arms transfers to non-allies fall as presidential elections approach. 
-This suggests that increasing exports from the United States to non-allies around elections concentrate in other goods. 
-
-
-Alliances and elections are not the only meaningful predictors of arms deals.
-Arms transfer levels are less sensitive to partner democracy, but increase with allied GDP and decrease with U.S. GDP. 
-Contiguous, more distant and former colonial states also receive more transfers, as do states that share more IGO memberships with the United States.
-The predicted probability of arms transfer coefficient implies that states that were more likely to receive arms are less likely to see large export increases.  
-U.S. GDP growth reduces arms exports. 
-The Cold War coefficient is largely negative, perhaps as the scale of arms transfers was more limited in that period. 
-Last, there is some temporal autocorrelation in arms transfers, as the lagged dependent variable of .61 shows.
-
-
-Again, the coefficient estimates are imperfect indicators of how alliances and electoral proximity interact.
-\autoref{fig:us-arms-plots} therefore plots predicted arms transfers and marginal effect of defense pacts.
-These predicted changes in arms transfers and estimated marginal effect of defensive alliances are consistent with the arms exports hypothesis.
+Because interpreting coefficients in triple interactions is challenging, I summarize the interaction of alliances democracy and presidential election proximity in \autoref{fig:us-arms-plots}.\footnote{Coefficient estimates are available in the appendix.}
+This figure plots predicted arms deals based on proximity to an election and whether a state is a U.S. ally or not. 
+Each facet sets recipient democracy at the minimum, first quartile, median, third quartile and maximum.
 
 
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{../figures/us-arms-plots.png}
-	\caption{Predicted outcome and the marginal impact of defensive alliances on changes in the log of arms transfers between the United States and other states 1950 to 2014. Points mark the estimates and error bars summarize the 95\% confidence interval.}
+	\caption{Predicted arms deals between the United States and other states 1950 to 2014 based on presidential election proximity, democracy, and security alliances. Points mark the estimates and error bars summarize the 95\% confidence interval.}
 	\label{fig:us-arms-plots}
 \end{figure}
 
 
-First, predicted arms transfers to U.S. allies increase as presidential elections approach.
-For a U.S. ally, predicted log arms transfers rise by .14 in expectation. 
-This is roughly equal to the marginal effect of an alliance on overall exports reflected in \autoref{fig:us-elec-pred}.
-At the same time, arms transfers to non-allies fall as elections approach. 
+There are two key inferences in \autoref{fig:us-arms-plots}.
+First, the United States makes more arms deals with allied states than non-allied states, regardless of regime type. 
+Predicted deals with non-allied states are low and basically constant across the different levels of democracy. 
+The impact of an alliance on arms deals is much greater for autocracies than democracies, however, which is consistent with \citep{McManusYarhi-Milo2017}. 
+U.S. allies with minimal polyarchy scores receive one more arms deal a year than states with similar democracy, all else equal. 
+Fully democratic U.S. allies receive .4 deals more in expectation. 
 
 
-As a result, while arms transfers to allies and non-allies are similar in the year after a presidential election, there is a expected gap of .34 between allies and non-allies in election years.
-The marginal impact of a defense pact on arms transfers reflects this difference, as it rises near presidential elections.
-U.S. allies thus receive more arms near presidential elections than other states, as security cooperation and defense industry integration encourage arms exports.
+The second inference is that electoral cycles in arms deals are present for autocratic allies and absent for democracies.
+When allied polyarchy is at the minimum value, predicted arms deals rise from 1.6 to 1.95 throughout the presidential election cycle. 
+This cycle diminishes as allied democracy increases, so fully democratic partners see no change in arms deals as elections approach.  
 
 
-Divergent electoral cycles in arms transfers reflect distinct political relations.
-Allies have more to gain from accommodating electoral cycles in arms transfers, and can fit additional U.S. arms into military forces that already use U.S. kit.
-Arms transfers cement cooperative relationships and bolster allied security through additional capability.
-Leaders may also face more scrutiny over arms transfers outside alliances as elections approach. 
+The overall results thus suggest the arms deals hypothesis. 
+As presidential elections approach, arms deals rise, but only with autocratic allies. 
+Arms deals with democratic allies are unchanged by electoral competition.
 
 
-These growing arms exports to allies near elections are the result of electoral cycles in defense contracting. 
-The next analysis examines electoral cycles in defense contracting. 
+These arms deals with autocratic allies near elections are connected to electoral cycles in defense contracting. 
+If there are no cycles in defense contract awards, then arms deals have less tangible consequences. 
+The next analysis checks for electoral cycles in defense contracting awards. 
 
 
 
