@@ -133,15 +133,24 @@ ggplot(contracts.data.state %>%
   geom_line()
 
 
-# Senate incumbent models
+# overall electoral competition 
 # simple model: OLS
+elec.lm <- lm(ln_obligations ~ s_comp + incumbent +
+                time_to_selec +
+                diff_vote_share + time_to_pelec +
+                pivot_prox +
+                poptotal + ln_ngdp + iraq_war,
+              data = state.data) 
+summary(elec.lm)
+
 # robust
-sen.ob.rlm <- rlm(ln_obligations ~ s_comp + incumbent +
-                    time_to_selec +
-                    diff_vote_share + time_to_pelec +
-                    poptotal + ln_ngdp + iraq_war,
-                 data = state.data) 
-summary(sen.ob.rlm)
+elec.rlm <- rlm(ln_obligations ~ s_comp + incumbent +
+                time_to_selec +
+                diff_vote_share + time_to_pelec +
+                pivot_prox +
+                poptotal + ln_ngdp + iraq_war,
+              data = state.data) 
+summary(elec.rlm)
 
 
 
@@ -190,18 +199,9 @@ ggplot(state.data,
 
 
 
-# prior vote share and contracting 
-pres.ob.vote <- rlm(ln_obligations ~ s_comp + 
-                      diff_vote_share +
-                      time_to_pelec +
-                      iraq_war +
-                      poptotal + ln_ngdp, #+ factor(state),
-                  data = state.data) 
-summary(pres.ob.vote)
-
 
 # contracting from time to presidential elections and pivot proximity
-pres.ob.prox <- lm(ln_obligations ~ time_to_pelec + pivot_prox +
+pres.ob.prox <- lm(ln_obligations ~ time_to_pelec*pivot_prox +
                      iraq_war +
                       poptotal + ln_ngdp,
                    data = state.data) 
@@ -240,9 +240,9 @@ formula.sector <- vector(mode = "list", length = length(sector.list))
 for(i in 1:length(sector.list)){
   formula.sector[[i]] <- as.formula(
     paste(
-      #paste0(sector.list[i], "_change ", "~"), 
-      paste0(sector.list[i]), "~",
-      paste0(sector.list[i], "_lag"),
+      paste0(sector.list[i], "_change ", "~"), 
+      # paste0(sector.list[i]), "~",
+      # paste0(sector.list[i], "_lag"),
       paste0(" + ", "deals_", sector.list[i]),
       paste0(" + ", "s_comp"),
       paste0(" + ", "diff_vote_share + time_to_pelec"),
@@ -257,10 +257,10 @@ summary(sector.state.sys)
 for(i in 1:length(sector.list)){
   formula.sector[[i]] <- as.formula(
     paste(
-      #paste0(sector.list[i], "_change ", "~"), 
-      paste0(sector.list[i]), "~",
-      paste0(sector.list[i], "_lag"),
-      paste0(" + ", "deals_", sector.list[i], "*diff_vote_share"),
+      paste0(sector.list[i], "_change ", "~"), 
+      # paste0(sector.list[i]), "~",
+      # paste0(sector.list[i], "_lag"),
+      paste0(" + ", "deals_", sector.list[i], "*time_to_pelec"),
       paste0(" + ", "time_to_pelec + s_comp + iraq_war")
     ))
 }

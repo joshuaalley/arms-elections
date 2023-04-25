@@ -30,11 +30,11 @@ parameters {
 
 transformed parameters {
   //vector[C] alpha_cntry; // country varying intercepts
-  vector[S] mu_stateyr; // state-year parameter means
+  vector[N] mu_cntry; // state-year parameter means
   
     
-  // linear predictor for contracts
-    mu_stateyr = G * lambda;
+  // linear predictor for arms deals
+    mu_cntry = X * beta;
   
   // country varying intercepts
   //alpha_cntry = 0 + sigma_cntry * alpha_cntry_std; // non-centered parameterization,
@@ -46,23 +46,24 @@ transformed parameters {
 
 model {
 
-  vector[N] mu;
+  vector[S] mu;
   
-  
-  // likelihood: contracts- t distributed
-      for (s in 1:S) {
-      target += normal_lpdf(y_ob[s] | mu_stateyr[s], sigma_stateyr);
+    // likelihood: arms exports- poisson
+    for (n in 1:N) {
+      target += poisson_log_lpmf(y_arms[n] | mu_cntry[n]);
     }
     
-  // initialize linear predictor term: arms
-    mu = //alpha_cntry[cntry] + 
-                  Z * mu_stateyr + // brings in arms contracts
-                  X * beta;
-
-  // likelihood: arms exports- poisson
-    for (n in 1:N) {
-      target += poisson_log_lpmf(y_arms[n] | mu[n]);
+    // initialize linear predictor term: contracts
+    mu = G * lambda + 
+                  Z' * mu_cntry; // brings in arms contracts
+  
+  // likelihood: contracts- normal
+      for (s in 1:S) {
+      target += normal_lpdf(y_ob[s] | mu, sigma_stateyr);
     }
+    
+
+
   // priors including constants
   target += student_t_lpdf(alpha | 3, 0.7, 2.5);
   target += normal_lpdf(beta | 0, 1);
