@@ -67,7 +67,8 @@ mcmc_intervals(draws, regex_pars = "lambda\\[[1-9]\\]") +
   scale_y_discrete(labels = colnames(process.data$G))
 
 # competition
-mcmc_intervals(draws, regex_pars = "gamma\\[[1-9]\\]") +
+draws.gamma <- select(draws, starts_with("gamma"))
+mcmc_intervals(draws.gamma) +
   scale_y_discrete(labels = colnames(process.data$H))
 
 # country-year level parameters
