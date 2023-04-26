@@ -17,7 +17,7 @@ fit.process <- process.mod$sample(
   parallel_chains = 4,
   threads_per_chain = 1,
   seed = 12,
-  max_treedepth = 20,
+  max_treedepth = 20, 
   refresh = 200
 )
 
@@ -40,10 +40,10 @@ mcmc_acf(draws, pars = "alpha")
 #mcmc_acf(draws, pars = "alpha_cntry[12]")
 
 # parallel coordinates plot
-mcmc_parcoord(fit.process$draws("lambda"))
+mcmc_parcoord(fit.process$draws("eta"))
 
 # look at parameter estimates: start with alpha_stateyr
-draws.state.yr <- select(draws, starts_with("mu_stateyr")) 
+draws.state.yr <- select(draws, starts_with("mu_ob")) 
 mcmc_intervals(draws.state.yr) # messy, but shows variation
 
 # get summary 
@@ -64,6 +64,10 @@ ggplot(state.yr.int, aes(x = year, y = m,
 # state-year level parameters
 mcmc_intervals(draws, regex_pars = "lambda\\[[1-9]\\]") +
   scale_y_discrete(labels = colnames(process.data$G))
+
+# competition
+mcmc_intervals(draws, regex_pars = "gamma\\[[1-9]\\]") +
+  scale_y_discrete(labels = colnames(process.data$H))
 
 # country-year level parameters
 draws.beta <- select(draws, starts_with("beta"))

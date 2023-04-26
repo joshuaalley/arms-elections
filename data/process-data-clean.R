@@ -47,14 +47,24 @@ state.yr.final <- state.data.ml %>%
          ln_obligations, 
          ln_ngdp,
          s_comp, diff_vote_share, 
-         time_to_pelec, time_to_selec,
+         pivot_prox, time_to_selec,
          iraq_war) 
 # rescale obligations and GDP by 2sd 
 state.yr.final[, 2:3] <- apply(state.yr.final[, 2:3], 2,
        function(x) arm::rescale(x,
                                 binary.inputs = "0/1"))
+# rescale pivot prox as well
+state.yr.final$pivot_prox <- state.yr.final$pivot_prox / 10
+
+
 # matrix for stan
-state.yr.final <- as.matrix(state.yr.final)
+state.yr.cont <- as.matrix(select(state.yr.final,
+                                   intercept, ln_obligations,
+                                  ln_ngdp, iraq_war))
+
+state.yr.comp <- as.matrix(select(state.yr.final,
+                                  s_comp, diff_vote_share, 
+                                  pivot_prox))
 
 
 
@@ -96,29 +106,27 @@ ggplot(us.arms.deals, aes(x = deals)) + geom_histogram()
 
 # create a matrix to index when state-year obs apply 
 # (double-indexing failed)
-state.yr.idmat <- left_join(
+yr.idmat <- left_join(
     select(us.arms.deals, ccode, year),
-    select(state.data.ml, year, state.year.txt)
+    select(state.data.ml, year),
+    multiple = "all"
    ) %>%
   distinct() %>%
-  group_by(ccode, year, state.year.txt) %>%
-  summarise(n = dplyr::n(), .groups = "drop") %>%
-  filter(n == 1L) %>% 
+  group_by(ccode, year) %>%
+  summarise(present = dplyr::n(), 
+            .groups = "drop") %>%
   mutate(
-    present = 1, # to fill dummies
+    obs = paste(ccode, year, sep = "-")
   ) %>%
   pivot_wider( # wider 
-    id_cols = c(ccode, year),
-    names_from = "state.year.txt",
+    id_cols = c("obs"),
+    names_from = c("year"),
     values_from = "present"
   ) %>%
-  select(-c(ccode, year))
-state.yr.idmat[is.na(state.yr.idmat)] <- 0
+  select(-c(obs))
+yr.idmat[is.na(yr.idmat)] <- 0
 
 
-
-# state-year data
-state.yr.proc <- select(as.data.frame(state.yr.final), -ln_obligations) 
 
 # separate data- select variables
 us.arms.deals.iv <- us.arms.deals %>% 
@@ -138,13 +146,18 @@ us.arms.deals.iv <- us.arms.deals %>%
 process.data <- list(
   N = nrow(us.arms.deals),
   y_arms = us.arms.deals$deals,
+  
   X = us.arms.deals.iv,
   K = ncol(us.arms.deals.iv),
-  #cntry = us.arms.deals$cntry.index,
-  #C = max(us.arms.deals$cntry.index),
+
   S = nrow(state.data.ml),
   y_ob = state.data.ml$ln_obligations,
-  Z = as.matrix(state.yr.idmat),
-  G = state.yr.proc,
-  L = ncol(state.yr.proc)
+  
+  Z = as.matrix(yr.idmat),
+  T = ncol(yr.idmat),
+  
+  G = state.yr.cont,
+  L = ncol(state.yr.cont),
+  H = state.yr.comp,
+  M = ncol(state.yr.comp)
 )
