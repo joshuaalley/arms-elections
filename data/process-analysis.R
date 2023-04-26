@@ -18,6 +18,7 @@ fit.process <- process.mod$sample(
   threads_per_chain = 1,
   seed = 12,
   max_treedepth = 20, 
+  adapt_delta = .9,
   refresh = 200
 )
 
@@ -40,7 +41,7 @@ mcmc_acf(draws, pars = "alpha")
 #mcmc_acf(draws, pars = "alpha_cntry[12]")
 
 # parallel coordinates plot
-mcmc_parcoord(fit.process$draws("eta"))
+mcmc_parcoord(fit.process$draws("beta"))
 
 # look at parameter estimates: start with alpha_stateyr
 draws.state.yr <- select(draws, starts_with("mu_ob")) 

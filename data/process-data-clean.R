@@ -92,10 +92,9 @@ us.arms.deals$deals[is.na(us.arms.deals$deals)] <- 0
 us.arms.deals <- drop_na(us.arms.deals)
 class(us.arms.deals) <- "data.frame"
 
+
 # group indices 
 us.arms.deals$cntry.index <- us.arms.deals %>% group_by(ccode) %>%
-                              group_indices()
-us.arms.deals$year.id <- us.arms.deals %>% group_by(year) %>%
   group_indices()
 us.arms.deals$ally.id <- us.arms.deals %>% group_by(ally) %>%
   group_indices()
@@ -142,6 +141,13 @@ us.arms.deals.iv <- us.arms.deals %>%
     elec_ally_democ = time_to_elec * ally * v2x_polyarchy2
   )
 
+# time indices
+year.id.state <- state.data.ml %>% group_by(year) %>%
+  group_indices()
+
+us.arms.deals$year.id <- us.arms.deals %>% group_by(year) %>%
+  group_indices()
+
 # data 
 process.data <- list(
   N = nrow(us.arms.deals),
@@ -155,6 +161,7 @@ process.data <- list(
   
   Z = as.matrix(yr.idmat),
   T = ncol(yr.idmat),
+  year_ob = year.id.state,
   
   G = state.yr.cont,
   L = ncol(state.yr.cont),
