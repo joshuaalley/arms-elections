@@ -382,14 +382,16 @@ Arms exports in turn are rooted in electoral cycles of defense contracting.
 
 
 
-The argument generates several testable implications, albeit within the scope of U.S. alliances. 
-These twin cycles of arms deals and defense contracting are the result of a large defense industry and many security commitments.
+The argument generates several testable implications, about U.S. alliances, arms deals and defense contracting. 
+Again, this argument applies best and perhaps exclusively to the United States.  
+The twin cycles of arms deals and defense contracting are the result of a large defense industry and many security commitments.
 Fixed election scheduling further reduces endogeneity between policy decisions and election timing. 
-Other states may have weaker cycles, or electoral cycles in different goods.
+Other states may have weaker cycles, or electoral cycles in different goods, however. 
 
 
-The first hypothesis predicts corresponding cycles in arms exports, especially to autocratic allies.
-Proximity to presidential elections will increase arms transfers from the United States to autocratic allied states. 
+The first hypothesis predicts electoral cycles in arms deals, especially to autocratic allies.
+Democratic allies will be less likely to make cyclical arms deals. 
+As a result, greater proximity to presidential elections will increase arms deals with autocratic allied states. 
 
 
 \begin{quote}
@@ -397,21 +399,30 @@ Proximity to presidential elections will increase arms transfers from the United
 \end{quote}
 
 
-The second prediction tests the expected relationship between defense contracts and arms exports. 
-I expect electoral cycles in defense contacting, and a positive correlation between these cycles and U.S. arms exports.
-
+The second prediction deals with electoral competition and contract awards. 
+Because leaders are using contracts to increase their odds of winning election, greater electoral competition in a state should lead to more prime contract awards. 
 
 \begin{quote}
 \textsc{Defense Contracts Hypothesis: As electoral competition in a state increases, prime defense contract awards increase.}
 \end{quote}
 
 
+Finally, I expect that arms deals magnify the relationship between electoral competition and prime contract awards.
+By striking deals, leaders can focus more contracts in key districts. 
+Again, the concentration of arms manufacturing in key electoral areas facilitates this process. 
+
+
+\begin{quote}
+\textsc{Deals and Contracts Hypothesis: Increasing arms deals increase the magnitude of the association between electoral competition and contract awards.}
+\end{quote}
+
 
 % What's next
 In the following, I examine each of these hypotheses. 
 In the first analysis, I use a series of descriptive data and single-outcome statistical models to illustrate each step in the process.
 This starts with descriptive data on defense contracting from 2000 to 2020, then shows how arms exports to allies track U.S. electoral cycles, and ends with a model of electoral cycles in U.S. trade. 
-After that, I unify the different outcomes in Bayesian model that captures the process where contract allocations to electorally important states filter up into arms exports, ultimately driving increased exports.
+After that, I test the third deals and contracts hypothesis by unifying the different outcomes in Bayesian model.
+The joint model captures the process whereby arms deals increase the association between electoral competition and defense contracting awards. 
 
 
 
@@ -445,7 +456,7 @@ I interact all three of these variables to predict arms deals.
 To estimate how alliances, democracy and election timing shape arms deals, I use a Poisson model.
 This fits the annual count of arms deals well.
 To preserve compatibility with a later joint model, I use Bayesian estimation with the brms package for \textsf{R} \citep{Buerkner2017}. 
-I show in the appendix that OTHER MODELS HERE give similar inferences. 
+I show in the appendix that OTHER MODELS give similar inferences. 
 
 
 Along with the three key independent variables, I adjust for other factors that are correlated with arms deals, alliances, and democracy. 
@@ -459,7 +470,7 @@ Finally, I adjust for presidential partisanship with a dummy indicator of years 
 \subsection{Results}
 
 
-Because interpreting coefficients in triple interactions is challenging, I summarize the interaction of alliances democracy and presidential election proximity in \autoref{fig:us-arms-plots}.\footnote{Coefficient estimates are available in the appendix.}
+Because interpreting coefficients in triple interactions is challenging, I summarize the interaction of alliances democracy and presidential election proximity in \autoref{fig:us-arms-plots}.\footnote{See the appendix for coefficient estimates.}
 This figure plots predicted arms deals based on proximity to an election and whether a state is a U.S. ally or not. 
 Each facet sets recipient democracy at the minimum, first quartile, median, third quartile and maximum.
 
@@ -480,12 +491,17 @@ U.S. allies with minimal polyarchy scores receive one more arms deal a year than
 Fully democratic U.S. allies receive .4 deals more in expectation. 
 
 
-The second inference is that electoral cycles in arms deals are present for autocratic allies and absent for democracies.
-When allied polyarchy is at the minimum value, predicted arms deals rise from 1.6 to 1.95 throughout the presidential election cycle. 
+The second inference is that electoral cycles in arms deals are present for autocratic allies and absent for democratic allies.
+When allied polyarchy is at the minimum value, predicted arms deals rise from 1.6 to 1.95 throughout the presidential election cycle.
 This cycle diminishes as allied democracy increases, so fully democratic partners see no change in arms deals as elections approach.  
 
 
-The overall results thus suggest the arms deals hypothesis. 
+Electoral cycles are only present for autocratic allies. 
+States that are not US allies do not change arms deals throughout the electoral cycle. 
+Alliances increase the level of arms deals, and regime type impacts responsiveness to presidential elections. 
+
+
+These estimates support arms deals hypothesis. 
 As presidential elections approach, arms deals rise, but only with autocratic allies. 
 Arms deals with democratic allies are unchanged by electoral competition.
 
@@ -496,44 +512,51 @@ The next analysis checks for electoral cycles in defense contracting awards.
 
 
 
-\section{Defense Contracting Cycles}
+\section{Electoral Competition and Defense Contracting}
 
 
-To show electoral cycles in defense contracting, I draw on Department of Defense prime contract award data from the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
+To show the electoral correlates of defense contracting, I use Department of Defense prime contract award data from the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
 This archive contains data on individual contract awards starting in the 2000 fiscal year, and I collected all Department of Defense contracts from 2000 to 2020.
+The key outcome is the log of total defense contracts tied to arms production awarded to a state in every year.\footnote{This measure excludes other contracts besides weapons production because arms deals are unlikely to translate into other contracts.}
 
 
-In addition to aggregating the total federal dollar obligation of all contracts in every year, I differentiate contracts by sector to assess which sectors drive contracting cycles. 
-I measure total contracts for aircraft, ships, vehicles, electronics, missiles/space, and weapons/ammunition. 
-While large contracts for components of major combat platforms have greater economic heft, full platforms can take years to deliver. 
-Missiles, weapons and ammunition may lead to more immediate exports of defense goods, as their production schedules are more flexible.
+I employ three indicators of electoral competition to predict defense contracting awards at the state-year level. 
+Presidential competition includes the years to a presidential election, which ranges from three to zero. 
+This measure captures aggregate cycles, which the others deal with state-level competition. 
+Following \citet{KrinerReeves2015}, I use dummy indicators of whether a state is a swing state or a core state in the President's coalition. 
+Swing states are states where the losing party has won at least 45\% of the two-party vote in three straight elections. 
 
 
-If defense contracting drives electoral export cycles, we should observe electoral cycles in defense contracting.
-\autoref{fig:contract-cycles} shows defense contracting cycles around presidential elections. 
-As presidential elections approach, aggregate defense contract awards increase. 
-There is a notable spike of \$25-30 billion in the median of overall defense contracts from two years into a presidential term to one year before an election. 
-Median defense contracting levels rise further in election years.
+In addition to the electoral competition variables, I include four controls in the regressions. 
+First, I adjust for population and GDP, in case larger and more prosperous states receive more contracts. 
+I also include a dummy indicator of years with active U.S. engagement in Iraq, which is one from 2003 to 2011, and zero otherwise. 
+The Iraq dummy captures a general increase in contracts during war years. 
+The final control adjusts for presidential partisanship by coding years with a Republican President with one. 
 
 
-\begin{figure}[htpb]
-	\centering
-		\includegraphics[width=0.95\textwidth]{../figures/contract-cycles.png}
-	\caption{Distribution of prime defense contract awards by presidential election proximity, 2000-2020. The dark line in the box plot marks the median value of total contract awards in each year.}
-	\label{fig:contract-cycles}
-\end{figure}
+I use OLS and robust regression to estimate the associations between electoral competition and defense contracting.  
+The robust regression checks whether alternative assumptions about the residual distribution change the inferences. 
+Robust regression uses Tukey's Biweight function.
 
 
-Particular sectors drive the aggregate increase in defense contracting. 
-Aircraft contracts increase dramatically, as do missile and space outlays. 
-Naval contacts and prime awards for weapons and ammunition also increase, but retain a high level in the first year of many administrations, which changes those cycles. 
-Electronics contracting also rise significantly, and there is a slight increase in vehicle contracting. 
-Outside of aircraft, most of the specific platform cycles change the median contract outlay by less than \$10 billion.
+\input{../figures/state-reg-comp.tex}
 
 
-Therefore, there is some evidence that defense contracting cycles follow presidential elections.
-Along with prior research \citep{DerouenHeo2000}, this suggests that defense contracting is a plausible source of electoral cycles in arms exports from the United States to its allies.
-Efforts to manipulate economic conditions through defense contracting have international ramifications. 
+\autoref{tab:state-res} summarizes the results from these estimates. 
+This table presents the average marginal effect of a change in each variable in the linear and robust regressions.
+
+Swing states are more likely to receive defense contracts than other states, which is consistent with the electoral competition hypothesis. 
+Relative to states that are not swing states, core states receive marginally fewer contracts, but this association is more uncertain. 
+There is little evidence that this shifts with election timing, however. 
+
+
+Among the controls, the Iraq War has a clear positive association with arms contracts. 
+Population is also mostly positively correlated with contracts. 
+GDP has little association with contracts, however. 
+
+
+These estimates validate prior findings that electoral considerations shape defense contracting. 
+In the final analysis, I examine how arms deals magnify this relationship.
 
 
 
@@ -541,7 +564,7 @@ Efforts to manipulate economic conditions through defense contracting have inter
 \section{A Bayesian Model of Contracts, Arms Exports, and Trade}
 
 
-The three individual analyses provide initial support for the argument, but they also treat each part of the process in isolation. 
+The two individual analyses provide initial support for the argument, but they also treat each part of the process in isolation. 
 To show the full process, I employ a generative model where each stage of the process informs the next level.
 This move 
 I employ this approach because standard multiple-equation models in political science cannot easily accommodate divergent levels of analysis.

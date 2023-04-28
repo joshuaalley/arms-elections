@@ -5,7 +5,7 @@
 ### raw data 
 table(state.data$incumbent)
 table(state.data$time_to_selec)
-table(state.data$time_to_pelec)
+table(state.data$time_to_elec)
 
 
 # plot obligations
@@ -118,7 +118,7 @@ contract.cycles <- arrangeGrob(contracts.elec.agg, contracts.elec.sector,
                                layout_matrix = rbind(c(1, 1, 2, 2, 2),
                                                      c(1, 1, 2, 2, 2),
                                                      c(1, 1, 2, 2, 2)))
-ggsave("figures/contract-cycles.png", contract.cycles, height = 6, width = 8)
+ggsave("appendix/contract-cycles.png", contract.cycles, height = 6, width = 8)
 
 
 
@@ -130,47 +130,75 @@ ggplot(contracts.data.state %>%
            group = usml_cont,
            color = usml_cont)) +
   facet_wrap(~ state, scales = "free_y") +
-  geom_line()
+  geom_point()
 
 
 # overall electoral competition 
+
+# missing data is: 
+visdat::vis_miss(select(state.data,
+                        ln_obligations, s_comp, incumbent,
+                          diff_vote_share, time_to_elec,
+                          swing, core, rep_pres,
+                          pivot_prox,
+                          poptotal, ln_ngdp, iraq_war))
+
 # simple model: OLS
-elec.lm <- lm(ln_obligations ~ s_comp + incumbent +
-                time_to_selec +
-                diff_vote_share + time_to_pelec +
-                pivot_prox +
+elec.lm <- lm(ln_obligations ~ 
+                time_to_elec + swing + core + 
+                rep_pres +
                 poptotal + ln_ngdp + iraq_war,
               data = state.data) 
 summary(elec.lm)
 
 # robust
-elec.rlm <- rlm(ln_obligations ~ s_comp + incumbent +
-                time_to_selec +
-                diff_vote_share + time_to_pelec +
-                pivot_prox +
-                poptotal + ln_ngdp + iraq_war,
+elec.rlm <- rlm(ln_obligations ~ 
+                  time_to_elec + swing + core + 
+                  rep_pres +
+                  poptotal + ln_ngdp + iraq_war,
               data = state.data) 
 summary(elec.rlm)
 
 
+# plot/tabulate results
+comp.res.state <- list(elec.lm, elec.rlm)
+names(comp.res.state) <- c("OLS", "Robust")
+modelplot(comp.res.state, coef_map = coef.names.map.state)
+modelsummary(comp.res.state,
+             coef_map = coef.names.map.state,
+             # statistic = c("conf.int",
+             #               "s.e. = {std.error}", 
+             #               "t = {statistic}"),
+             gof_omit = "IC|R2|Log.Lik.|F",
+             note = "Standard Error in Parentheses",
+             title = "Electoral Competition and Defense Contracting: 2001-2020")
 
-sen.vote.log <- glm(incumb.win ~ ln_obligations +
-                   poptotal + ln_ngdp + pres_election + iraq_war,
-                 data = state.data,
-                 family = binomial(link = "logit"))
-summary(sen.vote.log)
+mfx.lm.state <- avg_slopes(elec.lm)
+mfx.rlm.state <- avg_slopes(elec.rlm)
+
+comp.mfx.state <- list(mfx.lm.state, mfx.rlm.state)
+names(comp.mfx.state) <- c("OLS", "Robust")
+
+modelsummary(comp.mfx.state,
+             shape = term + model ~ statistic,
+             statistic = c("{std.error}",
+                           "{statistic}"),
+             coef_map = coef.names.map.state,
+             gof_map = NA,
+             title = "\\label{tab:state-res} Marginal Effects of Electoral Competition on Defense Contracting Awards: 2001-2020",
+             output = "figures/state-reg-comp.tex")
 
 
 
 # Presidential vote 
 
 # plot obligations: loess 
-ggplot(state.data, 
-       aes(group = factor(time_to_pelec,
+ggplot(drop_na(state.data, time_to_elec), 
+       aes(group = factor(time_to_elec,
                           ordered = TRUE,
                           levels = c("3", "2",
                                      "1", "0")),
-           color = factor(time_to_pelec,
+           color = factor(time_to_elec,
                           ordered = TRUE,
                           levels = c("3", "2",
                                      "1", "0")),
@@ -182,12 +210,12 @@ ggplot(state.data,
 
 
 # plot obligations: linear
-ggplot(state.data, 
-       aes(group = factor(time_to_pelec,
+ggplot(drop_na(state.data, time_to_elec), 
+       aes(group = factor(time_to_elec,
                           ordered = TRUE,
                           levels = c("3", "2",
                                      "1", "0")),
-           color = factor(time_to_pelec,
+           color = factor(time_to_elec,
                           ordered = TRUE,
                           levels = c("3", "2",
                                      "1", "0")),
@@ -198,14 +226,42 @@ ggplot(state.data,
   theme(legend.position = "bottom")
 
 
+# swing states
 
 
-# contracting from time to presidential elections and pivot proximity
-pres.ob.prox <- lm(ln_obligations ~ time_to_pelec*pivot_prox +
-                     iraq_war +
-                      poptotal + ln_ngdp,
-                   data = state.data) 
-summary(pres.ob.prox)
+
+# allow impact of electoral competition variables to shift over time
+
+comp.time <- brm(ln_obligations ~ 1 + (swing + core
+                                       | year) +
+                   swing + core + 
+                   rep_pres +
+                   poptotal + ln_ngdp + iraq_war,
+                 family = student(),
+                 prior = 
+                   set_prior("normal(0, 1)", class = "b"),
+                 data = state.data,
+                 cores = 4,
+                 backend = "cmdstanr",
+                 control = list(
+                   adapt_delta = .99,
+                   max_treedepth = 20
+                 )
+                 )
+summary(comp.time)
+coefs.comp <- coef(comp.time)
+coefs.comp[["year"]]
+
+coefs.var.state <- bind_rows(Swing = as.data.frame(coefs.comp$year[, , 2]),
+                             Core = as.data.frame(coefs.comp$year[, , 3]),
+                             .id = "Variable")
+coefs.var.state$time <- rep(seq(from = 2001, to = 2019, by = 1))
+
+ggplot(coefs.var.state, aes(x = time, y = Estimate)) +
+  facet_wrap(~ Variable) +
+  geom_pointrange(aes(ymin = Q2.5,
+                      ymax = Q97.5))
+
 
 
 ### state data with arms deals
@@ -213,19 +269,18 @@ state.data.deals <- left_join(state.data,
                               select(arms.deals.year,
                                      year, deals))
 
-ggplot(state.data.deals, aes(x = factor(time_to_pelec),
+ggplot(state.data.deals, aes(x = factor(time_to_elec),
                              y = deals)) +
   geom_boxplot()
   
 
+
 # add deals to model
 # contracting from time to presidential elections and pivot proximity
 deals.state <- lm(ln_obligations ~ deals +
-                    s_comp + 
-                    diff_vote_share +
-                    time_to_pelec +
-                     iraq_war +
-                     poptotal + ln_ngdp,
+                    swing + core + time_to_elec +
+                    rep_pres +
+                    poptotal + ln_ngdp + iraq_war,
                    data = state.data.deals) 
 summary(deals.state)
 
@@ -241,29 +296,11 @@ for(i in 1:length(sector.list)){
   formula.sector[[i]] <- as.formula(
     paste(
       paste0(sector.list[i], "_change ", "~"), 
-      # paste0(sector.list[i]), "~",
-      # paste0(sector.list[i], "_lag"),
       paste0(" + ", "deals_", sector.list[i]),
-      paste0(" + ", "s_comp"),
-      paste0(" + ", "diff_vote_share + time_to_pelec"),
-      paste0("+ iraq_war")
+      paste0(" + ", "swing + core + time_to_elec"),
+      paste0("+ iraq_war + rep_pres + ln_ngdp + poptotal")
     ))
   }
 
 sector.state.sys <- systemfit(formula.sector, data = state.data.ord)
 summary(sector.state.sys)
-
-# interact with vote share 
-for(i in 1:length(sector.list)){
-  formula.sector[[i]] <- as.formula(
-    paste(
-      paste0(sector.list[i], "_change ", "~"), 
-      # paste0(sector.list[i]), "~",
-      # paste0(sector.list[i], "_lag"),
-      paste0(" + ", "deals_", sector.list[i], "*time_to_pelec"),
-      paste0(" + ", "time_to_pelec + s_comp + iraq_war")
-    ))
-}
-
-sector.state.lvote <- systemfit(formula.sector, data = state.data.ord)
-summary(sector.state.lvote)

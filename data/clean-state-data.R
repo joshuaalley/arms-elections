@@ -2,76 +2,17 @@
 # clean US state-level data
 
 
-# load exports data by state
-state.exports <- read.csv("data/state-exports-country.csv")
-# remove commas and measure in thousands
-state.exports$value <- as.numeric(gsub(",","", state.exports$value)) / 1000
-
-# remove unknown state
-state.exports <- filter(state.exports, state != "Unknown") 
-
-# state exports ccode
-state.exports$ccode <- countrycode(origin = "country.name",
-                                   sourcevar = state.exports$destination,
-                                   destination = "cown")
-
-# add destination level info
-state.exports.dyad <-  left_join(state.exports,
-                                 (create_dyadyears(system = "cow",
-                                                   mry = TRUE, 
-                                                   directed = FALSE) %>%
-                                    add_cow_mids() %>%
-                                    add_atop_alliance() %>%
-                                    add_igos() %>%
-                                    add_democracy() %>% 
-                                    rename(
-                                      ccode = ccode2
-                                    ) %>%
-                                    filter(ccode1 == 2 & year >= 1946) %>%   
-                                    select(ccode, year,
-                                           cowmidongoing, xm_qudsest2,
-                                           atop_defense, dyadigos) %>%
-                                    mutate(
-                                      lag_atop_defense = lag(atop_defense),
-                                      lag_xm_qudsest2 = lag(xm_qudsest2)
-                                    ))) %>%
-  left_join(select(ungroup(us.trade.ally),
-                   ccode, year,
-                   time_to_elec,
-                   ln_total_statements)) 
-# fix ATOP alliance 0s 
-state.exports.dyad$atop_defense[state.exports.dyad$year == 2019] <- NA
-state.exports.dyad$atop_defense[state.exports.dyad$year == 2020] <- NA
-state.exports.dyad <- fill(state.exports.dyad, atop_defense, .direction = "down")
-
-
-
-state.exports.dyad <- left_join(state.exports.dyad,
-                                pwt.key) %>%
-  drop_na(ccode)  %>% # otherwise matches all ccode NAs
-  mutate(
-    lag_ln_rgdpe = lag(log(rgdpe)),
-    lag_pop = lag(pop),
-    lag_xr = lag(xr),
-    lag_csh_g = lag(csh_g)
-  ) 
 
 # state GDP data from FRED
 state.gdp <- read.csv("data/state-gdp.csv") %>%
-  pivot_longer(-observation_date)
-state.gdp$name[state.gdp$name == "AKNGSP_20080605"] <- "AKNGSP"
-state.gdp$measure <- substr(state.gdp$name, 3, 6)
-state.gdp$st <- substr(state.gdp$name, 1, 2)
-state.gdp$year <- as.numeric(substr(state.gdp$observation_date, 1, 4))
-
-# real gdp
-state.gdp <- state.gdp %>%
-  filter(measure == "NGSP") %>%
+  pivot_longer(-GeoName) %>%
   mutate(
+    year = as.numeric(substr(name, 2, 5)),
     ln_ngdp = log(value)
-  ) %>%
+    ) %>%
+  rename(state = GeoName) %>%
   select(
-    st, year, ln_ngdp
+    state, year, ln_ngdp
   )
 
 
@@ -82,31 +23,9 @@ cspp.data <- get_cspp_data(vars = c("foreign_born",
                                "atotspt", # total state and local spending
                                "fairtrade", "rep_unified", "s_diffs", "h_diffs"
                              ),
-                           years = seq(2002, 2019)) %>%
-  left_join(state.gdp)
-
-# Add cspp data
-state.exports.dyad <- left_join(state.exports.dyad, cspp.data) 
-
-# check duplicates
-state.exports.dyad$duplicates <- duplicated(state.exports.dyad)
-state.exports.dyad <- filter(state.exports.dyad, duplicates == FALSE)
-
-state.exports.dyad <- state.exports.dyad %>%
+                           years = seq(2000, 2020)) %>%
+  left_join(state.gdp) %>%
   mutate(
-    lag_poptotal = lag(poptotal),
-    lag_ln_ngdp = lag(ln_ngdp)
-  )
-
-
-# clean up w/ new variables
-state.exports.dyad <- state.exports.dyad %>%
-  mutate(
-    ln_state_exports = log(value),
-    lag_ln_exports = lag(ln_state_exports),
-    ihs_state_exports = asinh(value),
-    lag_ihs_exports = lag(ihs_state_exports),
-    
     election = ifelse(year == 2000 | 
                         year == 2004 |
                         year == 2008 |
@@ -115,7 +34,7 @@ state.exports.dyad <- state.exports.dyad %>%
                         year == 2020, 
                       1, 0),
     lead_election = lead(election),
-    lag_election = lag(election),
+    lag_election = lag(election)
   )
 
 # add electoral votes
@@ -162,10 +81,32 @@ election.res <- read.csv("data/pres-election-res.csv") %>%
     rep_vote_share = REPUBLICAN / totalvotes,
     diff_vote_share = abs(dem_vote_share - rep_vote_share),
     # following MA and McLaren NBER
-    close_state = ifelse(abs(diff_vote_share) < .04, 1, 0),
+    close_state = ifelse(abs(diff_vote_share) < .05, 1, 0),
     lag_close_state = lag(close_state),
     state_winner = ifelse(rep_vote_share > dem_vote_share,
-                          "Rep", "Dem")
+                          "Rep", "Dem"),
+    rep_pres = ifelse((year >= 2001 & year <= 2008) | # HW Bush
+                        (year >= 2017), # Trump
+                      1, 0)
+  )
+
+# code swing states using Kriner and Reeves (2015) criteria
+# swing if three elections where loser gets < .45
+election.res <- election.res %>%
+  group_by(state) %>%
+  mutate(
+    loser_share = ifelse(state_winner == "Rep",
+                         dem_vote_share, rep_vote_share),
+    # three cycle mean of the loser's vote share
+    loser_avg = zoo::rollmean(loser_share, k = 3, fill = NA),
+    # lagged for past three 
+    lag_loser_avg = lag(loser_avg),
+    swing = ifelse(lag_loser_avg >= .45, 1, 0),
+    rep_avg = lag(zoo::rollmean(rep_vote_share, k = 3, fill = NA)),
+    dem_avg = lag(zoo::rollmean(dem_vote_share, k = 3, fill = NA)),
+    core = ifelse((rep_pres == 1 & rep_avg >= .55) |
+                    (rep_pres == 0 & dem_avg >= .55), 
+                  1, 0)
   ) %>%
   filter(year >= 1999 & state != "District Of Columbia") %>% # match exports sample
   left_join(evotes.state) %>%
@@ -226,28 +167,28 @@ pivot.state <- function(data, year){
 
 # rank pivotal states by election
 pivot.list <- pivot.state(election.res, unique(election.res$year))
+pivot.data <- bind_rows(pivot.list) %>%
+               select(
+                 state, year, pivot_prox
+               )
 
 # merge with election res 
-election.res <- left_join(election.res, bind_rows(pivot.list))
+election.res <- left_join(election.res, pivot.data)
 
-# add to dyad data
-state.exports.dyad <- left_join(state.exports.dyad, election.res)
-glimpse(state.exports.dyad) 
+
+
+
+# add to state data
+state.data.raw <- left_join(cspp.data, election.res)
+glimpse(state.data.raw) 
 # fill in election data for intervening years
-state.exports.dyad <- state.exports.dyad %>%
+state.data.raw <- state.data.raw %>%
   fill(diff_vote_share, lag_close_state,
        pivot_prox,
        .direction = "down") %>%
   group_by(state) %>%
   mutate(
     lag_diff_vote = lag(diff_vote_share))
-
-
-# check duplicates
-state.exports.dyad$duplicates <- duplicated(state.exports.dyad)
-
-# Cut out duplicates from merging
-state.exports.dyad <- filter(state.exports.dyad, duplicates == FALSE)
 
 
 
@@ -262,9 +203,10 @@ contracts.data.state <- contracts.data %>%
   ) %>% 
   mutate( # obligations in millions
     obligations = obligations / 1000000,
-    ln_obligations = log(obligations + 1)
+    ln_obligations = log(obligations + 1),
+    state = str_to_title(state)
   ) %>%
-  filter(state %in% senate.data$state) %>%
+  filter(state %in% state.data.raw$state) %>%
   arrange(state, year) %>%
   ungroup()
 
@@ -313,19 +255,21 @@ contracts.state.wide <- drop_na(contracts.data.state, usml_cont) %>%
 contracts.state.wide[is.na(contracts.state.wide)] <- 0
 
 # add contracts to exports dyad
-state.exports.dyad <- left_join(state.exports.dyad, 
+state.data.raw <- left_join(state.data.raw, 
                                 contracts.state.wide %>%
                                   mutate( # ensures proper merge 
-                                    state = str_to_sentence(state)
+                                    state = str_to_title(state)
                                   ))
 
 # senate data
 # load senate data here:
 senate.data <- read.csv("data/senate-data.csv")
 glimpse(senate.data)
+senate.data$state <- str_to_title(senate.data$state)
 
 
-state.sen.data <- left_join(contracts.state.wide, senate.data) %>%
+state.sen.data <- left_join(select(state.data.raw, state, year),
+                            senate.data) %>%
   group_by(state) %>%
   mutate(
     incumbent = ifelse(str_detect(incumb, "incumb"),
@@ -347,35 +291,32 @@ state.sen.data <- left_join(contracts.state.wide, senate.data) %>%
 # elections only in merge, so replace NA with 0
 state.sen.data$election[is.na(state.sen.data$election)] <- 0
 
-# merge with state data 
-state.sen.data$state <- str_to_title(state.sen.data$state)
-state.data <- left_join(state.sen.data, cspp.data) %>%
+# merge senate and all other state data 
+state.data <- left_join(state.sen.data, state.data.raw,
+                        by = c("state", "year")) %>%
   filter(year <= 2020) %>%
   mutate(
     poptotal = arm::rescale(poptotal), 
     ln_ngdp = arm::rescale(ln_ngdp),
     iraq_war = ifelse(year >= 2003 & year <= 2010, 
+                      1, 0),
+    rep_pres = ifelse((year >= 2001 & year <= 2008) | # HW Bush
+                        (year >= 2017), # Trump
                       1, 0)
-  )
-
-
-# add presidential elections data
-election.res.join <- election.res
-# change this to merge- otherwise misses 2000
-election.res.join$year[election.res.join$year == 2000] <- 2001
-state.data <- left_join(state.data, election.res.join) %>% 
-  left_join(elections.data, by = "year") %>%
+  ) %>%
+  fill(core, swing, .direction = "up") %>%
   rename(
     sen_election = election.x,
-    pres_election = election.y,
-    time_to_selec = time_to_elec.x,
-    time_to_pelec = time_to_elec.y
+    pres_election = election.y
   )
+
+
+
 
 # fill in election data for intervening years
 # back fill- next election is what matters
 state.data <- state.data %>%
-  fill(diff_vote_share, lag_close_state,
+  fill(diff_vote_share,
        pivot_prox, s_comp,
        .direction = "up") %>%
   group_by(state) %>%
@@ -413,3 +354,4 @@ ggplot(state.elec.sum, aes(x = mean.prox, y = sd.prox)) +
 
 ggplot(state.elec.sum, aes(x = mean.diff, y = sd.diff)) +
   geom_point()
+

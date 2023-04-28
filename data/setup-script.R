@@ -127,6 +127,19 @@ coef.names.map = c("lag_exports" = "Lag Exports",
                    "lag_us_arms" = "Lag Ln(Arms Transfers)",
                    "pred_nz_arms" = "Pred. Prob. of Arms Transfer")
 
+coef.names.map.state = c(
+                   "diff_vote_share" = "Presidential Vote Difference",
+                   "pivot_prox" = "Electoral College\nPivot Proximity",
+                   "time_to_elec" = "Years to Presidential\nElection",
+                   "swing" = "Swing State",
+                   "core" = "Core State",
+                   "s_comp" = "Senate Vote Difference",
+                   "incumbent" = "Senate Incumbent",
+                   "poptotal" = "Population (Rescaled)",
+                   "ln_ngdp" = "Log GDP (Rescaled)",
+                   "iraq_war" = "Iraq War",
+                   "rep_pres" = "Republican President")
+
 
 
 # typical observations for US
@@ -157,3 +170,5 @@ me.us.elec <- function(model, formula, rm.wt, data){
   
   res <- list(me.est, pred.out, me.def.plot)
 }
+
+

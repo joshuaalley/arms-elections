@@ -455,6 +455,7 @@ contracts.data.clean$elec.cycle <- c(rep(2004, 4), rep(2008, 4),
                                      rep(2020, 4))
 
 
+
 ### clean specific orders data ###
 # SIPRI with a ton of manual cleaning before import here 
 us.trade.regis <- read.csv("data/us-trade-register.csv")
