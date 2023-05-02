@@ -128,6 +128,7 @@ coef.names.map = c("lag_exports" = "Lag Exports",
                    "pred_nz_arms" = "Pred. Prob. of Arms Transfer")
 
 coef.names.map.state = c(
+                   "lag_ln_obligations" = "Lag Contracts",
                    "diff_vote_share" = "Presidential Vote Difference",
                    "pivot_prox" = "Electoral College\nPivot Proximity",
                    "time_to_elec" = "Years to Presidential\nElection",

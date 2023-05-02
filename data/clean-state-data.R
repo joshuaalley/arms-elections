@@ -201,9 +201,11 @@ contracts.data.state <- contracts.data %>%
     obligations = sum(fed.obligation, na.rm = TRUE),
     .groups = "keep"
   ) %>% 
+  group_by(state) %>% 
   mutate( # obligations in millions
     obligations = obligations / 1000000,
     ln_obligations = log(obligations + 1),
+    lag_ln_obligations = lag(obligations),
     state = str_to_title(state)
   ) %>%
   filter(state %in% state.data.raw$state) %>%
@@ -244,9 +246,12 @@ contracts.state.wide <- drop_na(contracts.data.state, usml_cont) %>%
   pivot_wider(id_cols = c("state", "year"),
               names_from = "usml_cont",
               values_from = "ln_obligations") %>%
+  group_by(state) %>% 
   mutate(
     ln_obligations = aircraft + arms + electronics + missile_space +
       ships + vehicles,
+    lag_ln_obligations = lag(ln_obligations),
+    change_ln_obligations = ln_obligations - lag_ln_obligations,
     ln_obligations_other = aircraft + arms + electronics + missile_space +
       ships + vehicles + other
   )
@@ -355,3 +360,7 @@ ggplot(state.elec.sum, aes(x = mean.prox, y = sd.prox)) +
 ggplot(state.elec.sum, aes(x = mean.diff, y = sd.diff)) +
   geom_point()
 
+# swing and core summary
+state.data$comp.sum <- ifelse(state.data$swing == 1, "Swing",
+                              ifelse(state.data$core == 1, "Core",
+                                     "Neither"))

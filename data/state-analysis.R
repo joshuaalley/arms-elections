@@ -3,30 +3,18 @@
 
 
 ### raw data 
-table(state.data$incumbent)
-table(state.data$time_to_selec)
 table(state.data$time_to_elec)
+table(state.data$swing)
+table(state.data$core)
 
 
 # plot obligations
 ggplot(state.data, aes(x = ln_obligations)) + geom_histogram()
-
-ggplot(drop_na(state.data, incumbent), 
-              aes(x = factor(time_to_selec,
-                             ordered = TRUE,
-                             levels = c("3", "2",
-                             "1", "0")),
-                  y = ln_obligations,
-                  color = factor(incumbent))) +
-  geom_boxplot()
+ggplot(state.data, aes(x = change_ln_obligations)) + geom_histogram()
 
 
 ggplot(state.data, 
-       aes(color = factor(time_to_selec,
-                      ordered = TRUE,
-                      levels = c("3", "2",
-                                 "1", "0")),
-           y = ln_obligations,
+       aes(y = ln_obligations,
            x = s_comp)) +
   geom_point() 
 
@@ -133,6 +121,12 @@ ggplot(contracts.data.state %>%
   geom_point()
 
 
+# swing vs core- changes by election proximity
+ggplot(state.data, aes(x = factor(time_to_elec), y = change_ln_obligations,
+                       fill = factor(comp.sum))) +
+  geom_boxplot()
+
+
 # overall electoral competition 
 
 # missing data is: 
@@ -144,20 +138,28 @@ visdat::vis_miss(select(state.data,
                           poptotal, ln_ngdp, iraq_war))
 
 # simple model: OLS
-elec.lm <- lm(ln_obligations ~ 
-                time_to_elec + swing + core + 
+elec.lm <- lm(ln_obligations ~ lag_ln_obligations +
+                time_to_elec + swing + core +
                 rep_pres +
                 poptotal + ln_ngdp + iraq_war,
               data = state.data) 
 summary(elec.lm)
 
 # robust
-elec.rlm <- rlm(ln_obligations ~ 
-                  time_to_elec + swing + core + 
+elec.rlm <- rlm(ln_obligations ~ lag_ln_obligations +
+                  time_to_elec + swing + core +
                   rep_pres +
                   poptotal + ln_ngdp + iraq_war,
               data = state.data) 
 summary(elec.rlm)
+
+# robust: changes
+elec.rlm.chg <- rlm(change_ln_obligations ~ 
+                  time_to_elec + swing + core +
+                  rep_pres +
+                  poptotal + ln_ngdp + iraq_war,
+                data = state.data) 
+summary(elec.rlm.chg)
 
 
 # plot/tabulate results
@@ -185,10 +187,54 @@ modelsummary(comp.mfx.state,
                            "{statistic}"),
              coef_map = coef.names.map.state,
              gof_map = NA,
-             title = "\\label{tab:state-res} Marginal Effects of Electoral Competition on Defense Contracting Awards: 2001-2020",
-             output = "figures/state-reg-comp.tex")
+             title = "\\label{tab:state-res} Marginal Effects of Electoral Competition on Defense Contracting Awards: 2001-2020")
 
+# calculate LRMs 
+# summary first
+cont.res.lm <- summary(elec.lm)
+cont.res.rlm <- summary(elec.rlm)
 
+lrm.calc <- function(mod, est){
+  
+  coef <- as.data.frame(est[["coefficients"]][, 1:3])
+  colnames(coef) <- c("est", "se", "t")
+  coef$lrm <- NA
+  
+  for(i in 1:nrow(coef)){
+  
+  coef$lrm[i] <- (coef$est[i]) /(1 -  coef$est[2])
+  
+  # formula for deltamethod 
+  formula <- as.formula(paste0("~ (x", i, ") / (1 - x2)"))
+  
+  coef$lrm.se[i] <- msm::deltamethod(g = formula,
+                                  mean = coef(mod),
+                                  cov = vcov(mod))
+  
+}
+  # output
+  coef$var <- rownames(coef)
+  # nice names
+  coef$var <- coef.names.map.state[coef$var]
+  # drop LDV
+  coef <- coef[3:nrow(coef), ]
+  coef # final output
+}
+
+est.lm <- lrm.calc(mod = elec.lm, est = cont.res.lm)
+est.lm
+est.rlm <- lrm.calc(mod = elec.rlm, est = cont.res.rlm)
+est.rlm
+
+# lrm estimates
+lrm.all <- bind_rows(OLS = est.lm,
+                     Robust = est.rlm,
+                     .id = "Model")
+ggplot(lrm.all, aes(y = var, x = lrm,
+                    color = Model)) +
+  geom_pointrange(aes(xmin = lrm - 1.96*lrm.se,
+                      xmax = lrm + 1.96*lrm.se),
+                  position = position_dodge(width = .5))
 
 # Presidential vote 
 
@@ -225,21 +271,35 @@ ggplot(drop_na(state.data, time_to_elec),
   geom_smooth(method = "lm") +
   theme(legend.position = "bottom")
 
-
-# swing states
+# changes 
+ggplot(drop_na(state.data, time_to_elec), 
+       aes(group = factor(time_to_elec,
+                          ordered = TRUE,
+                          levels = c("3", "2",
+                                     "1", "0")),
+           color = factor(time_to_elec,
+                          ordered = TRUE,
+                          levels = c("3", "2",
+                                     "1", "0")),
+           y = change_ln_obligations,
+           x = diff_vote_share)) +
+  geom_point() +
+  geom_smooth() +
+  theme(legend.position = "bottom")
 
 
 
 # allow impact of electoral competition variables to shift over time
 
-comp.time <- brm(ln_obligations ~ 1 + (swing + core
-                                       | year) +
+comp.time <- brm(change_ln_obligations ~ #1 + lag_ln_obligations +
+                    (swing + core
+                       | year) +
                    swing + core + 
                    rep_pres +
                    poptotal + ln_ngdp + iraq_war,
                  family = student(),
                  prior = 
-                   set_prior("normal(0, 1)", class = "b"),
+                   set_prior("normal(0, 2)", class = "b"),
                  data = state.data,
                  cores = 4,
                  backend = "cmdstanr",
@@ -252,7 +312,8 @@ summary(comp.time)
 coefs.comp <- coef(comp.time)
 coefs.comp[["year"]]
 
-coefs.var.state <- bind_rows(Swing = as.data.frame(coefs.comp$year[, , 2]),
+coefs.var.state <- bind_rows(#Year = as.data.frame(coefs.comp$year[, , 1]),
+                             Swing = as.data.frame(coefs.comp$year[, , 2]),
                              Core = as.data.frame(coefs.comp$year[, , 3]),
                              .id = "Variable")
 coefs.var.state$time <- rep(seq(from = 2001, to = 2019, by = 1))
