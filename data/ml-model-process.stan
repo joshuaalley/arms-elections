@@ -6,7 +6,7 @@ data {
   int<lower = 0> N; // number of arms deal level obs
   int<lower = 1> S; // number of state-year obs
   array[N] int<lower = 0> y_arms; // deliveries outcome: country-year
-  array[S] real<lower = 0> y_ob; // state-level contracts
+  array[S] real y_ob; // state-level contracts
   
   int<lower = 1> K;  // number of country/deal-level variables
   matrix[N, K] X;  // country/deal-level design matrix
@@ -36,14 +36,14 @@ parameters {
   matrix[M, T] z_gamma; // for non-centered Cholesky factorization 
   cholesky_factor_corr[M] L_Omega_gamma; // for non-centered Cholesky factorization 
   
-  //vector[T] mat_sum = ;
-  //real[M] rho; // impact of deals on means of eta- corr between 
+  vector[M] rho; // impact of deals on means of eta- corr between 
 }
 
 transformed parameters {
   vector[N] mu_arms; // state-year parameter means
   vector[T] agg_deals;
   vector[S] mu_ob;
+  // matrix[T, M] mu_gamma; // mean of alliance-level coefficients
   matrix[T, M] gamma; // state-year competition effects
   
     
@@ -52,6 +52,11 @@ transformed parameters {
     
   // aggregate deals by year
     agg_deals = Z' * mu_arms;
+    
+  // predict mean of gamma pars with deals
+  // for (m in 1:M){
+  //   mu_gamma[, m] = agg_deals * rho[m];
+  // }
   
   // multivariate implementation of gamma 
     gamma = mu_gamma + (diag_pre_multiply(tau_gamma, L_Omega_gamma) * z_gamma)';
@@ -85,10 +90,11 @@ model {
   alpha ~ student_t(3, 0.7, 2.5);
   beta ~ normal(0, 1);
   lambda ~ normal(0, 1);
+  rho ~ normal(0, 1);
   to_vector(z_gamma) ~ normal(0, .5);
   L_Omega_gamma ~ lkj_corr_cholesky(2);
   tau_gamma ~ normal(0, .25); 
-  to_vector(mu_gamma) ~ normal(0, .5);
+  to_vector(mu_gamma) ~ normal(0, 1);
 
   target += normal_lpdf(sigma_stateyr | 0, 1);
   //target += gamma_lpdf(nu_ob | 2, 0.1);

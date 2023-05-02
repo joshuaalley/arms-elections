@@ -18,6 +18,24 @@ ggplot(state.data,
            x = s_comp)) +
   geom_point() 
 
+# over time
+
+# all states 
+ggplot(state.data, aes(x = year, y = ln_obligations,
+                       group = state)) +
+  geom_line()
+
+
+# small multiples
+ggplot(state.data, aes(x = year, y = ln_obligations)) +
+  facet_wrap(~ state) + 
+  geom_line()
+
+
+ggplot(state.data, aes(x = year, y = change_ln_obligations)) +
+  facet_wrap(~ state) + 
+  geom_line()
+
 
 # elections and contracts: expected negative coef
 contracts.ts.reg <- lm(all_contracts ~ lag_all_contracts +
@@ -139,25 +157,52 @@ visdat::vis_miss(select(state.data,
 
 # simple model: OLS
 elec.lm <- lm(ln_obligations ~ lag_ln_obligations +
-                time_to_elec + swing + core +
+                time_to_elec +
+                swing + 
+                core +
                 rep_pres +
                 poptotal + ln_ngdp + iraq_war,
               data = state.data) 
 summary(elec.lm)
 
+
+# OLS w/ state FE
+elec.lm.st <- lm(ln_obligations ~ lag_ln_obligations +
+                time_to_elec +
+                swing + 
+                core +
+                rep_pres +
+                poptotal + ln_ngdp + iraq_war + 
+                factor(state),
+              data = state.data) 
+summary(elec.lm.st)
+
+# simple model: OLS w/ state and year FE
+elec.lm.fe <- lm(ln_obligations ~ lag_ln_obligations +
+                time_to_elec +
+                swing + 
+                core +
+                rep_pres +
+                poptotal + ln_ngdp + iraq_war + 
+                factor(state) + factor(year),
+              data = state.data) 
+summary(elec.lm.fe)
+
 # robust
 elec.rlm <- rlm(ln_obligations ~ lag_ln_obligations +
                   time_to_elec + swing + core +
                   rep_pres +
-                  poptotal + ln_ngdp + iraq_war,
+                  poptotal + ln_ngdp + iraq_war +
+                  factor(state),
               data = state.data) 
 summary(elec.rlm)
 
 # robust: changes
-elec.rlm.chg <- rlm(change_ln_obligations ~ 
+elec.rlm.chg <- lm(change_ln_obligations ~ 
                   time_to_elec + swing + core +
                   rep_pres +
-                  poptotal + ln_ngdp + iraq_war,
+                  change_poptotal + change_ln_ngdp + iraq_war +
+                    factor(state),
                 data = state.data) 
 summary(elec.rlm.chg)
 
@@ -291,15 +336,18 @@ ggplot(drop_na(state.data, time_to_elec),
 
 # allow impact of electoral competition variables to shift over time
 
-comp.time <- brm(change_ln_obligations ~ #1 + lag_ln_obligations +
-                    (swing + core
-                       | year) +
-                   swing + core + 
+comp.time <- brm(bf(change_ln_obligations ~ #1 + lag_ln_obligations +
+                   (1 | year) +
+                   (1 | state) +
+                   swing + core + time_to_elec +
                    rep_pres +
-                   poptotal + ln_ngdp + iraq_war,
+                   change_poptotal + change_ln_ngdp + iraq_war,
+                  sigma ~ swing + core + time_to_elec),
                  family = student(),
-                 prior = 
+                 prior = c(
                    set_prior("normal(0, 2)", class = "b"),
+                   set_prior("normal(0, 1)", class = "sd")
+                   ),
                  data = state.data,
                  cores = 4,
                  backend = "cmdstanr",
@@ -309,10 +357,10 @@ comp.time <- brm(change_ln_obligations ~ #1 + lag_ln_obligations +
                  )
                  )
 summary(comp.time)
-coefs.comp <- coef(comp.time)
+coefs.comp <- coef(comp.time) 
 coefs.comp[["year"]]
 
-coefs.var.state <- bind_rows(#Year = as.data.frame(coefs.comp$year[, , 1]),
+coefs.var.state <- bind_rows(Year = as.data.frame(coefs.comp$year[, , 1]),
                              Swing = as.data.frame(coefs.comp$year[, , 2]),
                              Core = as.data.frame(coefs.comp$year[, , 3]),
                              .id = "Variable")
@@ -320,8 +368,15 @@ coefs.var.state$time <- rep(seq(from = 2001, to = 2019, by = 1))
 
 ggplot(coefs.var.state, aes(x = time, y = Estimate)) +
   facet_wrap(~ Variable) +
+  geom_hline(yintercept = 0) +
   geom_pointrange(aes(ymin = Q2.5,
                       ymax = Q97.5))
+
+ggplot(coefs.var.state, aes(x = time, y = Estimate)) +
+  facet_wrap(~ Variable) +
+  geom_pointrange(aes(ymin = Q2.5,
+                      ymax = Q97.5)) 
+
 
 
 

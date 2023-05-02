@@ -3,14 +3,14 @@
 
 # state component
 state.data.ml <- select(state.data, state, year,
-                        ln_obligations, s_comp, diff_vote_share, 
-                        pivot_prox,
-                        time_to_selec, time_to_pelec,
-                        ln_ngdp, iraq_war) %>% 
+                        change_ln_obligations, 
+                        swing, core, 
+                        time_to_elec,
+                        rep_pres, change_poptotal,
+                        change_ln_ngdp, iraq_war) %>% 
   distinct() %>% 
   group_by(state) %>%
-  mutate( # lag obligations- one year to NA 
-    lag_ln_obligations = lag(ln_obligations),
+  mutate(
     state.year.txt = paste0(state, ".", year)
   ) %>% # remove missing for STAN
   drop_na() 
@@ -22,12 +22,12 @@ state.data.ml$year.id <- state.data.ml %>%
   group_indices()
 
 # plot obligations
-ggplot(state.data.ml, aes(x = ln_obligations)) + geom_histogram()
+ggplot(state.data.ml, aes(x = change_ln_obligations)) + geom_histogram()
 
 # clean up ordering
 state.data.ml <- state.data.ml %>%
   select(state, year, state.year.txt, state.year, year.id,
-         ln_obligations,
+         change_ln_obligations,
          everything()) %>%
   filter(year <= 2018) %>% # match missing in COW 
   group_by(year, state.year.txt) %>%
@@ -39,32 +39,27 @@ class(state.data.ml) <- "data.frame"
 # state data for analysis 
 state.yr.final <- state.data.ml %>%
   mutate(
-    iraq_war = ifelse(year >= 2003 & year <= 2010, 
-                      1, 0),
     intercept = 1
   ) %>%
   select(intercept,
-         ln_obligations, 
-         ln_ngdp,
-         s_comp, diff_vote_share, 
-         pivot_prox, time_to_selec,
-         iraq_war) 
+         swing, core, 
+         time_to_elec,
+         rep_pres, change_poptotal,
+         change_ln_ngdp, iraq_war) 
 # rescale obligations and GDP by 2sd 
 state.yr.final[, 2:3] <- apply(state.yr.final[, 2:3], 2,
        function(x) arm::rescale(x,
                                 binary.inputs = "0/1"))
-# rescale pivot prox as well
-state.yr.final$pivot_prox <- state.yr.final$pivot_prox / 10
 
 
 # matrix for stan
 state.yr.cont <- as.matrix(select(state.yr.final,
-                                   intercept, ln_obligations,
-                                  ln_ngdp, iraq_war))
+                                   intercept,
+                                  rep_pres, change_poptotal,
+                                  change_ln_ngdp, iraq_war))
 
 state.yr.comp <- as.matrix(select(state.yr.final,
-                                  s_comp, diff_vote_share, 
-                                  pivot_prox))
+                                  swing, core, time_to_elec))
 
 
 
@@ -157,7 +152,7 @@ process.data <- list(
   K = ncol(us.arms.deals.iv),
 
   S = nrow(state.data.ml),
-  y_ob = state.data.ml$ln_obligations,
+  y_ob = state.data.ml$change_ln_obligations,
   
   Z = as.matrix(yr.idmat),
   T = ncol(yr.idmat),
@@ -168,3 +163,4 @@ process.data <- list(
   H = state.yr.comp,
   M = ncol(state.yr.comp)
 )
+

@@ -325,6 +325,12 @@ state.data <- state.data %>%
        pivot_prox, s_comp,
        .direction = "up") %>%
   group_by(state) %>%
+  mutate(
+    lag_ln_ngdp = lag(ln_ngdp),
+    change_ln_ngdp = ln_ngdp - lag_ln_ngdp,
+    lag_poptotal = lag(poptotal),
+    change_poptotal = poptotal - lag(poptotal)
+  ) %>%
   ungroup() %>%
   mutate(
     election.cycle = ifelse(year <= 2004, 2004,
