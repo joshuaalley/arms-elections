@@ -37,7 +37,74 @@ ggplot(state.data, aes(x = year, y = change_ln_obligations)) +
   geom_line()
 
 
-# elections and contracts: expected negative coef
+# specific sectors
+ggplot(contracts.state.long %>% 
+         filter(name != "other" & 
+                  name != "ln_obligations_other" &
+                  name != "ln_obligations" &
+                  name != "lag_ln_obligations" &
+                  name != "change_ln_obligations"),
+       aes(x = year, y = value,
+           group = name,
+           color = name)) +
+  facet_wrap(~ state, scales = "free_y") +
+  geom_line()
+
+
+ggplot(contracts.state.long %>% 
+         filter(name != "other" & 
+                  name != "ln_obligations_other" &
+                  name != "ln_obligations" &
+                  name != "lag_ln_obligations" &
+                  name != "change_ln_obligations"),
+       aes(x = name, y = value)) +
+  geom_boxplot()
+
+
+# mean and SD summary
+contracts.var.sum <- contracts.state.long %>% 
+                      group_by(name) %>%
+                      summarize(
+                        sd = sd(value, na.rm = TRUE),
+                        mean = mean(value, na.rm = TRUE),
+                        sd_mean = sd / mean 
+                      )
+
+
+ggplot(contracts.state.long %>% 
+         filter(name != "other" & 
+                  name != "ln_obligations_other" &
+                  name != "ln_obligations" &
+                  name != "lag_ln_obligations" &
+                  name != "change_ln_obligations"),
+       aes(x = factor(year), y = value)) +
+  facet_wrap(~ name) +
+  geom_boxplot()
+
+
+
+# swing vs core- changes by election proximity
+# overall levels by year
+ggplot(drop_na(state.data, time_to_elec),
+       aes(x = factor(year), y = ln_obligations,
+           fill = factor(comp.sum))) +
+  geom_boxplot()
+
+# changes by election proximity
+ggplot(drop_na(state.data, time_to_elec),
+       aes(x = factor(time_to_elec), y = ln_obligations,
+           fill = factor(comp.sum))) +
+  geom_boxplot()
+
+
+ggplot(drop_na(state.data, time_to_elec),
+       aes(x = factor(time_to_elec), y = change_ln_obligations,
+           fill = factor(comp.sum))) +
+  geom_boxplot()
+
+
+
+# elections and contracts numbers: expected negative coef
 contracts.ts.reg <- lm(all_contracts ~ lag_all_contracts +
                          time_to_elec,
                        data = contracts.data.clean)
@@ -128,22 +195,6 @@ ggsave("appendix/contract-cycles.png", contract.cycles, height = 6, width = 8)
 
 
 
-# state data 
-ggplot(contracts.data.state %>% 
-         left_join(elections.data) %>%
-         filter(usml_cont != "other"),
-       aes(x = year, y = ln_obligations,
-           group = usml_cont,
-           color = usml_cont)) +
-  facet_wrap(~ state, scales = "free_y") +
-  geom_point()
-
-
-# swing vs core- changes by election proximity
-ggplot(state.data, aes(x = factor(time_to_elec), y = change_ln_obligations,
-                       fill = factor(comp.sum))) +
-  geom_boxplot()
-
 
 # overall electoral competition 
 
@@ -157,7 +208,6 @@ visdat::vis_miss(select(state.data,
 
 # simple model: OLS
 elec.lm <- lm(ln_obligations ~ lag_ln_obligations +
-                time_to_elec +
                 swing + 
                 core +
                 rep_pres +
@@ -168,7 +218,6 @@ summary(elec.lm)
 
 # OLS w/ state FE
 elec.lm.st <- lm(ln_obligations ~ lag_ln_obligations +
-                time_to_elec +
                 swing + 
                 core +
                 rep_pres +
@@ -177,34 +226,13 @@ elec.lm.st <- lm(ln_obligations ~ lag_ln_obligations +
               data = state.data) 
 summary(elec.lm.st)
 
-# simple model: OLS w/ state and year FE
-elec.lm.fe <- lm(ln_obligations ~ lag_ln_obligations +
-                time_to_elec +
-                swing + 
-                core +
-                rep_pres +
-                poptotal + ln_ngdp + iraq_war + 
-                factor(state) + factor(year),
-              data = state.data) 
-summary(elec.lm.fe)
-
 # robust
 elec.rlm <- rlm(ln_obligations ~ lag_ln_obligations +
-                  time_to_elec + swing + core +
+                  swing + core +
                   rep_pres +
-                  poptotal + ln_ngdp + iraq_war +
-                  factor(state),
+                  poptotal + ln_ngdp + iraq_war,
               data = state.data) 
 summary(elec.rlm)
-
-# robust: changes
-elec.rlm.chg <- lm(change_ln_obligations ~ 
-                  time_to_elec + swing + core +
-                  rep_pres +
-                  change_poptotal + change_ln_ngdp + iraq_war +
-                    factor(state),
-                data = state.data) 
-summary(elec.rlm.chg)
 
 
 # plot/tabulate results
@@ -336,46 +364,49 @@ ggplot(drop_na(state.data, time_to_elec),
 
 # allow impact of electoral competition variables to shift over time
 
-comp.time <- brm(bf(change_ln_obligations ~ #1 + lag_ln_obligations +
-                   (1 | year) +
-                   (1 | state) +
-                   swing + core + time_to_elec +
-                   rep_pres +
-                   change_poptotal + change_ln_ngdp + iraq_war,
-                  sigma ~ swing + core + time_to_elec),
+comp.time <- brm(bf(ln_obligations ~ #ar(time = year,
+                                            #gr = state,
+                                            #p = 1) +
+                   (1 | year) +    
+                   (1 + lag_ln_obligations | state) +
+                  (swing + core | iraq_war) +
+                   swing + core +
+                   rep_pres  +
+                   poptotal + ln_ngdp,
+                  sigma ~ swing + core),
                  family = student(),
                  prior = c(
                    set_prior("normal(0, 2)", class = "b"),
-                   set_prior("normal(0, 1)", class = "sd")
+                   set_prior("normal(0, 2)", class = "sd")
+                   #set_prior("normal(0, .3)", class = "ar")
                    ),
                  data = state.data,
                  cores = 4,
                  backend = "cmdstanr",
                  control = list(
                    adapt_delta = .99,
-                   max_treedepth = 20
-                 )
-                 )
+                   max_treedepth = 20)
+                 ) 
 summary(comp.time)
 coefs.comp <- coef(comp.time) 
-coefs.comp[["year"]]
+coefs.comp[["iraq_war"]]
 
-coefs.var.state <- bind_rows(Year = as.data.frame(coefs.comp$year[, , 1]),
-                             Swing = as.data.frame(coefs.comp$year[, , 2]),
-                             Core = as.data.frame(coefs.comp$year[, , 3]),
+coefs.var.state <- bind_rows(Swing = as.data.frame(coefs.comp$iraq_war[, , 2]),
+                             Core = as.data.frame(coefs.comp$iraq_war[, , 3]),
                              .id = "Variable")
-coefs.var.state$time <- rep(seq(from = 2001, to = 2019, by = 1))
+coefs.var.state$war <- factor(c("No", "Yes"),
+                              ordered = TRUE,
+                              levels = c("Yes", "No"))
 
-ggplot(coefs.var.state, aes(x = time, y = Estimate)) +
+ggplot(coefs.var.state, aes(x = war, y = Estimate)) +
   facet_wrap(~ Variable) +
   geom_hline(yintercept = 0) +
   geom_pointrange(aes(ymin = Q2.5,
-                      ymax = Q97.5))
+                      ymax = Q97.5)) +
+  labs(
+    x = "At War?"
+  )
 
-ggplot(coefs.var.state, aes(x = time, y = Estimate)) +
-  facet_wrap(~ Variable) +
-  geom_pointrange(aes(ymin = Q2.5,
-                      ymax = Q97.5)) 
 
 
 
@@ -384,17 +415,14 @@ ggplot(coefs.var.state, aes(x = time, y = Estimate)) +
 state.data.deals <- left_join(state.data, 
                               select(arms.deals.year,
                                      year, deals))
-
-ggplot(state.data.deals, aes(x = factor(time_to_elec),
-                             y = deals)) +
-  geom_boxplot()
   
 
 
 # add deals to model
 # contracting from time to presidential elections and pivot proximity
-deals.state <- lm(ln_obligations ~ deals +
-                    swing + core + time_to_elec +
+deals.state <- lm(ln_obligations ~ lag_ln_obligations +
+                    deals +
+                    swing + core + 
                     rep_pres +
                     poptotal + ln_ngdp + iraq_war,
                    data = state.data.deals) 
@@ -402,7 +430,8 @@ summary(deals.state)
 
 
 
-# link orders with state contracts by sector
+### examine state contracts by sector
+
 # this puts orders before contracts
 sector.list <- c("aircraft", "arms", "electronics", "missile_space",
                  "ships", "vehicles")
@@ -411,9 +440,11 @@ formula.sector <- vector(mode = "list", length = length(sector.list))
 for(i in 1:length(sector.list)){
   formula.sector[[i]] <- as.formula(
     paste(
-      paste0(sector.list[i], "_change ", "~"), 
-      paste0(" + ", "deals_", sector.list[i]),
-      paste0(" + ", "swing + core + time_to_elec"),
+      paste0(sector.list[i], "~"), 
+      paste0(sector.list[i], "_lag"), 
+      #paste0(sector.list[i], "_change ", "~"), 
+      #paste0(" + ", "deals_", sector.list[i]),
+      paste0(" + ", "swing + core"),
       paste0("+ iraq_war + rep_pres + ln_ngdp + poptotal")
     ))
   }

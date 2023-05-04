@@ -259,7 +259,13 @@ contracts.state.wide <- drop_na(contracts.data.state, usml_cont) %>%
 # nothing leads to NA 
 contracts.state.wide[is.na(contracts.state.wide)] <- 0
 
-# add contracts to exports dyad
+# move it back long
+contracts.state.long <- 
+  pivot_longer(contracts.state.wide,
+               cols = -c(state, year)) %>%
+  filter(name != "lag_ln_obligations")
+
+# add contracts to state data
 state.data.raw <- left_join(state.data.raw, 
                                 contracts.state.wide %>%
                                   mutate( # ensures proper merge 
@@ -272,26 +278,40 @@ senate.data <- read.csv("data/senate-data.csv")
 glimpse(senate.data)
 senate.data$state <- str_to_title(senate.data$state)
 
+# clean up as there are multiple elections in some years- creates duplicate obs
+senate.data <- senate.data %>%
+   group_by(state, year) %>% 
+   mutate( 
+     election = 1,
+     incumbent = ifelse(str_detect(incumb, "incumb"),
+                                 1, 0),
+     s_comp = abs(vote.share - .5),
+     incumb_win = ifelse((incumb == "GOP incumb" & 
+                            party_simplified == "REPUBLICAN") |
+                           (incumb == "Dem incumb" & 
+                              party_simplified == "DEMOCRAT") |
+                           (incumb == "other incumb" & 
+                              party_simplified == "OTHER"),
+                         1, 0)
+     ) %>%
+   summarize(
+     election = max(election),
+     s_comp = mean(s_comp, na.rm = TRUE),
+     incumbent = max(incumbent, na.rm = TRUE),
+     incumb_win = mean(incumb_win, na.rm = TRUE),
+     .groups = "keep"
+   )
+glimpse(senate.data)
 
 state.sen.data <- left_join(select(state.data.raw, state, year),
                             senate.data) %>%
   group_by(state) %>%
   mutate(
-    incumbent = ifelse(str_detect(incumb, "incumb"),
-                       1, 0),
     election.year = ifelse(election == 1, year, NA),
-    s_comp = abs(vote.share - .5),
-    incumb.win = ifelse((incumb == "GOP incumb" & 
-                           party_simplified == "REPUBLICAN") |
-                          (incumb == "Dem incumb" & 
-                             party_simplified == "DEMOCRAT") |
-                          (incumb == "other incumb" & 
-                             party_simplified == "OTHER"),
-                        1, 0)
   ) %>%
   fill(election.year, incumbent, .direction = "up") %>%
   mutate(
-    time_to_elec = election.year - year
+    time_to_selec = election.year - year
   )
 # elections only in merge, so replace NA with 0
 state.sen.data$election[is.na(state.sen.data$election)] <- 0
@@ -333,11 +353,13 @@ state.data <- state.data %>%
   ) %>%
   ungroup() %>%
   mutate(
-    election.cycle = ifelse(year <= 2004, 2004,
+    election.cycle =ifelse(year <= 2000, 2000,
+                      ifelse(year <= 2004, 2004,
                              ifelse(year <= 2008, 2008,
                                     ifelse(year <= 2012, 2012,
                                            ifelse(year <= 2016, 2016,
-                                           2020))))
+                                           2020))))),
+    time_to_elec = election.cycle - year
   )
 
 
