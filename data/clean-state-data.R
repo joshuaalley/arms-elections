@@ -323,7 +323,7 @@ state.data <- left_join(state.sen.data, state.data.raw,
   mutate(
     poptotal = arm::rescale(poptotal), 
     ln_ngdp = arm::rescale(ln_ngdp),
-    iraq_war = ifelse(year >= 2003 & year <= 2010, 
+    gwot = ifelse(year >= 2001 & year <= 2010, 
                       1, 0),
     rep_pres = ifelse((year >= 2001 & year <= 2008) | # HW Bush
                         (year >= 2017), # Trump
@@ -392,3 +392,6 @@ ggplot(state.elec.sum, aes(x = mean.diff, y = sd.diff)) +
 state.data$comp.sum <- ifelse(state.data$swing == 1, "Swing",
                               ifelse(state.data$core == 1, "Core",
                                      "Neither"))
+
+state.data$swing.sum <- ifelse(state.data$swing == 1, "Swing State", 
+                               "Not Swing")

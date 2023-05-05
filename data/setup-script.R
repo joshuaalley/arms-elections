@@ -129,18 +129,15 @@ coef.names.map = c("lag_exports" = "Lag Exports",
 
 coef.names.map.state = c(
                    "lag_ln_obligations" = "Lag Contracts",
-                   "diff_vote_share" = "Presidential Vote Difference",
-                   "pivot_prox" = "Electoral College\nPivot Proximity",
-                   "time_to_elec" = "Years to Presidential\nElection",
                    "swing" = "Swing State",
+                   "swing:gwot" = "Swing: GWOT",
                    "core" = "Core State",
-                   "swing:iraq_war" = "Swing: Iraq War",
-                   "iraq_war:core" = "Core: Iraq War",
+                   "gwot:core" = "Core: GWOT",
+                   "gwot" = "Global War\non Terror",
                    "s_comp" = "Senate Vote Difference",
                    "incumbent" = "Senate Incumbent",
                    "poptotal" = "Population (Rescaled)",
                    "ln_ngdp" = "Log GDP (Rescaled)",
-                   "iraq_war" = "Iraq War",
                    "rep_pres" = "Republican President")
 
 

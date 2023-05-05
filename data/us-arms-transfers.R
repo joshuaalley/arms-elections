@@ -125,7 +125,14 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
                    labels = c(`0` = "No", `1` = "Yes")) +
   labs(title = "Elections and Arms Deals",
        y = "Predicted Arms Deals",
-       x = "Years to Presidential Election")
+       x = "Years to Presidential Election") +
+  theme(
+    axis.text=element_text(size=11),
+    axis.title=element_text(size=13),
+    title = element_text(size = 15),
+    legend.title = element_text(size = 13),
+    strip.text = element_text(size = 9)
+  )
 pred.us.deals
 ggsave("figures/us-arms-plots.png", height = 6, width = 8)
 
@@ -156,12 +163,19 @@ me.us.deals <- ggplot(pois.deals.est[[1]], aes(y = estimate,
                   position = position_dodge(width = .1)) +
   labs(title = "Marginal Effect of Alliance",
        y = "Marginal Effect of Alliance",
-       x = "Years to Presidential Election")
+       x = "Years to Presidential Election") +
+  theme(
+    axis.text=element_text(size=11),
+    axis.title=element_text(size=13),
+    title = element_text(size = 15),
+    strip.text = element_text(size = 9)
+  )
 me.us.deals
 
 # combine and export
 grid.arrange(pred.us.deals, me.us.deals, nrow = 2)
 us.arms.plots <- arrangeGrob(pred.us.deals, me.us.deals, nrow = 1)
+
 
 
 # negative binomial deals

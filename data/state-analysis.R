@@ -85,18 +85,25 @@ ggplot(contracts.state.long %>%
 
 # swing vs core- changes by election proximity
 # overall levels by year
-ggplot(drop_na(state.data, time_to_elec),
+ggplot(drop_na(state.data, lag_ln_obligations),
        aes(x = factor(year), y = ln_obligations,
-           fill = factor(comp.sum,
-                         levels = c("Swing", "Neither", "Core")))) +
-  geom_boxplot() +
-  scale_fill_grey
+           fill = factor(swing.sum))) +
+  geom_boxplot(outlier.shape = NA, coef = 0) +
+  scale_fill_grey(start = .9, end = .5) +
   labs(
     x = "Year",
     y = "Log Prime Contracts",
-    fill = "Electoral Competition"
+    fill = "Electoral\nCompetition",
+    title = "Defense Contracts and Electoral Competition",
+    subtitle = "2001-2020"
+  ) +
+  theme(
+    axis.text=element_text(size=11),
+    axis.title=element_text(size=13),
+    legend.title = element_text(size = 13),
+    title = element_text(size = 15)
   )
-ggsave("figures/raw-comp-state.png", height = 10, width = 12)
+ggsave("figures/raw-comp-state.png", height = 9, width = 12)
 
 
 # changes by election proximity
@@ -121,11 +128,11 @@ visdat::vis_miss(select(state.data,
                           diff_vote_share, time_to_elec,
                           swing, core, rep_pres,
                           pivot_prox,
-                          poptotal, ln_ngdp, iraq_war))
+                          poptotal, ln_ngdp, gwot))
 
 # simple model: OLS
 elec.lm <- lm(ln_obligations ~ lag_ln_obligations +
-                swing*iraq_war + core*iraq_war +
+                 swing*gwot +  
                 rep_pres +
                 poptotal + ln_ngdp,
               data = state.data) 
@@ -134,15 +141,15 @@ summary(elec.lm)
 
 # OLS w/ state FE
 elec.lm.st <- lm(ln_obligations ~ lag_ln_obligations +
-                   swing*iraq_war + core*iraq_war +
+                    swing*gwot +  
                 rep_pres +
-                poptotal + ln_ngdp + iraq_war,
+                poptotal + ln_ngdp + gwot,
               data = state.data) 
 summary(elec.lm.st)
 
 # robust
 elec.rlm <- rlm(ln_obligations ~ lag_ln_obligations +
-                  swing*iraq_war + core*iraq_war +
+                   swing*gwot +  
                   rep_pres +
                   poptotal + ln_ngdp,
               data = state.data) 
@@ -219,6 +226,7 @@ lrm.all <- bind_rows(OLS = est.lm,
                      .id = "Model")
 ggplot(lrm.all, aes(y = var, x = lrm,
                     color = Model)) +
+  geom_vline(xintercept = 0) +
   geom_pointrange(aes(xmin = lrm - 1.96*lrm.se,
                       xmax = lrm + 1.96*lrm.se),
                   position = position_dodge(width = .5))
@@ -258,32 +266,17 @@ ggplot(drop_na(state.data, time_to_elec),
   geom_smooth(method = "lm") +
   theme(legend.position = "bottom")
 
-# changes 
-ggplot(drop_na(state.data, time_to_elec), 
-       aes(group = factor(time_to_elec,
-                          ordered = TRUE,
-                          levels = c("3", "2",
-                                     "1", "0")),
-           color = factor(time_to_elec,
-                          ordered = TRUE,
-                          levels = c("3", "2",
-                                     "1", "0")),
-           y = change_ln_obligations,
-           x = diff_vote_share)) +
-  geom_point() +
-  geom_smooth() +
-  theme(legend.position = "bottom")
-
 
 
 # add distributional component
 comp.dist <- brm(bf(ln_obligations ~ 
                    (1 | year) +    
                    (1 + lag_ln_obligations | state) +
-                   swing*iraq_war + core*iraq_war +
+                   swing*gwot +  
                    rep_pres  +
                    poptotal + ln_ngdp,
-                  sigma ~ swing + core),
+                  sigma ~ swing*gwot + rep_pres  +
+                    poptotal + ln_ngdp),
                  family = student(),
                  prior = c(
                    set_prior("normal(0, 2)", class = "b"),
@@ -338,20 +331,78 @@ ggsave("appendix/year-pars.png", height = 6, width = 8)
 coef.comp <- get_estimates(comp.dist)
 draws.comp <-prepare_predictions(comp.dist)
 
- coefs.inter$war <- factor(c("No", "Yes"),
-                              ordered = TRUE,
-                              levels = c("Yes", "No"))
+# get groups
+coef.comp$group[str_detect(coef.comp$term, "sigma")] <- "Contracts Variance"
+coef.comp$group[coef.comp$group == ""] <- "Contracts Mean"
 
-ggplot(coefs.var.state, aes(x = war, y = Estimate)) +
-  facet_wrap(~ Variable) +
-  geom_hline(yintercept = 0) +
-  geom_pointrange(aes(ymin = Q2.5,
-                      ymax = Q97.5)) +
+# nice term labels
+coef.comp$term <- str_remove(coef.comp$term, "b_")
+coef.comp$term <- str_remove(coef.comp$term, "sigma_")
+coef.comp$var <- coef.names.map.state[coef.comp$term]
+coef.comp$var <- factor(coef.comp$var, ordered = T,
+                        levels = coef.names.map.state)
+
+# plot it 
+ggplot(drop_na(coef.comp, var), aes(y = fct_rev(var), x = estimate)) +
+  facet_wrap(~ group, scales = "free") +
+  geom_vline(xintercept = 0) +
+  geom_pointrange(aes(xmin = conf.low,
+                      xmax = conf.high),
+                  linewidth = 1.5,
+                  size = .75) +
   labs(
-    x = "At War?"
+    x = "Estimate and 95% Credible Interval",
+    y = "Variable",
+    title = "Correlates of Defense Contracting Level and Variance",
+    subtitle = "2001-2020"
+  ) +
+  theme(
+    axis.text=element_text(size=11),
+    axis.title=element_text(size=13),
+    title = element_text(size = 15),
+    strip.text = element_text(size = 9)
   )
+ggsave("figures/coef-comp-state.png", height = 6, width = 8)
 
 
+# make predictions
+pred.comp.state <- predictions(comp.dist, newdata = datagrid(swing = c(0, 1),
+                                                           gwot = c(0, 1),
+                                                           year = 2013,
+                                                           state = "Iowa")) %>%
+                  mutate(
+                    comp = factor(ifelse(swing == 1, "Swing",
+                                 "Not Swing")),
+                    gwot_fac = factor(ifelse(gwot == 1, "Yes (2001-2011)",
+                                             "No (2012-2020)"),
+                                      ordered = TRUE,
+                                      levels = c("Yes (2001-2011)", 
+                                                 "No (2012-2020)"))
+                    )
+
+
+# Plot counterfactuals
+ggplot(pred.comp.state, aes(y = estimate, x = gwot_fac,
+                            color = comp)) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .5),
+                  linewidth = 1.5,
+                  size = .75) +
+  scale_color_grey(start = .9, end = .5) +
+  labs(
+    x = "Global War on Terror",
+    y = "Predicted Log Defense Contract Awards",
+    color = "Political\nCompetition",
+    title = "Predicted Defense Contracts and Swing States"
+  ) +
+  theme(
+    axis.text=element_text(size=11),
+    axis.title=element_text(size=13),
+    title = element_text(size = 15),
+    legend.title = element_text(size = 13),
+    strip.text = element_text(size = 9)
+  )
+ggsave("figures/pred-comp-state.png", height = 6, width = 8)
 
 
 
@@ -368,7 +419,7 @@ deals.state <- lm(ln_obligations ~ lag_ln_obligations +
                     deals +
                     swing + core + 
                     rep_pres +
-                    poptotal + ln_ngdp + iraq_war,
+                    poptotal + ln_ngdp + gwot,
                    data = state.data.deals) 
 summary(deals.state)
 
@@ -386,10 +437,9 @@ for(i in 1:length(sector.list)){
     paste(
       paste0(sector.list[i], "~"), 
       paste0(sector.list[i], "_lag"), 
-      #paste0(sector.list[i], "_change ", "~"), 
-      #paste0(" + ", "deals_", sector.list[i]),
+      paste0(" + ", "deals_", sector.list[i]),
       paste0(" + ", "swing + core"),
-      paste0("+ iraq_war + rep_pres + ln_ngdp + poptotal")
+      paste0("+ gwot + rep_pres + ln_ngdp + poptotal")
     ))
   }
 
