@@ -29,7 +29,7 @@ parameters {
   real alpha;  // overall intercept
 
   real<lower = 0> sigma_stateyr; // sd of state-year outcome
-  //real<lower = 4> nu_ob; // d.f. for state-year outcome
+  real<lower = 3> nu_ob; // d.f. for state-year outcome
   
   matrix[T, M] mu_gamma; // mean of alliance-level coefficients
   vector<lower = 0>[M] tau_gamma; // mean of theta par in multivariate distribution 
@@ -81,7 +81,7 @@ model {
   
   // likelihood: contracts- normal
       for (s in 1:S) {
-      target += normal_lpdf(y_ob[s] | mu_ob, sigma_stateyr);
+      target += student_t_lpdf(y_ob[s] | mu_ob, sigma_stateyr, nu_ob);
     }
     
 
@@ -96,8 +96,8 @@ model {
   tau_gamma ~ normal(0, .25); 
   to_vector(mu_gamma) ~ normal(0, 1);
 
-  target += normal_lpdf(sigma_stateyr | 0, 1);
-  //target += gamma_lpdf(nu_ob | 2, 0.1);
+  sigma_stateyr ~ normal(0, 1);
+  nu_ob ~ gamma(2, 0.1);
   
 }
 

@@ -69,7 +69,7 @@ contracts.var.sum <- contracts.state.long %>%
                         mean = mean(value, na.rm = TRUE),
                         sd_mean = sd / mean 
                       )
-
+contracts.var.sum
 
 ggplot(contracts.state.long %>% 
          filter(name != "other" & 
@@ -87,8 +87,17 @@ ggplot(contracts.state.long %>%
 # overall levels by year
 ggplot(drop_na(state.data, time_to_elec),
        aes(x = factor(year), y = ln_obligations,
-           fill = factor(comp.sum))) +
-  geom_boxplot()
+           fill = factor(comp.sum,
+                         levels = c("Swing", "Neither", "Core")))) +
+  geom_boxplot() +
+  scale_fill_grey
+  labs(
+    x = "Year",
+    y = "Log Prime Contracts",
+    fill = "Electoral Competition"
+  )
+ggsave("figures/raw-comp-state.png", height = 10, width = 12)
+
 
 # changes by election proximity
 ggplot(drop_na(state.data, time_to_elec),
@@ -104,98 +113,6 @@ ggplot(drop_na(state.data, time_to_elec),
 
 
 
-# elections and contracts numbers: expected negative coef
-contracts.ts.reg <- lm(all_contracts ~ lag_all_contracts +
-                         time_to_elec,
-                       data = contracts.data.clean)
-summary(contracts.ts.reg)
-
-
-ggplot(contracts.data.clean, aes(x = year,
-                                 color = factor(elec.cycle),
-                                 y = all_contracts)) +
-  geom_point() +
-  geom_line() +
-  scale_color_manual(values = wes_palette("Darjeeling1")) +
-  labs(y = "Total Prime Contracts",
-       x = "Year",
-       title = "Aggregate Defense Contracting",
-       color = "Election Cycle")
-summary(contracts.data.clean$all_contracts)
-
-# summarize by election proximity- look within cycles
-contracts.elec.agg <- ggplot(contracts.data.clean, aes(x = time_to_elec,
-                                                       color = factor(elec.cycle),
-                                                       y = all_contracts)) +
-  geom_point() +
-  geom_line() +
-  scale_x_reverse() +
-  scale_color_manual(values = wes_palette("Darjeeling1")) +
-  labs(y = "Total Prime Contracts",
-       x = "Years to Presidential Election",
-       title = "Aggregate Defense Contracting",
-       color = "Election Cycle")
-contracts.elec.agg
-
-# cycles by type of contract
-contracts.data.key <- select(contracts.data.clean,
-                             year, time_to_elec, missile_space,
-                             aircraft, vehicles, arms,
-                             electronics, ships, elec.cycle) %>% 
-  pivot_longer(
-    -c(year, time_to_elec, elec.cycle),
-    names_to = "allocation",
-    values_to = "value"
-  )
-
-# plot over time
-ggplot(contracts.data.key, aes(x =  year,
-                               y = value,
-                               group = allocation,
-                               color = allocation)) +
-  geom_line(linewidth = 2) +
-  labs(y = "Total Defense Contracts",
-       x = "Year",
-       title = "Defense Contracting Allocations over time")
-
-contracts.elec.sector <- ggplot(contracts.data.key, aes(x = time_to_elec,
-                                                        color = factor(elec.cycle),
-                                                        y = value)) +
-  geom_point() +
-  geom_line() +
-  scale_x_reverse() +
-  facet_wrap(~ allocation, scales = "free_y",
-             labeller = labeller(allocation = 
-                                   c("aircraft" = "Aircraft",
-                                     "missile_space" = "Missiles & Space",
-                                     "electronics" = "Electronics",
-                                     "ships" = "Ships",
-                                     "vehicles" = "Vehicles",
-                                     "arms"= "Weapons & Ammo"))
-  ) +
-  scale_color_manual(values = wes_palette("Darjeeling1")) +
-  labs(y = "Total Prime Contracts",
-       x = "Years to Presidential Election",
-       title = "Sectoral Defense Contracting",
-       color = "Election Cycle")
-contracts.elec.sector
-
-# combine sectoral and aggregate plots
-grid.arrange(contracts.elec.agg, contracts.elec.sector,
-             nrow = 1,
-             layout_matrix = rbind(c(1, 1, 2, 2, 2),
-                                   c(1, 1, 2, 2, 2),
-                                   c(1, 1, 2, 2, 2)))
-contract.cycles <- arrangeGrob(contracts.elec.agg, contracts.elec.sector,
-                               nrow = 1,
-                               layout_matrix = rbind(c(1, 1, 2, 2, 2),
-                                                     c(1, 1, 2, 2, 2),
-                                                     c(1, 1, 2, 2, 2)))
-ggsave("appendix/contract-cycles.png", contract.cycles, height = 6, width = 8)
-
-
-
-
 # overall electoral competition 
 
 # missing data is: 
@@ -208,29 +125,26 @@ visdat::vis_miss(select(state.data,
 
 # simple model: OLS
 elec.lm <- lm(ln_obligations ~ lag_ln_obligations +
-                swing + 
-                core +
+                swing*iraq_war + core*iraq_war +
                 rep_pres +
-                poptotal + ln_ngdp + iraq_war,
+                poptotal + ln_ngdp,
               data = state.data) 
 summary(elec.lm)
 
 
 # OLS w/ state FE
 elec.lm.st <- lm(ln_obligations ~ lag_ln_obligations +
-                swing + 
-                core +
+                   swing*iraq_war + core*iraq_war +
                 rep_pres +
-                poptotal + ln_ngdp + iraq_war + 
-                factor(state),
+                poptotal + ln_ngdp + iraq_war,
               data = state.data) 
 summary(elec.lm.st)
 
 # robust
 elec.rlm <- rlm(ln_obligations ~ lag_ln_obligations +
-                  swing + core +
+                  swing*iraq_war + core*iraq_war +
                   rep_pres +
-                  poptotal + ln_ngdp + iraq_war,
+                  poptotal + ln_ngdp,
               data = state.data) 
 summary(elec.rlm)
 
@@ -362,15 +276,11 @@ ggplot(drop_na(state.data, time_to_elec),
 
 
 
-# allow impact of electoral competition variables to shift over time
-
-comp.time <- brm(bf(ln_obligations ~ #ar(time = year,
-                                            #gr = state,
-                                            #p = 1) +
+# add distributional component
+comp.dist <- brm(bf(ln_obligations ~ 
                    (1 | year) +    
                    (1 + lag_ln_obligations | state) +
-                  (swing + core | iraq_war) +
-                   swing + core +
+                   swing*iraq_war + core*iraq_war +
                    rep_pres  +
                    poptotal + ln_ngdp,
                   sigma ~ swing + core),
@@ -378,7 +288,6 @@ comp.time <- brm(bf(ln_obligations ~ #ar(time = year,
                  prior = c(
                    set_prior("normal(0, 2)", class = "b"),
                    set_prior("normal(0, 2)", class = "sd")
-                   #set_prior("normal(0, .3)", class = "ar")
                    ),
                  data = state.data,
                  cores = 4,
@@ -387,14 +296,49 @@ comp.time <- brm(bf(ln_obligations ~ #ar(time = year,
                    adapt_delta = .99,
                    max_treedepth = 20)
                  ) 
-summary(comp.time)
-coefs.comp <- coef(comp.time) 
-coefs.comp[["iraq_war"]]
+summary(comp.dist)
+coefs.comp <- coef(comp.dist) 
+coefs.comp[["state"]]
 
-coefs.var.state <- bind_rows(Swing = as.data.frame(coefs.comp$iraq_war[, , 2]),
-                             Core = as.data.frame(coefs.comp$iraq_war[, , 3]),
-                             .id = "Variable")
-coefs.var.state$war <- factor(c("No", "Yes"),
+# summarize state intercepts and LDV estimates 
+coefs.var.state <- bind_rows("Intercept" = as.data.frame(coefs.comp$state[, , 1]),
+                             "Lag Contracts" = as.data.frame(coefs.comp$state[, , 2]),
+                             .id = "Variable") 
+coefs.var.state$state <- gsub("\\..*","", row.names(coefs.var.state))
+# order for plotting 
+coefs.var.state <- coefs.var.state %>%
+                    group_by(Variable) %>%
+                    arrange(Estimate, .by_group = TRUE)
+coefs.var.state$state <- factor(coefs.var.state$state, ordered = TRUE,
+                                     levels = coefs.var.state$state[1:50])
+
+ggplot(coefs.var.state, aes(y = state, x = Estimate)) +
+  facet_wrap(~ Variable, scales = "free_x") +
+  geom_pointrange(aes(xmin = Q2.5, xmax = Q97.5)) +
+  labs(
+    y = "State",
+    title = "State Varying Intercepts and Temporal Autocorrelation"
+  )
+ggsave("appendix/state-pars.png", height = 6, width = 8)
+
+
+# year intercepts
+coefs.var.year <- as.data.frame(coefs.comp$year[, , 1])
+coefs.var.year$year <- row.names(coefs.var.year)
+ggplot(coefs.var.year, aes(x = year, y = Estimate)) +
+  geom_pointrange(aes(ymin = Q2.5, ymax = Q97.5)) +
+  labs(
+    x = "Year"
+  )
+ggsave("appendix/year-pars.png", height = 6, width = 8)
+
+
+
+# estimates from the interaction 
+coef.comp <- get_estimates(comp.dist)
+draws.comp <-prepare_predictions(comp.dist)
+
+ coefs.inter$war <- factor(c("No", "Yes"),
                               ordered = TRUE,
                               levels = c("Yes", "No"))
 
