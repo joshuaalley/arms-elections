@@ -374,7 +374,7 @@ state.data.ord <- left_join(state.data, arms.cat.all) %>%
 
 
 # Variation in pivot_prox and vote share by state
-state.elec.sum <- election.res.join %>% 
+state.elec.sum <- state.data %>% 
                    group_by(state) %>%
                    summarize(
                      mean.prox = mean(pivot_prox, na.rm = TRUE), 

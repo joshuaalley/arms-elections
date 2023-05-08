@@ -36,12 +36,6 @@ us.deals$nz_deals[is.na(us.deals$nz_deals)] <- 0
 us.deals.comp <- drop_na(us.deals)
 
 
-# time-series of deals
-ggplot(filter(us.deals, deals > 0), 
-       aes(x = factor(time_to_elec), y = deals)) +
-  geom_boxplot(outlier.shape = NA) +
-  ylim(0, 5)
-
 
 # time-series of deals
 ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin)), 
@@ -173,14 +167,13 @@ me.us.deals <- ggplot(pois.deals.est[[1]], aes(y = estimate,
 me.us.deals
 
 # combine and export
-grid.arrange(pred.us.deals, me.us.deals, nrow = 2)
+grid.arrange(pred.us.deals, me.us.deals, nrow = 1)
 us.arms.plots <- arrangeGrob(pred.us.deals, me.us.deals, nrow = 1)
 
 
 
-# negative binomial deals
-# poisson model of deals 
-nb.deals <- brm(deals ~  
+# check poisson with OLS model of deals 
+ols.deals <- brm(deals ~  
                   time_to_elec*ally*v2x_polyarchy2 +
                   cold_war + 
                   eu_member +
@@ -188,15 +181,45 @@ nb.deals <- brm(deals ~
                   ln_rgdp + 
                   ln_pop + ln_distw + 
                   Comlang,
-                  family = negbinomial(link = "log",
-                                       link_shape = "log"),
+                  family = gaussian(link = "identity"),
                  cores = 4,
                   prior = c(prior(normal(0, .5), class = "b")),
                   backend = "cmdstanr",
                 data = us.deals.comp)
-summary(nb.deals)
-plot_cme(nb.deals, variables = "time_to_elec", condition = "ally")
-plot_cme(nb.deals, condition = "time_to_elec", variables = c("ally", "democ_bin"))
+summary(ols.deals)
+plot_cme(ols.deals, variables = "time_to_elec", condition = "ally")
+plot_cme(ols.deals, condition = "time_to_elec", variables = c("ally", "v2x_polyarchy2"))
+
+
+# check estimates: predictions 
+ols.deals.est <- me.us.elec(ols.deals, data = us.deals.comp)  
+
+
+ggplot(ols.deals.est[[2]], aes(y = estimate, 
+                              x = time_to_elec,
+                             group = factor(ally),
+                            color = factor(ally))) +
+  facet_wrap(~ v2x_polyarchy2, labeller = democ.all.labs) + 
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line() +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1)) +
+  scale_color_grey("US Ally", 
+                   start = 0.7,
+                   end = 0.1,
+                   labels = c(`0` = "No", `1` = "Yes")) +
+  labs(title = "Elections and Arms Deals: OLS",
+       y = "Predicted Arms Deals",
+       x = "Years to Presidential Election") +
+  theme(
+    axis.text=element_text(size=11),
+    axis.title=element_text(size=13),
+    title = element_text(size = 15),
+    legend.title = element_text(size = 13),
+    strip.text = element_text(size = 9)
+  )
+ggsave("appendix/deals-pred-ols.png", height = 6, width = 8)
 
 
 
@@ -363,7 +386,7 @@ us.arms.ex.cw <- rlm(us_arms ~ lag_us_arms +
                        rep_pres +
                        cowmidongoing + dyadigos +
                        ln_rgdp + ln_distw + eu_member +
-                       Comlang + Contig + Evercol + pred_nz_arms,,
+                       Comlang + Contig + Evercol + pred_nz_arms,
                      maxit = 40,
                      data = filter(us.arms.comp, cold_war == 1))
 summary(us.arms.ex.cw)
@@ -376,7 +399,7 @@ us.arms.ex.ncw <- rlm(us_arms ~ lag_us_arms +
                         rep_pres + 
                         cowmidongoing + dyadigos +
                         ln_rgdp + ln_distw + eu_member +
-                        Comlang + Contig + Evercol + pred_nz_arms,,
+                        Comlang + Contig + Evercol + pred_nz_arms,
                       maxit = 40,
                       data = filter(us.arms.comp, cold_war == 0))
 summary(us.arms.ex.ncw)

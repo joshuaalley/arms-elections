@@ -293,6 +293,17 @@ summary(comp.dist)
 coefs.comp <- coef(comp.dist) 
 coefs.comp[["state"]]
 
+
+# summarize state competition 
+state.comp.sum <- state.data %>% 
+                    group_by(state) %>% 
+                    summarize(
+                      share_swing = mean(swing, na.rm = TRUE),
+                      avg_vote_diff = mean(diff_vote_share, na.rm = TRUE),
+                      often_swing = ifelse(share_swing > .5, "Yes", "No"),
+                      .groups = "keep"
+                    )
+
 # summarize state intercepts and LDV estimates 
 coefs.var.state <- bind_rows("Intercept" = as.data.frame(coefs.comp$state[, , 1]),
                              "Lag Contracts" = as.data.frame(coefs.comp$state[, , 2]),
@@ -301,16 +312,19 @@ coefs.var.state$state <- gsub("\\..*","", row.names(coefs.var.state))
 # order for plotting 
 coefs.var.state <- coefs.var.state %>%
                     group_by(Variable) %>%
-                    arrange(Estimate, .by_group = TRUE)
+                    arrange(Estimate, .by_group = TRUE) %>%
+                    left_join(state.comp.sum)
 coefs.var.state$state <- factor(coefs.var.state$state, ordered = TRUE,
                                      levels = coefs.var.state$state[1:50])
 
-ggplot(coefs.var.state, aes(y = state, x = Estimate)) +
+ggplot(coefs.var.state, aes(y = state, x = Estimate,
+                            color = often_swing)) +
   facet_wrap(~ Variable, scales = "free_x") +
   geom_pointrange(aes(xmin = Q2.5, xmax = Q97.5)) +
   labs(
     y = "State",
-    title = "State Varying Intercepts and Temporal Autocorrelation"
+    title = "State Varying Intercepts and Temporal Autocorrelation",
+    color = "Frequent\nSwing\nState"
   )
 ggsave("appendix/state-pars.png", height = 6, width = 8)
 
