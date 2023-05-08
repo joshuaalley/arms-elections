@@ -323,7 +323,7 @@ state.data <- left_join(state.sen.data, state.data.raw,
   mutate(
     poptotal = arm::rescale(poptotal), 
     ln_ngdp = arm::rescale(ln_ngdp),
-    gwot = ifelse(year >= 2001 & year <= 2010, 
+    gwot = ifelse(year >= 2001 & year <= 2011, 
                       1, 0),
     rep_pres = ifelse((year >= 2001 & year <= 2008) | # HW Bush
                         (year >= 2017), # Trump

@@ -88,6 +88,10 @@ ggplot(contracts.state.long %>%
 ggplot(drop_na(state.data, lag_ln_obligations),
        aes(x = factor(year), y = ln_obligations,
            fill = factor(swing.sum))) +
+  facet_wrap(~ fct_rev(recode(gwot, `0` = "2011-2020",
+                      `1` = "GWOT: 2001-2011")), # change order for plot
+             scales = "free_x",
+             ) +
   geom_boxplot(outlier.shape = NA, coef = 0) +
   scale_fill_grey(start = .9, end = .5) +
   labs(
@@ -143,7 +147,7 @@ summary(elec.lm)
 elec.lm.st <- lm(ln_obligations ~ lag_ln_obligations +
                     swing*gwot +  
                 rep_pres +
-                poptotal + ln_ngdp + gwot,
+                poptotal + ln_ngdp + gwot + factor(state),
               data = state.data) 
 summary(elec.lm.st)
 
@@ -247,23 +251,6 @@ ggplot(drop_na(state.data, time_to_elec),
            x = diff_vote_share)) +
   geom_point() +
   geom_smooth() +
-  theme(legend.position = "bottom")
-
-
-# plot obligations: linear
-ggplot(drop_na(state.data, time_to_elec), 
-       aes(group = factor(time_to_elec,
-                          ordered = TRUE,
-                          levels = c("3", "2",
-                                     "1", "0")),
-           color = factor(time_to_elec,
-                          ordered = TRUE,
-                          levels = c("3", "2",
-                                     "1", "0")),
-           y = ln_obligations,
-           x = diff_vote_share)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
   theme(legend.position = "bottom")
 
 
@@ -431,9 +418,9 @@ state.data.deals <- left_join(state.data,
 # contracting from time to presidential elections and pivot proximity
 deals.state <- lm(ln_obligations ~ lag_ln_obligations +
                     deals +
-                    swing + core + 
+                    swing*gwot + 
                     rep_pres +
-                    poptotal + ln_ngdp + gwot,
+                    poptotal + ln_ngdp,
                    data = state.data.deals) 
 summary(deals.state)
 
