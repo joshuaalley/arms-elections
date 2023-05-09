@@ -167,7 +167,11 @@ me.us.elec <- function(model, formula, rm.wt, data){
   pred.out <- predictions(model, 
                           newdata = typical.func.us(model))
   
-  res <- list(me.est, pred.out, me.def.plot)
+  # full fitted draws
+  fit.out <- posterior_epred(model, 
+                    newdata = typical.func.us(model))
+  
+  res <- list(me.est, pred.out, me.def.plot, fit.out)
 }
 
 

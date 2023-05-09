@@ -130,7 +130,55 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
 pred.us.deals
 ggsave("figures/us-arms-plots.png", height = 6, width = 8)
 
+
+# test difference 
+# democracy at minimum 
+pois.comp.dmin <- pois.deals.est[[2]] %>%
+                     filter(
+                       ally == 1 & v2x_polyarchy2 == 0.013) 
+
+key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.dmin$rowid])
+colnames(key.pois.draws) <- c("a", "b", "c", "d")
+hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"))
+hypothesis(key.pois.draws, c("a > d"))
+
+
+# democracy at 1st q  
+pois.comp.d1q <- pois.deals.est[[2]] %>%
+  filter(
+    ally == 1 & v2x_polyarchy2 == 0.186) 
+
+key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.d1q$rowid])
+colnames(key.pois.draws) <- c("a", "b", "c", "d")
+hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"))
+hypothesis(key.pois.draws, c("a > d"))
+
+
+# democracy at median  
+pois.comp.dmed <- pois.deals.est[[2]] %>%
+  filter(
+    ally == 1 & v2x_polyarchy2 == 0.390) 
+
+key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.dmed$rowid])
+colnames(key.pois.draws) <- c("a", "b", "c", "d")
+hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"))
+hypothesis(key.pois.draws, c("a > d"))
+
+
+
+# democracy at 3rd quartile
+pois.comp.d3q <- pois.deals.est[[2]] %>%
+  filter(
+    ally == 1 & v2x_polyarchy2 == 0.745) 
+
+key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.d3q$rowid])
+colnames(key.pois.draws) <- c("a", "b", "c", "d")
+hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"))
+hypothesis(key.pois.draws, c("a > d"))
  
+
+
+
 # marginal effects w/ same style- less helpful
 # don't need a line and points- need a grid of democ/time to elec, 
 # split by ally/not
@@ -221,6 +269,11 @@ ggplot(ols.deals.est[[2]], aes(y = estimate,
   )
 ggsave("appendix/deals-pred-ols.png", height = 6, width = 8)
 
+
+# test difference 
+key.ols.draws <- as.data.frame(ols.deals.est[[4]][, key.pois.comp$rowid])
+colnames(key.ols.draws) <- c("a", "b", "c", "d")
+hypothesis(key.ols.draws, c("a > b", "b > c", "c > d"))
 
 
 ### Arms transfers: SIRPI TIV
