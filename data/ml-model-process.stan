@@ -11,92 +11,73 @@ data {
   int<lower = 1> K;  // number of country/deal-level variables
   matrix[N, K] X;  // country/deal-level design matrix
   
-  int<lower = 1> T; // number of years
-  matrix[N, T] Z; // year intercepts index
-  //array[N] int<lower = 1, upper = T> year_arms; // year index- arms eq
-  array[S] int<lower = 1, upper = T> year_ob; // year index- contracts
+  matrix[N, S] Z; // state-year index
   
   int<lower = 1> L; // number of state-year variables
   matrix[S, L] G; // state-year variables matrix
-  int<lower = 1> M; // number of electoral competition variables 
-  matrix[S, M] H; // matrix of state-year electoral competition variables
+  int<lower = 1> M; // number of contract variance predictors  
+  matrix[S, M] H; // matrix of state-year contract variance predictors  
   
 }
 
 parameters {
   vector[K] beta;  // population-level effects- arms
+  real alpha_arms;  // overall intercept- arms 
   vector[L] lambda; // state-year level effects
-  real alpha;  // overall intercept
+  vector[M] gamma; // state-year variance effects 
+  real alpha_ob;  // overall intercept- contracts
 
-  real<lower = 0> sigma_stateyr; // sd of state-year outcome
-  real<lower = 3> nu_ob; // d.f. for state-year outcome
+  real<lower = 2> nu_ob; // d.f. for state-year outcome
   
-  matrix[T, M] mu_gamma; // mean of state-year coefficients
-  vector<lower = 0>[M] tau_gamma; // mean of theta par in multivariate distribution 
-  matrix[M, T] z_gamma; // for non-centered Cholesky factorization 
-  cholesky_factor_corr[M] L_Omega_gamma; // for non-centered Cholesky factorization 
-  
-  vector[M] rho; // impact of deals on means of eta- corr between 
+  real rho; // impact of deals on means of eta- corr between 
 }
 
 transformed parameters {
   vector[N] mu_arms; // state-year parameter means
-  vector[T] agg_deals;
+  vector[S] agg_deals;
   vector[S] mu_ob;
-  // matrix[T, M] mu_gamma; // mean of alliance-level coefficients
-  matrix[T, M] gamma; // state-year competition effects
   
     
   // linear predictor for arms deals
-    mu_arms = X * beta;
+    mu_arms = alpha_arms + X * beta;
     
   // aggregate deals by year
     agg_deals = Z' * mu_arms;
-    
-  // predict mean of gamma pars with deals
-  // for (m in 1:M){
-  //   mu_gamma[, m] = agg_deals * rho[m];
-  // }
-  
-  // multivariate implementation of gamma 
-    gamma = mu_gamma + (diag_pre_multiply(tau_gamma, L_Omega_gamma) * z_gamma)';
                                       
   // linear predictor term: contracts
-    mu_ob = G * lambda + 
-          (H * gamma') * rep_vector(1.0, T); // sums the product of H and the gammas
-          // brings in arms contracts
+    mu_ob = alpha_ob + G * lambda; 
                                     
  }
 
 model {
 
-
+    vector[S] sigma_stateyr = rep_vector(0.0, S);; // sd of state-year outcome
   
-    // likelihood: arms exports- poisson
+  // likelihood: arms exports- poisson
     for (n in 1:N) {
       target += poisson_log_lpmf(y_arms[n] | mu_arms[n]);
     }
     
-
+    
+  // predict contract variance  
+     sigma_stateyr = H * gamma + agg_deals * rho;
+     sigma_stateyr = exp(sigma_stateyr);
   
-  // likelihood: contracts- normal
+  // likelihood: contracts- student
       for (s in 1:S) {
-      target += student_t_lpdf(y_ob[s] | mu_ob, sigma_stateyr, nu_ob);
+      target += student_t_lpdf(y_ob[s] | mu_ob[s], sigma_stateyr[s], nu_ob);
     }
     
 
 
   // priors including constants
-  alpha ~ student_t(3, 0.7, 2.5);
+  alpha_ob ~ student_t(3, 15, 5);
+  alpha_arms ~ student_t(3, .75, 2);
   beta ~ normal(0, 1);
   lambda ~ normal(0, 1);
   rho ~ normal(0, 1);
-  to_vector(z_gamma) ~ normal(0, .5);
-  L_Omega_gamma ~ lkj_corr_cholesky(2);
-  tau_gamma ~ normal(0, .25); 
-  to_vector(mu_gamma) ~ normal(0, 1);
+  gamma ~ normal(0, .5);
 
-  sigma_stateyr ~ normal(0, 1);
   nu_ob ~ gamma(2, 0.1);
   
 }

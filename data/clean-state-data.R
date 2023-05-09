@@ -344,6 +344,8 @@ state.data <- state.data %>%
   fill(diff_vote_share,
        pivot_prox, s_comp,
        .direction = "up") %>%
+  fill(poptotal,
+       .direction = "down") %>%
   group_by(state) %>%
   mutate(
     lag_ln_ngdp = lag(ln_ngdp),

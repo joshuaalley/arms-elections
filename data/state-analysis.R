@@ -18,6 +18,23 @@ ggplot(state.data,
            x = s_comp)) +
   geom_point() 
 
+# Presidential vote plot obligations: loess 
+ggplot(drop_na(state.data, time_to_elec), 
+       aes(group = factor(time_to_elec,
+                          ordered = TRUE,
+                          levels = c("3", "2",
+                                     "1", "0")),
+           color = factor(time_to_elec,
+                          ordered = TRUE,
+                          levels = c("3", "2",
+                                     "1", "0")),
+           y = ln_obligations,
+           x = diff_vote_share)) +
+  geom_point() +
+  geom_smooth() +
+  theme(legend.position = "bottom")
+
+
 # over time
 
 # all states 
@@ -235,34 +252,17 @@ ggplot(lrm.all, aes(y = var, x = lrm,
                       xmax = lrm + 1.96*lrm.se),
                   position = position_dodge(width = .5))
 
-# Presidential vote 
-
-# plot obligations: loess 
-ggplot(drop_na(state.data, time_to_elec), 
-       aes(group = factor(time_to_elec,
-                          ordered = TRUE,
-                          levels = c("3", "2",
-                                     "1", "0")),
-           color = factor(time_to_elec,
-                          ordered = TRUE,
-                          levels = c("3", "2",
-                                     "1", "0")),
-           y = ln_obligations,
-           x = diff_vote_share)) +
-  geom_point() +
-  geom_smooth() +
-  theme(legend.position = "bottom")
 
 
 
-# add distributional component
+### add distributional component
 comp.dist <- brm(bf(ln_obligations ~ 
                    (1 | year) +    
                    (1 + lag_ln_obligations | state) +
                    swing*gwot +  
                    rep_pres  +
                    poptotal + ln_ngdp,
-                  sigma ~ swing*gwot + rep_pres  +
+                  sigma ~ swing + gwot + rep_pres  +
                     poptotal + ln_ngdp),
                  family = student(),
                  prior = c(
@@ -274,7 +274,8 @@ comp.dist <- brm(bf(ln_obligations ~
                  backend = "cmdstanr",
                  control = list(
                    adapt_delta = .99,
-                   max_treedepth = 20)
+                   max_treedepth = 20),
+                 normalize = FALSE
                  ) 
 summary(comp.dist)
 coefs.comp <- coef(comp.dist) 
@@ -410,20 +411,44 @@ ggsave("figures/pred-comp-state.png", height = 6, width = 8)
 ### state data with arms deals
 state.data.deals <- left_join(state.data, 
                               select(arms.deals.year,
-                                     year, deals))
+                                     year, deals)) %>%
+                    mutate(
+                      deals_rs = arm::rescale(deals)
+                    )
   
 
 
 # add deals to model
 # contracting from time to presidential elections and pivot proximity
-deals.state <- lm(ln_obligations ~ lag_ln_obligations +
-                    deals +
-                    swing*gwot + 
+deals.state <- rlm(ln_obligations ~ lag_ln_obligations +
+                    deals_rs + swing*gwot + 
                     rep_pres +
                     poptotal + ln_ngdp,
                    data = state.data.deals) 
 summary(deals.state)
 
+# add distributional component
+comp.dist.deals <- brm(bf(ln_obligations ~ 
+                      (1 | year) +    
+                      (1 + lag_ln_obligations | state) +
+                      swing*gwot + deals_rs + 
+                      rep_pres  +
+                      poptotal + ln_ngdp,
+                    sigma ~ deals_rs*swing + gwot + rep_pres  +
+                      poptotal + ln_ngdp),
+                 family = student(),
+                 prior = c(
+                   set_prior("normal(0, 2)", class = "b"),
+                   set_prior("normal(0, 2)", class = "sd")
+                 ),
+                 data = state.data.deals,
+                 cores = 4,
+                 backend = "cmdstanr",
+                 control = list(
+                   adapt_delta = .99,
+                   max_treedepth = 20)
+) 
+summary(comp.dist.deals)
 
 
 ### examine state contracts by sector

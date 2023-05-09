@@ -4,10 +4,9 @@
 # state component
 state.data.ml <- select(state.data, state, year,
                         ln_obligations, 
-                        swing, core, 
-                        time_to_elec,
-                        rep_pres, change_poptotal,
-                        change_ln_ngdp, iraq_war) %>% 
+                        swing, 
+                        rep_pres, poptotal,
+                        ln_ngdp, gwot) %>% 
   distinct() %>% 
   group_by(state) %>%
   mutate(
@@ -29,7 +28,7 @@ state.data.ml <- state.data.ml %>%
   select(state, year, state.year.txt, state.year, year.id,
          ln_obligations,
          everything()) %>%
-  filter(year <= 2018) %>% # match missing in COW 
+  filter(year <= 2019) %>% # match missing in COW 
   group_by(year, state.year.txt) %>%
   mutate(n = n(), .groups = "drop") %>%
   filter(n == 1) 
@@ -38,28 +37,21 @@ class(state.data.ml) <- "data.frame"
 
 # state data for analysis 
 state.yr.final <- state.data.ml %>%
-  mutate(
-    intercept = 1
-  ) %>%
-  select(intercept,
-         swing, core, 
-         time_to_elec,
-         rep_pres, change_poptotal,
-         change_ln_ngdp, iraq_war) 
-# rescale obligations and GDP by 2sd 
-state.yr.final[, 2:3] <- apply(state.yr.final[, 2:3], 2,
-       function(x) arm::rescale(x,
-                                binary.inputs = "0/1"))
+  select(swing, gwot,
+         rep_pres, poptotal,
+         ln_ngdp) %>%
+  mutate(swing_gwot = swing*gwot)
+# rescale population and GDP by 2sd 
+state.yr.final$ln_ngdp <- arm::rescale(state.yr.final$ln_ngdp,
+                                binary.inputs = "0/1")
+state.yr.final$poptotal <- arm::rescale(state.yr.final$poptotal,
+                                       binary.inputs = "0/1")
 
 
 # matrix for stan
-state.yr.cont <- as.matrix(select(state.yr.final,
-                                   intercept,
-                                  rep_pres, change_poptotal,
-                                  change_ln_ngdp, iraq_war))
-
-state.yr.comp <- as.matrix(select(state.yr.final,
-                                  swing, core, time_to_elec))
+state.yr.mean <- as.matrix(state.yr.final)
+state.yr.var <- as.matrix(select(state.yr.final,
+                                 -swing_gwot))
 
 
 
@@ -100,25 +92,24 @@ ggplot(us.arms.deals, aes(x = deals)) + geom_histogram()
 
 # create a matrix to index when state-year obs apply 
 # (double-indexing failed)
-yr.idmat <- left_join(
-    select(us.arms.deals, ccode, year),
-    select(state.data.ml, year),
-    multiple = "all"
-   ) %>%
+state.yr.idmat <- left_join(
+  select(us.arms.deals, ccode, year),
+  select(state.data.ml, year, state.year.txt)
+) %>%
   distinct() %>%
-  group_by(ccode, year) %>%
-  summarise(present = dplyr::n(), 
-            .groups = "drop") %>%
+  group_by(ccode, year, state.year.txt) %>%
+  summarise(n = dplyr::n(), .groups = "drop") %>%
+  filter(n == 1L) %>% 
   mutate(
-    obs = paste(ccode, year, sep = "-")
+    present = 1, # to fill dummies
   ) %>%
   pivot_wider( # wider 
-    id_cols = c("obs"),
-    names_from = c("year"),
+    id_cols = c(ccode, year),
+    names_from = "state.year.txt",
     values_from = "present"
   ) %>%
-  select(-c(obs))
-yr.idmat[is.na(yr.idmat)] <- 0
+  select(-c(ccode, year))
+state.yr.idmat[is.na(state.yr.idmat)] <- 0
 
 
 
@@ -154,13 +145,12 @@ process.data <- list(
   S = nrow(state.data.ml),
   y_ob = state.data.ml$ln_obligations,
   
-  Z = as.matrix(yr.idmat),
-  T = ncol(yr.idmat),
+  Z = as.matrix(state.yr.idmat),
   year_ob = year.id.state,
   
-  G = state.yr.cont,
-  L = ncol(state.yr.cont),
-  H = state.yr.comp,
-  M = ncol(state.yr.comp)
+  G = state.yr.mean,
+  L = ncol(state.yr.mean),
+  H = state.yr.var,
+  M = ncol(state.yr.var)
 )
 

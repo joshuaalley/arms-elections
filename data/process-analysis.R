@@ -13,12 +13,13 @@ process.mod <- cmdstan_model(stan_file = "data/ml-model-process.stan",
 # fit model 
 fit.process <- process.mod$sample(
   data = process.data,
+  init = 0.1,
   chains = 4, 
   parallel_chains = 4,
   threads_per_chain = 1,
   seed = 12,
   max_treedepth = 20, 
-  adapt_delta = .9,
+  adapt_delta = .99,
   refresh = 200
 )
 
