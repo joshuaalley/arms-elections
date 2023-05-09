@@ -31,7 +31,7 @@ parameters {
   real<lower = 0> sigma_stateyr; // sd of state-year outcome
   real<lower = 3> nu_ob; // d.f. for state-year outcome
   
-  matrix[T, M] mu_gamma; // mean of alliance-level coefficients
+  matrix[T, M] mu_gamma; // mean of state-year coefficients
   vector<lower = 0>[M] tau_gamma; // mean of theta par in multivariate distribution 
   matrix[M, T] z_gamma; // for non-centered Cholesky factorization 
   cholesky_factor_corr[M] L_Omega_gamma; // for non-centered Cholesky factorization 
