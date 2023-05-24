@@ -1,2 +1,2 @@
 # econ-bargain-all
-This working paper explores how electoral considerations drive cycles in defense contracting, arms exports and trade between the United States and its allies. 
+This working paper explores how electoral considerations drive arms deals for defense contracting in the United States. 
