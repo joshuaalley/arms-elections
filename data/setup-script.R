@@ -28,7 +28,7 @@ library(vdemdata)
 # set seed
 set.seed(12)
 # set ggplot theme
-theme_set(theme_bw())
+theme_set(theme_bw(base_size = 14))
 # set modelsummary TeX output
 options(modelsummary_format_numeric_latex = "plain")
 
@@ -128,12 +128,14 @@ coef.names.map = c("lag_exports" = "Lag Exports",
 
 coef.names.map.state = c(
                    "lag_ln_obligations" = "Lag Contracts",
+                   "pred_deals" = "Pred. Arms Deals",
+                   "pred_deals:gwot" = "Pred. Arms Deals: GWOT",
+                   "gwot" = "Global War\non Terror",
                    "swing" = "Swing State",
                    "swing:gwot" = "Swing: GWOT",
                    "core" = "Core State",
-                   "gwot:core" = "Core: GWOT",
-                   "gwot" = "Global War\non Terror",
                    "s_comp" = "Senate Vote Difference",
+                   "time_to_elec" = "Time to Election",
                    "incumbent" = "Senate Incumbent",
                    "poptotal" = "Population (Rescaled)",
                    "ln_ngdp" = "Log GDP (Rescaled)",

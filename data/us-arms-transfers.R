@@ -271,7 +271,7 @@ ggsave("appendix/deals-pred-ols.png", height = 6, width = 8)
 
 
 # test difference 
-key.ols.draws <- as.data.frame(ols.deals.est[[4]][, key.pois.comp$rowid])
+key.ols.draws <- as.data.frame(ols.deals.est[[4]][, pois.comp.dmed$rowid])
 colnames(key.ols.draws) <- c("a", "b", "c", "d")
 hypothesis(key.ols.draws, c("a > b", "b > c", "c > d"))
 

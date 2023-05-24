@@ -100,7 +100,7 @@ ggplot(contracts.state.long %>%
 
 
 
-# swing vs core- changes by election proximity
+# swing changes by election proximity
 # overall levels by year
 ggplot(drop_na(state.data, lag_ln_obligations),
        aes(x = factor(year), y = ln_obligations,
@@ -117,13 +117,7 @@ ggplot(drop_na(state.data, lag_ln_obligations),
     fill = "Electoral\nCompetition",
     title = "Defense Contracts and Electoral Competition",
     subtitle = "2001-2020"
-  ) +
-  theme(
-    axis.text=element_text(size=11),
-    axis.title=element_text(size=13),
-    legend.title = element_text(size = 13),
-    title = element_text(size = 15)
-  )
+  ) 
 ggsave("figures/raw-comp-state.png", height = 9, width = 12)
 
 
@@ -147,13 +141,13 @@ ggplot(drop_na(state.data, time_to_elec),
 visdat::vis_miss(select(state.data,
                         ln_obligations, s_comp, incumbent,
                           diff_vote_share, time_to_elec,
-                          swing, core, rep_pres,
+                          swing, swing_pivot, rep_pres,
                           pivot_prox,
                           poptotal, ln_ngdp, gwot))
 
 # simple model: OLS
 elec.lm <- lm(ln_obligations ~ lag_ln_obligations +
-                 swing*gwot +  
+                swing*gwot +  
                 rep_pres +
                 poptotal + ln_ngdp,
               data = state.data) 
@@ -162,7 +156,7 @@ summary(elec.lm)
 
 # OLS w/ state FE
 elec.lm.st <- lm(ln_obligations ~ lag_ln_obligations +
-                    swing*gwot +  
+                swing*gwot +  
                 rep_pres +
                 poptotal + ln_ngdp + gwot + factor(state),
               data = state.data) 
@@ -170,7 +164,7 @@ summary(elec.lm.st)
 
 # robust
 elec.rlm <- rlm(ln_obligations ~ lag_ln_obligations +
-                   swing*gwot +  
+                  swing*gwot +   
                   rep_pres +
                   poptotal + ln_ngdp,
               data = state.data) 
@@ -288,6 +282,7 @@ state.comp.sum <- state.data %>%
                     summarize(
                       share_swing = mean(swing, na.rm = TRUE),
                       avg_vote_diff = mean(diff_vote_share, na.rm = TRUE),
+                      avg_pivot_prox = mean(pivot_prox, na.rm = TRUE),
                       often_swing = ifelse(share_swing > .5, "Yes", "No"),
                       .groups = "keep"
                     )
@@ -314,7 +309,7 @@ ggplot(coefs.var.state, aes(y = state, x = Estimate,
     title = "State Varying Intercepts and Temporal Autocorrelation",
     color = "Frequent\nSwing\nState"
   )
-ggsave("appendix/state-pars.png", height = 6, width = 8)
+
 
 
 # year intercepts
@@ -364,7 +359,6 @@ ggplot(drop_na(coef.comp, var), aes(y = fct_rev(var), x = estimate)) +
     title = element_text(size = 15),
     strip.text = element_text(size = 9)
   )
-ggsave("figures/coef-comp-state.png", height = 6, width = 8)
 
 
 # make predictions
@@ -404,70 +398,5 @@ ggplot(pred.comp.state, aes(y = estimate, x = gwot_fac,
     legend.title = element_text(size = 13),
     strip.text = element_text(size = 9)
   )
-ggsave("figures/pred-comp-state.png", height = 6, width = 8)
 
 
-
-### state data with arms deals
-state.data.deals <- left_join(state.data, 
-                              select(arms.deals.year,
-                                     year, deals)) %>%
-                    mutate(
-                      deals_rs = arm::rescale(deals)
-                    )
-  
-
-
-# add deals to model
-# contracting from time to presidential elections and pivot proximity
-deals.state <- rlm(ln_obligations ~ lag_ln_obligations +
-                    deals_rs + swing*gwot + 
-                    rep_pres +
-                    poptotal + ln_ngdp,
-                   data = state.data.deals) 
-summary(deals.state)
-
-# add distributional component
-comp.dist.deals <- brm(bf(ln_obligations ~ 
-                      (1 | year) +    
-                      (1 + lag_ln_obligations | state) +
-                      swing*gwot + deals_rs + 
-                      rep_pres  +
-                      poptotal + ln_ngdp,
-                    sigma ~ deals_rs*swing + gwot + rep_pres  +
-                      poptotal + ln_ngdp),
-                 family = student(),
-                 prior = c(
-                   set_prior("normal(0, 2)", class = "b"),
-                   set_prior("normal(0, 2)", class = "sd")
-                 ),
-                 data = state.data.deals,
-                 cores = 4,
-                 backend = "cmdstanr",
-                 control = list(
-                   adapt_delta = .99,
-                   max_treedepth = 20)
-) 
-summary(comp.dist.deals)
-
-
-### examine state contracts by sector
-
-# this puts orders before contracts
-sector.list <- c("aircraft", "arms", "electronics", "missile_space",
-                 "ships", "vehicles")
-formula.sector <- vector(mode = "list", length = length(sector.list))
-  
-for(i in 1:length(sector.list)){
-  formula.sector[[i]] <- as.formula(
-    paste(
-      paste0(sector.list[i], "~"), 
-      paste0(sector.list[i], "_lag"), 
-      paste0(" + ", "deals_", sector.list[i]),
-      paste0(" + ", "swing + core"),
-      paste0("+ gwot + rep_pres + ln_ngdp + poptotal")
-    ))
-  }
-
-sector.state.sys <- systemfit(formula.sector, data = state.data.ord)
-summary(sector.state.sys)

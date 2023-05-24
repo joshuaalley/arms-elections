@@ -16,7 +16,7 @@ fit.process <- process.mod$sample(
   init = 0.1,
   chains = 4, 
   parallel_chains = 4,
-  threads_per_chain = 1,
+  threads_per_chain = 2,
   seed = 12,
   max_treedepth = 20, 
   adapt_delta = .99,

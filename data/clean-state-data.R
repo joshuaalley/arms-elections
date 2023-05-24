@@ -390,6 +390,18 @@ ggplot(state.elec.sum, aes(x = mean.prox, y = sd.prox)) +
 ggplot(state.elec.sum, aes(x = mean.diff, y = sd.diff)) +
   geom_point()
 
+
+# swing and pivotal
+table(state.data$swing, state.data$pivot_prox)
+table(state.data$swing, state.data$elec_votes)
+summary(state.data$elec_votes)
+state.data <- state.data %>%
+               mutate(
+                 pivotal = ifelse(pivot_prox <= 5, 1, 0),
+                 swing_pivot = swing*pivotal,
+                 swing_war = swing*gwot
+               )
+
 # swing and core summary
 state.data$comp.sum <- ifelse(state.data$swing == 1, "Swing",
                               ifelse(state.data$core == 1, "Core",
@@ -397,3 +409,4 @@ state.data$comp.sum <- ifelse(state.data$swing == 1, "Swing",
 
 state.data$swing.sum <- ifelse(state.data$swing == 1, "Swing State", 
                                "Not Swing")
+
