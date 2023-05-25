@@ -522,21 +522,52 @@ The next analysis checks for electoral cycles in defense contracting awards.
 \section{Arms Deals and Defense Contracting}
 
 
-To show how deals drive defense contracting, I use Department of Defense prime contract award data from the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
-This archive contains data on individual contract awards starting in the 2000 fiscal year, and I collected all Department of Defense contracts from 2000 to 2020.
-The key outcome is the log of total defense contracts tied to arms production awarded to a state in every year.\footnote{This measure excludes other contracts besides weapons production because arms deals are unlikely to translate into other contracts.}
-
-
 % describe the model 
 Connecting arms deals and defense contracting is challenging. 
 Deals occur between countries, while defense contracting takes place within US states. 
 As a result, separate models of deals and contracting cannot capture the transfer of electoral arms deals with autocrats into defense contracts. 
 
 
+To overcome this, I estimate a joint model of arms deals and defense contracting. 
+I estimate models of arms deals and defense contracting in the same model.
+The arms deal model uses data from 1951 to 2014, and is the same Poisson model as above. 
+Mean arms deals is the outcome at the country-year level and a predictor in the defense contracts level. 
 
+
+The defense contracting level of the model uses Department of Defense prime contract award data from the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
+This archive contains data on individual contract awards starting in the 2000 fiscal year, so the defense contracting analysis runs from 2000 to 2019.\footnote{Some state-level controls have limited coverage after 2019.}
+The key outcome is the log of total defense contracts tied to arms production awarded to a state in every year.\footnote{This measure excludes other contracts besides weapons production because arms deals are unlikely to translate into other contracts for things like construction equipment or food.}
+
+
+In the following, I describe the joint model formally.
+It starts with a model for the arms deals outcome $y_{it}^{deals}$. 
+This is the above Poisson model of arms deals, so it includes an intercept $\alpha_{deals}$ and a matrix of the triple interaction of election timing, alliance and democracy as well as control variables $\textbf{X}$ with associated coefficient vector $\beta$. 
+
+\begin{equation}
+y_{it}^{deals} \sim Poisson(\mu_{it}^{deals}) 
+\end{equation}
+
+\begin{equation}
+\mu_{it}^{deals} = \alpha_{deals} + \textbf{X} \beta
+\end{equation}
+
+
+The predicted arms deals for each country-year observation from the Poisson model $\mu_{it}^{deals}$ are also an independent variable in the defense contracts model. 
+I include this by summing the country-year predicted outcomes in each year to create a variable $\mu_{t}^{deals}$. 
+The contracts model uses a student-t likelihood with degrees of freedom $\nu$ and variance $sigma$. 
+  
+
+\begin{equation}
+y_{st}^{cont} \sim Student(\mu_{st}, \sigma, \nu)
+\end{equation}
+
+
+The mean of annual contracts $\mu_{st}$ is a function state varying intercepts, lagged contracts, the interaction of the Global War on Terror with mean arms deals, and the control matrix \textbf{G}. 
 Because the argument suggests that deals only drive contracting in periods with low demand, I account for the Global War on Terror, which increased defense spending through wars in Afghanistan and Iraq.  
-To do this, I include an indicator of peak years in the global war on terror, which is one from 2001 to 2011, and zero otherwise.\footnote{I end the peak years at 2011 with the U.S. withdrawal from Iraq.} 
+To do this, I include an indicator of peak years in the global war on terror, which is one from 2001 to 2011, and zero otherwise.\footnote{I end the global war on terror variable at 2011 because the U.S. withdrawal from Iraq dramatically reduced its costs.} 
 I then interact this dummy with the predicted mean of arms deals. 
+$\rho_1$ is the key parameter for testing the contracts hypothesis, as this implies that greater deals increase contract awards during peacetime. 
+$\rho_3$ captures the impact of deals during the general increase in contracting around the Iraq War, and should be close to zero.
 
 
 In addition to the electoral competition and war variables, I include several controls. 
@@ -546,27 +577,14 @@ Core states are those where the President's party received more than 55\% of the
 The final control adjusts for presidential partisanship by coding years with a Republican President with one. 
 
 
-The final adjustments in the model account for clustering and temporal dependence.
+The final adjustments in the model account for the data structure.
 First, I include state varying intercepts because observations cluster within states. 
 Current contracting also depends on past contracting, as the defense industrial base concentrates in particular areas and moving is difficult. 
-I therefore include a state-specific lagged dependent variable, which allows temporal dependence in contracting to vary by state. 
-
-
-In the following, I describe the joint model formally.\footnote{Model specified and estimated with \textsf{brms} \citep{Buerkner2017}.}
-The model uses a t-distribution for the outcome, which while estimating the degrees of freedom $\nu$ from the data, can be expressed as follows:\footnote{The full specification with priors is available in the appendix.} 
-
+I therefore include a state-specific lagged dependent variable, which allows temporal dependence in contracting to vary by state and is correlated with the state varying intercept. 
+Formally, the state-level equation is: 
 
 \begin{equation}
-y_{it} \sim Student(\mu_{st}, \sigma)
-\end{equation}
-
-The mean of annual contracts is a function state and year varying intercepts, lagged contracts, swing and core status and the control matrix \textbf{X}. 
-$\beta_1$ is the key parameter for testing the contracts hypothesis, as this implies that greater deals increase contract awards during peacetime. 
-$\beta_3$ captures the impact of deals during the general increase in contracting around the Iraq War, and should be close to zero.
-
-
-\begin{equation}
-\mu_{st}^{cont} = \alpha_{state} + \alpha_{year} + \theta_s y_{st-1} + \beta_1 \mbox{Deals} + \beta_2 \mbox{GWOT} + \beta_3 \mbox{Deals*GWOT} + \textbf{X} \beta
+\mu_{st}^{cont} = \alpha_{state} + \theta_s y_{st-1} + \rho_1 \mu_{t}^{deals} + \rho_2 \mbox{GWOT} + \rho_3 \mu_{t}^{deals} * \mbox{GWOT} + \textbf{G} \lambda
 \end{equation}
 
 

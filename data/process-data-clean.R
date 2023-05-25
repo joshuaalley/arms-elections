@@ -65,7 +65,6 @@ us.arms.deals <- us.arms.cat %>%
                           ally, v2x_polyarchy2,
                           Comlang, ln_rgdp, 
                           ln_distw, eu_member)) %>%
-                 filter(year %in% state.data.ml$year) %>% # pakistan/east pak duplicate gives warning- drop
                 distinct()
 # rescale for model input
 us.arms.deals$ln_rgdp <- arm::rescale(us.arms.deals$ln_rgdp, binary.inputs = "0/1")
@@ -79,8 +78,6 @@ class(us.arms.deals) <- "data.frame"
 
 # group indices 
 us.arms.deals$cntry.index <- us.arms.deals %>% group_by(ccode) %>%
-  group_indices()
-us.arms.deals$ally.id <- us.arms.deals %>% group_by(ally) %>%
   group_indices()
 
 
@@ -107,6 +104,7 @@ state.yr.idmat <- left_join(
   ) %>%
   select(-c(ccode, year))
 state.yr.idmat[is.na(state.yr.idmat)] <- 0
+state.yr.idmat <- state.yr.idmat[, 2:ncol(state.yr.idmat)]
 
 
 
