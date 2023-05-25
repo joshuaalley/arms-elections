@@ -1,10 +1,10 @@
 // Joshua Alley
-// ML model of US arms deals as a function of 
-// recipient characteristics and state defense contracts
+// ML model of US defense contracts as a function of 
+// arms deals- estimate both parts of the model
 
 data {
   int<lower = 0> N; // number of arms deal level obs
-  int<lower = 1> S; // number of state-year obs
+  int<lower = 0> S; // number of state-year obs
   array[N] int<lower = 0> y_arms; // deliveries outcome: country-year
   array[S] real y_ob; // state-level contracts
   
@@ -15,8 +15,8 @@ data {
   
   int<lower = 1> L; // number of state-year variables
   matrix[S, L] G; // state-year variables matrix
-  int<lower = 1> M; // number of contract variance predictors  
-  matrix[S, M] H; // matrix of state-year contract variance predictors  
+  vector<lower = 0, upper = 1>[S] gwot; // gwot measure for interaction
+  
   
 }
 
@@ -24,12 +24,12 @@ parameters {
   vector[K] beta;  // population-level effects- arms
   real alpha_arms;  // overall intercept- arms 
   vector[L] lambda; // state-year level effects
-  vector[M] gamma; // state-year variance effects 
   real alpha_ob;  // overall intercept- contracts
+  real sigma_stateyr ; // sd of state-year outcome
 
   real<lower = 2> nu_ob; // d.f. for state-year outcome
   
-  real rho; // impact of deals on means of eta- corr between 
+  vector[2] rho; // impact of deals on contracts- both inter terms
 }
 
 transformed parameters {
@@ -45,27 +45,23 @@ transformed parameters {
     agg_deals = Z' * mu_arms;
                                       
   // linear predictor term: contracts
-    mu_ob = alpha_ob + G * lambda; 
+    mu_ob = alpha_ob + G * lambda + agg_deals * rho[1] + 
+    (agg_deals .* gwot) * rho[2]; 
                                     
  }
 
 model {
-
-    vector[S] sigma_stateyr = rep_vector(0.0, S);; // sd of state-year outcome
   
   // likelihood: arms exports- poisson
     for (n in 1:N) {
       target += poisson_log_lpmf(y_arms[n] | mu_arms[n]);
     }
     
-    
-  // predict contract variance  
-     sigma_stateyr = H * gamma + agg_deals * rho;
-     sigma_stateyr = exp(sigma_stateyr);
+
   
   // likelihood: contracts- student
       for (s in 1:S) {
-      target += student_t_lpdf(y_ob[s] | mu_ob[s], sigma_stateyr[s], nu_ob);
+      target += student_t_lpdf(y_ob[s] | nu_ob, mu_ob[s], sigma_stateyr);
     }
     
 
@@ -73,10 +69,10 @@ model {
   // priors including constants
   alpha_ob ~ student_t(3, 15, 5);
   alpha_arms ~ student_t(3, .75, 2);
-  beta ~ normal(0, 1);
-  lambda ~ normal(0, 1);
-  rho ~ normal(0, 1);
-  gamma ~ normal(0, .5);
+  beta ~ std_normal();
+  lambda ~ std_normal();
+  rho ~ std_normal();
+  sigma_stateyr ~ std_normal(); 
 
   nu_ob ~ gamma(2, 0.1);
   

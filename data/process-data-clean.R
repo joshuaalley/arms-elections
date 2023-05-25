@@ -4,7 +4,7 @@
 # state component
 state.data.ml <- select(state.data, state, year,
                         ln_obligations, 
-                        swing, 
+                        swing, core, time_to_elec,
                         rep_pres, poptotal,
                         ln_ngdp, gwot) %>% 
   distinct() %>% 
@@ -37,10 +37,9 @@ class(state.data.ml) <- "data.frame"
 
 # state data for analysis 
 state.yr.final <- state.data.ml %>%
-  select(swing, gwot,
-         rep_pres, poptotal,
-         ln_ngdp) %>%
-  mutate(swing_gwot = swing*gwot)
+  select(swing, core, gwot, time_to_elec,
+         rep_pres, poptotal, 
+         ln_ngdp) 
 # rescale population and GDP by 2sd 
 state.yr.final$ln_ngdp <- arm::rescale(state.yr.final$ln_ngdp,
                                 binary.inputs = "0/1")
@@ -50,8 +49,6 @@ state.yr.final$poptotal <- arm::rescale(state.yr.final$poptotal,
 
 # matrix for stan
 state.yr.mean <- as.matrix(state.yr.final)
-state.yr.var <- as.matrix(select(state.yr.final,
-                                 -swing_gwot))
 
 
 
@@ -150,7 +147,6 @@ process.data <- list(
   
   G = state.yr.mean,
   L = ncol(state.yr.mean),
-  H = state.yr.var,
-  M = ncol(state.yr.var)
+  gwot = state.data.ml$gwot
 )
 
