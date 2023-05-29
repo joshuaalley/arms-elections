@@ -28,13 +28,23 @@ us.deals <- us.arms.cat %>%
   mutate(
     nz_deals = ifelse(deals > 0, 1, 0)
   ) %>% # pakistan/east pak duplicate gives warning- drop
-  distinct()
+  distinct() %>%
+  ungroup() %>%
+  mutate(
+    democ_grp = case_when(
+      v2x_polyarchy2 <= poly.sum[2] ~ "1st Quartile",
+      v2x_polyarchy2 > poly.sum[2] &
+        v2x_polyarchy2 <= poly.sum[3] ~ "2nd Quartile",
+      v2x_polyarchy2 > poly.sum[3] &
+        v2x_polyarchy2 <= poly.sum[4] ~ "3rd Quartile",
+      v2x_polyarchy2 > poly.sum[4] ~ "4th Quartile"
+    )
+  ) 
 # NA from right join- move to zero
 us.deals$deals[is.na(us.deals$deals)] <- 0
 us.deals$nz_deals[is.na(us.deals$nz_deals)] <- 0
 # complete cases
 us.deals.comp <- drop_na(us.deals)
-
 
 
 # time-series of deals
@@ -68,6 +78,54 @@ ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin) &
            color = factor(democ_bin))) +
   facet_wrap(~ ccode) +
   geom_point(aes(shape = factor(time_to_elec))) 
+
+
+# aggregate summary 
+poly.sum <- fivenum(us.deals$v2x_polyarchy2)
+poly.sum
+us.deals.sum <- us.deals %>%
+        ungroup() %>% # otherwise case_when is super slow 
+        mutate(
+          democ_grp = case_when(
+            v2x_polyarchy2 <= poly.sum[2] ~ "1st Quartile",
+            v2x_polyarchy2 > poly.sum[2] &
+            v2x_polyarchy2 <= poly.sum[3] ~ "2nd Quartile",
+            v2x_polyarchy2 > poly.sum[3] &
+            v2x_polyarchy2 <= poly.sum[4] ~ "3rd Quartile",
+            v2x_polyarchy2 > poly.sum[4] ~ "4th Quartile"
+          )
+        ) %>% 
+        group_by(
+          democ_grp, time_to_elec, atop_defense
+        ) %>%
+        summarize(
+          deals = sum(deals, na.rm = TRUE),
+          n = n(),
+          deals.state = deals / n,
+          .groups = "keep"
+        ) %>%
+        drop_na()
+table(us.deals.sum$democ_grp)
+
+
+ggplot(us.deals.sum, aes(x = time_to_elec,
+                         y = deals.state,
+                         color = factor(atop_defense))) +
+  facet_wrap(~ democ_grp) +
+  scale_x_reverse() +
+  geom_point() +
+  geom_line() +
+  labs(x = "Time to Election",
+       y = "Deals per Country in Group",
+       color = "Alliance")
+ggsave("appendix/deals-democ-raw.png", height = 6, width = 8)
+
+ggplot(us.deals, aes(x = factor(time_to_elec),
+                         y = deals,
+                         color = factor(atop_defense))) +
+  facet_wrap(~ democ_grp, scales = "free_y") +
+  geom_boxplot()
+
 
 
 ### model arms deals 
