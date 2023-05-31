@@ -3,7 +3,7 @@
 
 # state component
 state.data.ml <- select(state.data, state, year,
-                        ln_obligations, 
+                        ln_obligations, lag_ln_obligations,
                         swing, core, time_to_elec,
                         rep_pres, poptotal,
                         ln_ngdp, gwot) %>% 
@@ -13,8 +13,8 @@ state.data.ml <- select(state.data, state, year,
     state.year.txt = paste0(state, ".", year)
   ) %>% # remove missing for STAN
   drop_na() 
-state.data.ml$state.year <- state.data.ml %>%
-  group_by(state, year) %>%
+state.data.ml$state <- state.data.ml %>%
+  group_by(state) %>%
   group_indices()
 state.data.ml$year.id <- state.data.ml %>%
   group_by(year) %>%
@@ -143,6 +143,9 @@ process.data <- list(
   Z = t(as.matrix(state.yr.idmat)),
   year_ob = year.id.state,
   
+  st = max(state.data.ml$state),
+  state = state.data.ml$state,
+  lag_y_ob = state.data.ml$lag_ln_obligations,
   G = state.yr.mean,
   L = ncol(state.yr.mean),
   gwot = state.data.ml$gwot

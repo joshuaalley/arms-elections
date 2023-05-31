@@ -13,6 +13,9 @@ data {
   
   matrix[S, N] Z; // state-year index
   
+  int<lower = 1> st; // numer of states 
+  int<lower = 1, upper = st> state[S]; // state index
+  array[S] real lag_y_ob; // lagged contracts
   int<lower = 1> L; // number of state-year variables
   matrix[S, L] G; // state-year variables matrix
   vector<lower = 0, upper = 1>[S] gwot; // gwot measure for interaction
@@ -39,11 +42,13 @@ parameters {
   real alpha_arms;  // overall intercept- arms 
   vector[L] lambda; // state-year level effects
   real alpha_ob;  // overall intercept- contracts
-  real sigma_stateyr ; // sd of state-year outcome
+  real sigma_stateyr; // sd of state-year outcome
+  real theta; // lagged DV coef
 
   real<lower = 2> nu_ob; // d.f. for state-year outcome
   
   vector[2] rho; // impact of deals on contracts- both inter terms
+  vector[st] alpha_state; //
 }
 
 transformed parameters {
@@ -59,7 +64,9 @@ transformed parameters {
     agg_deals = csr_matrix_times_vector(S, N, w, v, u, mu_arms);
                                       
   // linear predictor term: contracts
-    mu_ob = alpha_ob + G * lambda + agg_deals * rho[1] + 
+    mu_ob = alpha_ob + alpha_state[state] +
+    lag_y_ob * theta +
+    G * lambda + agg_deals * rho[1] + 
     (agg_deals .* gwot) * rho[2]; 
                                     
  }
@@ -83,10 +90,12 @@ model {
   // priors including constants
   alpha_ob ~ student_t(3, 15, 5);
   alpha_arms ~ student_t(3, .75, 2);
+  alpha_state ~ normal(0, 15);
   beta ~ std_normal();
   lambda ~ std_normal();
   rho ~ std_normal();
   sigma_stateyr ~ std_normal(); 
+  theta ~ normal(0, .5); 
 
   nu_ob ~ gamma(2, 0.1);
   
