@@ -140,7 +140,7 @@ process.data <- list(
   S = nrow(state.data.ml),
   y_ob = state.data.ml$ln_obligations,
   
-  Z = as.matrix(state.yr.idmat),
+  Z = t(as.matrix(state.yr.idmat)),
   year_ob = year.id.state,
   
   G = state.yr.mean,

@@ -11,12 +11,26 @@ data {
   int<lower = 1> K;  // number of country/deal-level variables
   matrix[N, K] X;  // country/deal-level design matrix
   
-  matrix[N, S] Z; // state-year index
+  matrix[S, N] Z; // state-year index
   
   int<lower = 1> L; // number of state-year variables
   matrix[S, L] G; // state-year variables matrix
   vector<lower = 0, upper = 1>[S] gwot; // gwot measure for interaction
   
+  
+}
+
+transformed data{
+  
+  // sparse matrix represenation of Z
+  vector[rows(csr_extract_w(Z))] w;
+  int v[size(csr_extract_v(Z))]; 
+  int u[size(csr_extract_u(Z))]; 
+  
+  // Implement the transformations   
+  w = csr_extract_w(Z);
+  v = csr_extract_v(Z);
+  u = csr_extract_u(Z); 
   
 }
 
@@ -42,7 +56,7 @@ transformed parameters {
     mu_arms = alpha_arms + X * beta;
     
   // aggregate deals by year
-    agg_deals = Z' * mu_arms;
+    agg_deals = csr_matrix_times_vector(S, N, w, v, u, mu_arms);
                                       
   // linear predictor term: contracts
     mu_ob = alpha_ob + G * lambda + agg_deals * rho[1] + 
