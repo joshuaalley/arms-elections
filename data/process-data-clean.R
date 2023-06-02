@@ -19,6 +19,9 @@ state.data.ml$state <- state.data.ml %>%
 state.data.ml$year.id <- state.data.ml %>%
   group_by(year) %>%
   group_indices()
+state.data.ml$state.year <- state.data.ml %>%
+  group_by(state, year) %>%
+  group_indices()
 
 # plot obligations
 ggplot(state.data.ml, aes(x = ln_obligations)) + geom_histogram()
