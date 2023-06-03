@@ -42,14 +42,14 @@ parameters {
   real alpha_arms;  // overall intercept- arms 
   vector[L] lambda; // state-year level effects
   real alpha_ob;  // overall intercept- contracts
-  real sigma_stateyr; // sd of state-year outcome
+  real<lower = 0> sigma_ob; // sd of state-year outcome
 
   real<lower = 2> nu_ob; // d.f. for state-year outcome
   
   vector[2] rho; // impact of deals on contracts- both inter terms
   vector[st] alpha_state_std; // 
   vector[st] theta; // lagged DV coefs
-  real sigma_st; // sd for intercept and slope
+  real<lower = 0> sigma_st; // sd for intercept and slope
 
 }
 
@@ -72,11 +72,13 @@ transformed parameters {
     
 
   // linear predictor term: contracts
-    mu_ob = alpha_ob + 
-    alpha_state[state] + 
-    lag_y_ob + theta[state] +
-    G * lambda + agg_deals * rho[1] + 
-    (agg_deals .* gwot) * rho[2];
+  for(s in 1:S){
+   mu_ob[s] = alpha_ob + 
+    alpha_state[state[s]] + 
+    lag_y_ob[s]*theta[state[s]] +
+    G[s] * lambda + agg_deals[s] * rho[1] + 
+    (agg_deals[s] .* gwot[s]) * rho[2];
+  }
                                     
  }
 
@@ -92,7 +94,10 @@ model {
   
   // likelihood: contracts- student
       for (s in 1:S) {
-      target += student_t_lpdf(y_ob[s] | nu_ob, mu_ob[s], sigma_stateyr);
+      target += student_t_lpdf(y_ob[s] | 
+      nu_ob, 
+      mu_ob[s],
+    sigma_ob);
     }
     
 
@@ -103,21 +108,16 @@ model {
   beta ~ std_normal();
   lambda ~ std_normal();
   rho ~ std_normal();
-  sigma_stateyr ~ std_normal(); 
-  theta ~ normal(0, .5); 
+  sigma_ob ~ std_normal(); 
+  theta ~ normal(0, .45); 
   alpha_state_std ~ std_normal();
-  sigma_st ~ normal(0, 5);
+  sigma_st ~ normal(0, 10);
   nu_ob ~ gamma(2, 0.1);
   
 }
 
 generated quantities{
-  
-  // vector[N] y_pred; // posterior pred for checking
-  // 
-  // for(i in 1:N){
-  // y_pred[i] = poisson_log_rng(mu[i]);
-  // }
+
   
 }
 

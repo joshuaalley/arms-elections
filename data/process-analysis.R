@@ -63,4 +63,12 @@ mcmc_intervals(fit.process$draws("rho"))
 mcmc_intervals(fit.process$draws("beta")) +
   scale_y_discrete(labels = colnames(process.data$X))
 
+# country-year level parameters for arms
+mcmc_intervals(fit.process$draws("theta")) 
+
+# state varying intercepts
+mcmc_intervals(fit.process$draws("alpha_ob")) 
+mcmc_intervals(fit.process$draws("alpha_state")) 
+mcmc_intervals(fit.process$draws("sigma_st")) 
+mcmc_intervals(fit.process$draws("sigma_ob")) 
 
