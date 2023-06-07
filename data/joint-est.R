@@ -79,7 +79,7 @@ slope.deals <- plot_slopes(comp.deals, variable = "deals", by = "swing") +
   geom_hline(yintercept = 0) +
   scale_x_discrete(labels = c(`0` = "No", `1` = "Yes")) +
   labs(
-    title = "Marginal Impact of Arms Deals on Defense Contracts",
+    title = "Marginal Impact of Arms Deals",
     x = "Swing State",
     y = "Impact of Increasing Arms Deals"
   )
@@ -88,7 +88,7 @@ slope.deals
 slope.swing <- plot_slopes(comp.deals, variable = "swing", by = "deals") +
   geom_hline(yintercept = 0) +
   labs(
-    title = "Marginal Impact of Swing States on Defense Contracts",
+    title = "Marginal Impact of Swing States",
     x = "Total Arms Deals",
     y = "Impact of Swing Status"
   )
@@ -110,7 +110,8 @@ pred.cont.plot <- ggplot(pred.cont, aes(x = deals, y = estimate,
               alpha = .5) +
   labs(x = "Arms Deals",
        fill = "Electoral\nCompetition",
-       y = "Predicted Log Defense Contracts")
+       y = "Predicted Log Defense Contracts",
+       title = "Predicted Contracts")
 pred.cont.plot
 
 # combine it all 
@@ -188,3 +189,51 @@ ggplot(coefs.var.state, aes(y = state, x = Estimate)) +
   )
 ggsave("appendix/state-pars.png", height = 6, width = 8)
 
+
+
+# check if negative on swing in main figure is down to GWOT- triple
+# add state VI and LDV 
+comp.deals.gwot <- brm(bf(ln_obligations ~ 
+                       (1 + lag_ln_obligations | state) +
+                       deals*swing*gwot +
+                       time_to_elec + 
+                       rep_pres  +
+                       poptotal + ln_ngdp,
+                     center = FALSE),
+                  family = student(),
+                  prior = c(
+                    set_prior("normal(0, 2)", class = "b"),
+                    set_prior("normal(0, 2)", class = "sd")
+                  ),
+                  data = state.data.deals,
+                  cores = 4,
+                  backend = "cmdstanr",
+                  control = list(
+                    adapt_delta = .99,
+                    max_treedepth = 20)
+) 
+summary(comp.deals.gwot)
+slope.deals.gwot <- plot_slopes(comp.deals.gwot, variable = "deals", 
+                                by = c("swing", "gwot")) +
+  geom_hline(yintercept = 0) +
+  scale_x_discrete(labels = c(`0` = "No", `1` = "Yes")) +
+  labs(
+    title = "Marginal Impact of Arms Deals",
+    x = "Swing State",
+    y = "Impact of Increasing Arms Deals"
+  )
+slope.deals.gwot
+
+slope.swing.gwot <- plot_slopes(comp.deals.gwot, variable = "swing", 
+                           by = c("deals", "gwot")) +
+  geom_hline(yintercept = 0) +
+  scale_color_grey(guide = "none") +
+  scale_fill_grey(labels = c(`0` = "No", `1` = "Yes")) +
+  labs(
+    title = "Marginal Impact of Swing States\nand Global War on Terror",
+    x = "Total Arms Deals",
+    fill = "Global War\nOn Terror", 
+    y = "Impact of Swing Status"
+  ) 
+slope.swing.gwot
+ggsave("appendix/swing-gwot.png", height = 6, width = 8)
