@@ -147,7 +147,7 @@ coef.names.map.state = c(
 typical.func.us <- function(x){
   dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
                   ally = c(0, 1),
-                  v2x_polyarchy2 = fivenum)
+                  v2x_polyarchy = fivenum)
   dat$rep_pres <- 0
   dat 
 }
@@ -160,10 +160,10 @@ me.us.elec <- function(model, formula, rm.wt, data){
   me.est <- slopes(model, variables = c("ally"),
                             newdata = datagrid(model = model, 
                                                time_to_elec = c(0, 1, 2, 3),
-                                               v2x_polyarchy2 = fivenum))
+                                               v2x_polyarchy = fivenum))
   
-  me.def.plot <- plot_cme(model, variables = c("ally", "v2x_polyarchy2"),
-                          condition = "time_to_elec", draw = FALSE)
+   me.def.plot <- plot_cme(model, variables = c("ally", "v2x_polyarchy"),
+                         condition = "time_to_elec", draw = FALSE)
   
   # predicted outcomes
   pred.out <- predictions(model, 

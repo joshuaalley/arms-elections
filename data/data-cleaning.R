@@ -10,7 +10,7 @@ vdem <- vdem %>%
          ) %>% 
          filter(year >= 1950) 
 # cow country codes
-vdem$ccode2 <- countrycode(vdem$country_id,
+vdem$ccode <- countrycode(vdem$country_id,
                           origin = "vdem",
                           destination = "cown")
 
@@ -74,6 +74,8 @@ dyadic.cont <- create_dyadyears(system = "cow",
 # flow2 is vice-versa- imports by ccode2 from ccode1
 dyadic.cont$atop_defense[dyadic.cont$year == 2019] <- NA
 dyadic.cont$atop_defense[dyadic.cont$year == 2020] <- NA
+
+
 
 
 
@@ -240,6 +242,7 @@ us.trade.ally <- filter(dyadic.trade.major,
     us.code = ccode1,
     ccode = ccode2
   ) %>%
+  left_join(vdem) %>%
   right_join(select(elections.data, year, 
                    president, time_to_elec)) %>%
   left_join(promises.data) %>%
@@ -255,7 +258,9 @@ us.trade.ally <- filter(dyadic.trade.major,
                       1, 0),
     change_pres = ifelse(rep_pres != lag(rep_pres), 1, 0),
     near_elec = ifelse(time_to_elec == 0 | time_to_elec == 1, 1, 0),
-    cold_war = ifelse(year <= 1989, 1, 0)
+    cold_war = ifelse(year <= 1989, 1, 0),
+    gwot = ifelse(year >= 2001 & year <= 2011, 
+                  1, 0)
   ) %>%
   group_by(president, ccode) %>%
   mutate(
@@ -277,29 +282,26 @@ us.trade.ally$ally[us.trade.ally$ccode == 713] <- 1 # taiwan
 
 # democratic allies
 # above average unified democ score
-us.trade.ally$democ_bin <- ifelse(us.trade.ally$v2x_polyarchy2 > 
-                                    mean(us.trade.ally$v2x_polyarchy2, na.rm = T),
+us.trade.ally$democ_bin <- ifelse(us.trade.ally$v2x_polyarchy > 
+                                    mean(us.trade.ally$v2x_polyarchy, na.rm = T),
                                   1, 0)
 # allies w/ above average democ score
 us.trade.ally$ally_democ <- us.trade.ally$ally * us.trade.ally$democ_bin
 table(us.trade.ally$ally, us.trade.ally$ally_democ)
 
 
-# add allied GDP data from PWT
-# bring in PWT data
-pwt.key <- read.csv("data/pwt-100.csv") %>%
-  select(country, year, 
-         rgdpe, pop, xr, csh_g) %>%
+# add GDP data from wb
+# bring in wb data
+wb.key <- read.csv("data/wb-pop-gdp.csv") %>%
+  select(ccode, year, 
+         rgdpe, pop) %>%
   mutate(
     ln_rgdp = log(rgdpe),
     ln_pop = log(pop)
   )
-pwt.key$ccode <- countrycode(origin = "country.name",
-                             sourcevar = pwt.key$country,
-                             destination = "cown")
 
-# join pwt
-us.trade.ally <- left_join(us.trade.ally, pwt.key)
+# join wb
+us.trade.ally <- left_join(us.trade.ally, wb.key)
 
 
 
@@ -346,18 +348,6 @@ us.arms.year <- us.arms.sipri %>%
   mutate(
     lag_us_arms = lag(us_arms)
   )
-
-# same with some key trade variables
-us.trade.year <- us.trade.ally %>%
-  group_by(year) %>%
-  summarize(
-    total_exports = sum(ln_exports, na.rm = TRUE)
-  ) %>%
-  ungroup() %>%
-  mutate(
-    lag_total_exports = lag(total_exports)
-  )
-us.trade.year[us.trade.year == -Inf] <- NA
 
 
 
