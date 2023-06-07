@@ -3,7 +3,7 @@
 
 # state component
 state.data.ml <- select(state.data, state, year,
-                        change_ln_obligations,
+                        ln_obligations, lag_ln_obligations,
                         gwot,
                           swing, core, time_to_elec, 
                           rep_pres,
@@ -24,12 +24,12 @@ state.data.ml$state.year <- state.data.ml %>%
   group_indices()
 
 # plot obligations
-ggplot(state.data.ml, aes(x = change_ln_obligations)) + geom_histogram()
+ggplot(state.data.ml, aes(x = ln_obligations)) + geom_histogram()
 
 # clean up ordering
 state.data.ml <- state.data.ml %>%
   select(state, year, state.year.txt, state.id, state.year, year.id,
-         change_ln_obligations,
+         ln_obligations, lag_ln_obligations,
          everything()) %>%
   filter(year <= 2019) %>% # match missing in COW 
   group_by(year, state.year.txt) %>%
@@ -40,7 +40,7 @@ class(state.data.ml) <- "data.frame"
 
 # state data for analysis 
 state.yr.final <- state.data.ml %>%
-  select(swing, core, gwot, time_to_elec,
+  select(swing, gwot, time_to_elec,
          rep_pres, poptotal, 
          ln_ngdp) 
 # rescale population and GDP by 2sd 
@@ -141,17 +141,17 @@ process.data <- list(
   K = ncol(us.arms.deals.iv),
 
   S = nrow(state.data.ml),
-  y_ob = state.data.ml$change_ln_obligations,
+  y_ob = state.data.ml$ln_obligations,
   
   Z = t(as.matrix(state.yr.idmat)),
   year_ob = year.id.state,
   
   st = max(state.data.ml$state.id),
   state = state.data.ml$state.id,
-  #lag_y_ob = state.data.ml$lag_ln_obligations,
+  lag_y_ob = state.data.ml$lag_ln_obligations,
   G = state.yr.mean,
   L = ncol(state.yr.mean),
-  gwot = state.data.ml$gwot
+  swing = state.data.ml$swing
 )
 
 # summary of state indices

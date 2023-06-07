@@ -7,7 +7,7 @@ data {
   int<lower = 0> S; // number of state-year obs
   array[N] int<lower = 0> y_arms; // deliveries outcome: country-year
   array[S] real y_ob; // state-level contracts
-  //vector[S] lag_y_ob; // state-level contracts LDV
+  vector[S] lag_y_ob; // state-level contracts LDV
   
   int<lower = 1> K;  // number of country/deal-level variables
   matrix[N, K] X;  // country/deal-level design matrix
@@ -18,7 +18,7 @@ data {
   int<lower = 1, upper = st> state[S]; // state index
   int<lower = 1> L; // number of state-year variables
   matrix[S, L] G; // state-year variables matrix
-  vector<lower = 0, upper = 1>[S] gwot; // gwot measure for interaction
+  vector<lower = 0, upper = 1>[S] swing; // gwot measure for interaction
   
   
 }
@@ -48,7 +48,7 @@ parameters {
   
   vector[2] rho; // impact of deals on contracts- both inter terms
   vector[st] alpha_state_std; // 
-  //vector[st] theta; // lagged DV coef
+  vector[st] theta; // lagged DV coef
   real<lower = 0> sigma_st; // sd for intercept and slope
 
 }
@@ -75,9 +75,9 @@ transformed parameters {
   for(s in 1:S){
    mu_ob[s] = alpha_ob + 
     alpha_state[state[s]] + 
-    //theta * y[s-1] +
+    lag_y_ob[s] * theta[state[s]]  +
     G[s] * lambda + agg_deals[s] * rho[1] + 
-    (agg_deals[s] .* gwot[s]) * rho[2];
+    (agg_deals[s] .* swing[s]) * rho[2];
   }
                                     
  }
@@ -109,7 +109,7 @@ model {
   lambda ~ normal(0, 2);
   rho ~ std_normal();
   sigma_ob ~ std_normal(); 
-  //theta ~ normal(0, .45); 
+  theta ~ normal(0, .45); 
   alpha_state_std ~ std_normal();
   sigma_st ~ normal(0, 1.5);
   nu_ob ~ gamma(2, 0.1);
