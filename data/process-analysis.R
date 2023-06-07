@@ -22,7 +22,7 @@ fit.process <- process.mod$sample(
   refresh = 200
 )
 
-# save fit model
+ # save fit model
 fit.process$save_object(file = "data/ml-model-process-fit.RDS")
 
 
@@ -52,10 +52,6 @@ mcmc_parcoord(fit.process$draws("rho"))
 mcmc_intervals(fit.process$draws("lambda")) +
   scale_y_discrete(labels = colnames(process.data$G))
 
-
-mcmc_intervals(fit.process$draws("beta")) +
-  scale_y_discrete(labels = colnames(process.data$X))
-
 # competition
 mcmc_intervals(fit.process$draws("rho"))
 
@@ -68,7 +64,8 @@ mcmc_intervals(fit.process$draws("theta"))
 
 # state varying intercepts
 mcmc_intervals(fit.process$draws("alpha_ob")) 
-mcmc_intervals(fit.process$draws("alpha_state")) 
+mcmc_intervals(fit.process$draws("alpha_state")) +
+  scale_y_discrete(labels =  state.indices$state)
 mcmc_intervals(fit.process$draws("sigma_st")) 
 mcmc_intervals(fit.process$draws("sigma_ob")) 
 

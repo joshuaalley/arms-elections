@@ -3,17 +3,17 @@
 
 # state component
 state.data.ml <- select(state.data, state, year,
-                        ln_obligations, lag_ln_obligations,
-                        swing, core, time_to_elec,
-                        rep_pres, poptotal,
-                        ln_ngdp, gwot) %>% 
-  distinct() %>% 
+                        change_ln_obligations,
+                        gwot,
+                          swing, core, time_to_elec, 
+                          rep_pres,
+                          poptotal, ln_ngdp) %>% 
   group_by(state) %>%
   mutate(
     state.year.txt = paste0(state, ".", year)
-  ) %>% # remove missing for STAN
+  ) %>% # remove mi0ssing for STAN
   drop_na() 
-state.data.ml$state <- state.data.ml %>%
+state.data.ml$state.id <- state.data.ml %>%
   group_by(state) %>%
   group_indices()
 state.data.ml$year.id <- state.data.ml %>%
@@ -24,12 +24,12 @@ state.data.ml$state.year <- state.data.ml %>%
   group_indices()
 
 # plot obligations
-ggplot(state.data.ml, aes(x = ln_obligations)) + geom_histogram()
+ggplot(state.data.ml, aes(x = change_ln_obligations)) + geom_histogram()
 
 # clean up ordering
 state.data.ml <- state.data.ml %>%
-  select(state, year, state.year.txt, state.year, year.id,
-         ln_obligations,
+  select(state, year, state.year.txt, state.id, state.year, year.id,
+         change_ln_obligations,
          everything()) %>%
   filter(year <= 2019) %>% # match missing in COW 
   group_by(year, state.year.txt) %>%
@@ -65,7 +65,7 @@ us.arms.deals <- us.arms.cat %>%
                   ) %>% 
                   right_join(select(us.trade.ally,
                           ccode, year, time_to_elec,
-                          ally, v2x_polyarchy2,
+                          ally, v2x_polyarchy,
                           Comlang, ln_rgdp, 
                           ln_distw, eu_member)) %>%
                 distinct()
@@ -114,15 +114,15 @@ state.yr.idmat <- state.yr.idmat[, 2:ncol(state.yr.idmat)]
 # separate data- select variables
 us.arms.deals.iv <- us.arms.deals %>% 
   select(
-    time_to_elec, ally, v2x_polyarchy2, 
+    time_to_elec, ally, v2x_polyarchy, 
     Comlang, ln_rgdp, 
     ln_distw, eu_member
   ) %>%
   mutate(
     time_to_elec_ally = ally * time_to_elec,
-    time_to_elec_v2x_polyarchy2 = time_to_elec * v2x_polyarchy2,
-    ally_v2x_polyarchy2 = ally * v2x_polyarchy2,
-    elec_ally_democ = time_to_elec * ally * v2x_polyarchy2
+    time_to_elec_v2x_polyarchy = time_to_elec * v2x_polyarchy,
+    ally_v2x_polyarchy = ally * v2x_polyarchy,
+    elec_ally_democ = time_to_elec * ally * v2x_polyarchy
   )
 
 # time indices
@@ -141,16 +141,21 @@ process.data <- list(
   K = ncol(us.arms.deals.iv),
 
   S = nrow(state.data.ml),
-  y_ob = state.data.ml$ln_obligations,
+  y_ob = state.data.ml$change_ln_obligations,
   
   Z = t(as.matrix(state.yr.idmat)),
   year_ob = year.id.state,
   
-  st = max(state.data.ml$state),
-  state = state.data.ml$state,
-  lag_y_ob = state.data.ml$lag_ln_obligations,
+  st = max(state.data.ml$state.id),
+  state = state.data.ml$state.id,
+  #lag_y_ob = state.data.ml$lag_ln_obligations,
   G = state.yr.mean,
   L = ncol(state.yr.mean),
   gwot = state.data.ml$gwot
 )
 
+# summary of state indices
+state.indices <- select(state.data.ml,
+                        state.id, state) %>%
+                 distinct() %>%
+                 arrange(-state.id)
