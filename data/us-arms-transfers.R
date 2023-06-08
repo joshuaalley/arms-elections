@@ -136,15 +136,21 @@ pois.deals <- brm(bf(deals ~
                     ln_pop + ln_distw + 
                     Comlang,
                     center = FALSE),
-                  family = poisson(link = "log"),
+                  #family = poisson(link = "log"),
+                  family = zero_inflated_poisson(),
                   backend = "cmdstanr",
                   prior = c(prior(normal(0, .5), class = "b")),
                   cores = 4,
                   data = us.deals.comp)
 summary(pois.deals)
-#plot_slopes(pois.deals, variables = "time_to_elec", by = "ally")
-#plot_slopes(pois.deals, by = "time_to_elec", variables = c("ally", "v2x_polyarchy")) +
-#  scale_x_reverse() # decreasing time to election
+plot_slopes(pois.deals, variables = "time_to_elec", by = "ally")
+plot_slopes(pois.deals, by = "time_to_elec", variables = c("ally", "v2x_polyarchy")) +
+ scale_x_reverse() # decreasing time to election
+pp_check(pois.deals, type = "rootogram", 
+         style = "hanging") +
+  labs(title = "Posterior Predictive Check: Arms Deals")
+ggsave("appendix/pp-check-deals.png", height = 6, width = 8)
+
 
 # poisson model predictions 
 pois.deals.est <- me.us.elec(pois.deals, data = us.deals.comp)  
@@ -227,7 +233,7 @@ hypothesis(key.pois.draws, c("a > d"))
 
 
 
-# democracy at 3rd quartile
+# democracy at 3rd quartile: this is where it stops
 pois.comp.d3q <- pois.deals.est[[2]] %>%
   filter(
     ally == 1 & 

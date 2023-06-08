@@ -39,7 +39,7 @@
 
 \singlespace
 %\title{\textbf{Elections, Arms Deals and Autocratic Allies}}
-\title{\textbf{Arms and Electoral Influence: How Arms Deals with Autocracies Shape Defense Contracting in the United States}}
+\title{\textbf{Arms and Electoral Influence: How Arms Deals with Autocratic Allies Shape Defense Contracting in the United States}}
 \author{Joshua Alley \\
 Assistant Professor \\
 University College Dublin\thanks{Thanks to Brian Blankenship, Jonathan Caverley, Jonathan Chu, Ben Fordham, Erik Lin-Greenberg, Zachary Markovitch, Pieter Wezeman as well as participants in the Boston University Political Economy of Security Online Workshop Series and 2022 Meeting of the International Studies Association for helpful comments.} \\
@@ -71,8 +71,8 @@ U.S. leaders make arms deals to award more defense contracts in periods of low d
 Autocratic alliance prot{\'e}g{\'e}s have more need and political flexibility to strike arms deals near elections. 
 I examine these claims by analyzing the electoral determinants of defense contracting and arms export deals by the United States.  
 First, I detail electoral cycles in arms deals between the United States and its allies. 
-I then link defense contract awards and arms deals with a joint model.
-Finally, I examine sectoral differences in weapons deals and contracting.
+I then link defense contract awards and arms deals.
+Finally, I examine which weapons systems drive deals and contracting to show that the same systems appear in arms deals cycles and as correlates of swing state contracts.  
 The results show how electoral competition reshapes international security cooperation.
 \end{abstract} 
 
@@ -113,10 +113,9 @@ Autocratic allies are especially important because they receive more arms than o
 
 % Findings
 I scrutinize my argument connecting defense contracting, autocratic allies and arms export cycles in three steps. 
-First, I examine how electoral competition shapes contract awards in an analysis from 2000 to 2020.
-The first analysis finds that outside of war years, swing states receive more contracts and have less variation in prime contracting dollars. 
-I then analyze U.S. arms deals from 1950 to 2019, and show that arms deals with autocratic allies increase as presidential elections approach, while dealmaking with democratic allies remains consistent. 
-Finally, I connect the contracting and arms deals models in a joint model, and link deals and arms contracts within specific sectors.
+First, I analyze U.S. arms deals from 1950 to 2020, and show that arms deals with autocratic allies increase as presidential elections approach, while arms deals with democratic allies remain consistent. 
+Second, I estimate the correlation between arms deals and contract awards to swing states, and find that arms deals have little association with contracts outside of swing states, but increase contract awards in swing states. 
+Finally, I corroborate these correlations by analyzing which weapons systems are present in deals cycles and correlated with swing state contract awards.
 
 
 % focus on the U.S.
@@ -456,9 +455,9 @@ I interact all three of these variables to predict arms deals.
 
 
 % models
-To estimate how alliances, democracy and election timing shape arms deals, I use a Poisson model.
+To estimate how alliances, democracy and election timing shape arms deals, I use a Poisson model.\footnote{This is the best-fitting model for the deals data. Simple Poisson models under-predict zeros, while negative binomial models predict far too many large values.} 
 This fits the annual count of arms deals well.
-To preserve compatibility with a later joint model, I use Bayesian estimation with the brms package for \textsf{R} \citep{Buerkner2017}. 
+For ease of estimation and calculation, I use Bayesian estimation with the brms package for \textsf{R} \citep{Buerkner2017}. 
 I show in the appendix that using a Gaussian outcome gives similar inferences. 
 
 
@@ -495,10 +494,10 @@ Fully democratic U.S. allies receive .4 deals more in expectation.
 
 
 The second inference is that electoral cycles in arms deals are present for autocratic allies and absent for democratic allies.
-When allied polyarchy is at the minimum value, predicted arms deals rise from 1.6 to 1.95 throughout the presidential election cycle.
-Hypothesis tests of equality between allied arms deals at minimum democracy at each level suggest that the increase of .8 deals in each year of the electoral cycle is difference is clearly positive. 
+When allied polyarchy is at the minimum value, predicted arms deals rise from 1.4 to 1.7 throughout the presidential election cycle.
+Hypothesis tests of equality between allied arms deals at minimum democracy at each level suggest that the increase of .1 deals in each year of the electoral cycle is is clearly positive. 
 The electoral cycles when democracy is at the 1st quartile or median are also clearly positive, but are much less substantively important.
-This cycle diminishes as allied democracy increases, so fully democratic partners see no change in arms deals as elections approach.  
+This cycle diminishes as allied democracy increases, so allies with a polyarchy score at the third quartile or higher see no change in arms deals as elections approach.  
 
 
 Electoral cycles are only present for autocratic allies. 
@@ -603,18 +602,19 @@ Holding all else equal, increasing arms deals lead to greater contracts in swing
 But defense contracts in non-swing states do not respond to increasing arms deals.
 As a result, swing states receive more defense contracts in years with more arms deals. 
 At the observed maximum of arms deals, this translates into a difference of roughly \$3 million, all else equal. 
+In states with non-zero temporal autocorrelation, this will be slightly greater, as I describe below. 
 
 
 These estimates support the defense contracts hypothesis. 
 Increasing arms deals are correlated with greater defense contracts in swing states. 
-In the next section, I use these estimates and the model of arms deals to estimate how much additional defense contracting might be due to electoral cycles in arms deals with US allies. 
-
-
+In the next section, I use these estimates and the model of arms deals to estimate how much electoral cycles in arms deals with US allies add to defense contracting levels in swing states.  
 
 
 \section{Calculating the Defense Contracting Consequences of Arms Deals with Autocratic Allies}
 
 
+To connect the estimates about arms deals with the defense contracting model, I calculate the impact of deals on swing state contracts using hypothetical and observed data.\footnote{Estimating a joint model requires aggregating country-year deals into annual total deals, but doing so with fitted values creates an ecological inference problem.}
+The hypothetical data analysis 
 
 
 \section{Which Arms Drive Deals and Contracts?} 
