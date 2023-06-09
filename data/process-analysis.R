@@ -22,7 +22,7 @@ fit.process <- process.mod$sample(
   refresh = 200
 )
 
- # save fit model
+# save fit model
 fit.process$save_object(file = "data/ml-model-process-fit.RDS")
 
 
@@ -73,6 +73,7 @@ mcmc_intervals(fit.process$draws("sigma_ob"))
 
 ### Why doesn't this have the same association as the deals model? 
 # summing fitted values by year smooths out variance in total deals
+# essentially an aggregation problem 
 
 # id all years 
 yr.idmat.all  <- left_join(
@@ -100,8 +101,6 @@ fit.deals <- posterior_epred(pois.deals)
 fit.deals <- as.data.frame(t(fit.deals))
 
 fit.deals$year <- us.deals.comp$year
-#fit.deals <- filter(fit.deals, year %in% state.data$year)
-
 
 # sample 10 draws
 cols <- sample(seq(1, 4000, by = 1), size = 10, replace = FALSE)
@@ -127,9 +126,6 @@ deals.year <- us.deals.comp %>% group_by(year) %>%
     change_total_deals = total_deals - lag_total_deals
   ) 
 
-# %>%
-#    filter(year >= 2001)
-
 ggplot(deals.year, aes(x = year, y = total_deals)) + geom_line()
 ggplot(deals.year, aes(x = year, y = change_total_deals)) + geom_line()
 
@@ -137,10 +133,16 @@ ggplot(deals.year, aes(x = year, y = change_total_deals)) + geom_line()
 # pivot long and plot
 fit.deals.long <- fit.deals.yr %>%
   left_join(select(deals.year, year, total_deals)) %>%
-  pivot_longer(-year)
+  pivot_longer(-year) %>%
+  left_join(elections.data)
 
 ggplot(fit.deals.long, aes(x = year, y = value,
                            group = name)) + geom_line()
+
+# test deals and time to elec
+deals.year.elec <- left_join(select(deals.year, year, total_deals),
+                             elections.data)
+t.test(deals.year.elec$total_deals ~ deals.year.elec$election)
 
 
 ### brm-multiple 

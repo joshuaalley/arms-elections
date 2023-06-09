@@ -77,7 +77,8 @@ transformed parameters {
     alpha_state[state[s]] + 
     lag_y_ob[s] * theta[state[s]]  +
     G[s] * lambda + agg_deals[s] * rho[1] + 
-    (agg_deals[s] .* swing[s]) * rho[2];
+    swing[s] * rho[2] +
+    (agg_deals[s] .* swing[s]) * rho[3];
   }
                                     
  }

@@ -204,6 +204,7 @@ contracts.data.state <- contracts.data %>%
   group_by(state) %>% 
   mutate( # obligations in millions
     obligations = obligations / 1000000,
+    lag_obligations = lag(obligations),
     ln_obligations = log(obligations + 1),
     lag_ln_obligations = lag(obligations),
     state = str_to_title(state)
@@ -240,20 +241,22 @@ contracts.state.wide <- drop_na(contracts.data.state, usml_cont) %>%
   group_by(state, year, usml_cont) %>%
   summarize(
     obligations = sum(obligations, na.rm = TRUE),
-    ln_obligations = log(obligations + 1),
     .groups = "keep"
   ) %>%
   pivot_wider(id_cols = c("state", "year"),
               names_from = "usml_cont",
-              values_from = "ln_obligations") %>%
+              values_from = "obligations") %>%
   group_by(state) %>% 
   mutate(
-    ln_obligations = aircraft + arms + electronics + missile_space +
+    obligations = aircraft + arms + electronics + missile_space +
       ships + vehicles,
+    lag_obligations = lag(obligations),
+    change_obligations = obligations - lag(obligations),
+    ln_obligations = log(obligations + 1),
     lag_ln_obligations = lag(ln_obligations),
     change_ln_obligations = ln_obligations - lag_ln_obligations,
-    ln_obligations_other = aircraft + arms + electronics + missile_space +
-      ships + vehicles + other
+    ln_obligations_other = log(aircraft + arms + electronics + missile_space +
+      ships + vehicles + other + 1)
   )
 
 # nothing leads to NA 
@@ -355,12 +358,12 @@ state.data <- state.data %>%
   ) %>%
   ungroup() %>%
   mutate(
-    election.cycle =ifelse(year <= 2000, 2000,
-                      ifelse(year <= 2004, 2004,
-                             ifelse(year <= 2008, 2008,
-                                    ifelse(year <= 2012, 2012,
-                                           ifelse(year <= 2016, 2016,
-                                           2020))))),
+    election.cycle = case_when(year <= 2000 ~ 2000,
+                      year <= 2004 ~ 2004,
+                      year <= 2008 ~ 2008,
+                      year <= 2012 ~ 2012,
+                      year <= 2016 ~ 2016,
+                      year > 2016 ~2020),
     time_to_elec = election.cycle - year
   )
 

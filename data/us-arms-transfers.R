@@ -136,7 +136,6 @@ pois.deals <- brm(bf(deals ~
                     ln_pop + ln_distw + 
                     Comlang,
                     center = FALSE),
-                  #family = poisson(link = "log"),
                   family = zero_inflated_poisson(),
                   backend = "cmdstanr",
                   prior = c(prior(normal(0, .5), class = "b")),

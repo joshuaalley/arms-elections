@@ -5,7 +5,7 @@
 state.data.ml <- select(state.data, state, year,
                         ln_obligations, lag_ln_obligations,
                         gwot,
-                          swing, core, time_to_elec, 
+                          swing, time_to_elec, 
                           rep_pres,
                           poptotal, ln_ngdp) %>% 
   group_by(state) %>%
@@ -40,7 +40,7 @@ class(state.data.ml) <- "data.frame"
 
 # state data for analysis 
 state.yr.final <- state.data.ml %>%
-  select(swing, gwot, time_to_elec,
+  select(gwot, time_to_elec,
          rep_pres, poptotal, 
          ln_ngdp) 
 # rescale population and GDP by 2sd 
