@@ -22,7 +22,7 @@ library(gridExtra)
 library(lubridate)
 library(fastDummies)
 library(vdemdata)
-
+library(ordbetareg)
 
 
 # set seed
@@ -56,6 +56,7 @@ conflict_prefer("order_by", "doBy")
 conflict_prefer("some", "purrr")
 conflict_prefer("ar", "brms")
 conflict_prefer("first", "dplyr")
+conflict_prefer("rhat", "bayesplot")
 
 
 # function to create presidential indicator
