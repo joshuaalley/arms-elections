@@ -488,87 +488,96 @@ The next analysis checks for electoral cycles in defense contracting awards.
 % describe the model 
 Connecting arms deals and defense contracting is challenging. 
 Deals occur between countries, while defense contracting takes place within US states. 
-Aggregating contr
+Combining country-year estimates into an annual measure of total defense contracts creates an aggregation problem. 
 
 
-To overcome this, I estimate a joint model of arms deals and defense contracting. 
-I estimate models of arms deals and defense contracting in the same model.
-The arms deal model uses data from 1951 to 2014, and is the same Poisson model as above. 
-Mean arms deals is the outcome at the country-year level and a predictor in the defense contracts level. 
+This analysis uses observed annual deals, electoral competition and state-level factors to predict defense contract awards from 2001 to 2020. 
+I draw the outcome measure from Department of Defense prime contract award data in the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
+This archive contains data on individual contract awards starting in the 2000 fiscal year, so the defense contracting analysis runs from 2000 to 2020.\footnote{Some state-level controls have limited coverage after 2019.}
+The key outcome is total defense contracts tied to arms production awarded to a state in every year, measured in millions of US dollars.\footnote{This measure excludes other contracts besides weapons production because arms deals are unlikely to translate into other contracts for things like construction equipment or food.}
 
 
-The defense contracting level of the model uses Department of Defense prime contract award data from the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
-This archive contains data on individual contract awards starting in the 2000 fiscal year, so the defense contracting analysis runs from 2000 to 2019.\footnote{Some state-level controls have limited coverage after 2019.}
-The key outcome is the log of total defense contracts tied to arms production awarded to a state in every year.\footnote{This measure excludes other contracts besides weapons production because arms deals are unlikely to translate into other contracts for things like construction equipment or food.}
+Total defense contracts are challenging to measure, because there are some states with no observed contract awards in a given year, and other states with billions of dollars in annual contract awards. 
+This creates zero-valued, right-skewed data. 
+Traditional approaches, such as logging the outcome after adding one, are sensitive to the scale of the outcome and the constant added \citep{ChenRoth2022, MullahyNorton2022}. 
+Transformations with such data make calculating accurate marginal effects challenging and potentially biased. 
 
 
-In the following, I describe the model formally.
-The mean of annual contracts $\mu_{st}$ is a function state varying intercepts, lagged contracts, the interaction of the swing states with arms deals, and the control matrix \textbf{G}. 
+To overcome these issues, I fit two types of models.
+First, I rescale the defense contracts measure to fall between zero and one using the sum of all contracts, and then use ordered beta regression to fit the outcome \citep{Kubinec2022}. 
+Changing the coefficients and marginal effects to the scale of contracts after this is straightforward. 
+I also fit a a hurdle lognormal model that models the probability a state receives no contracts, as well as the roughly normally distributed log of non-zero contracts. 
+Both approaches give similar inferences.\footnote{The hurdle-lognormal results are in the appendix, along with estimates from OLS on untransformed.} 
+
+
+Arms deals is the key independent variable.  
 To measure arms deals, I sum US arms deals with all countries in every year. 
+This measure ranges from 75 to 160. 
 
 
 Because the argument suggests that deals drive contracts in areas with high electoral competition, I include a dummy indicator of swing state status from \citep{KrinerReeves2015}.
 Swing states are states where the losing party won at least 45\% of the two-party vote in three straight elections. 
 I then interact this dummy total US arms deals. 
-$\rho_1$, the constituent term for arms, should be close to zero.
-Because there are no years with zero US arms deals, the swing state constituent term $rho_2$ is not directly meaningful.  
-$\rho_3$ is the key parameter for testing the deals and contracts hypothesis, as it captures the impact of deals on swing states and should be positive. 
+In that interaction, constituent term of arms deals, which expresses the association between deals and contracts outside of swing states, should be close to zero.
+Because there are no years with zero US arms deals, the swing state constituent term is not directly meaningful.  
+The remaining interaction term should be positive, according to the deals and contracts hypothesis, as it captures the impact of deals on swing state contracts. 
 
 
 In addition to the electoral competition and deals variables, I include several controls. 
 First, I adjust for population and GDP, in case larger and more prosperous states receive more contracts. 
+Other electoral competition indicators include the time to a presidential election and whether a state is a core member of the president's coalition \citep{KrinerReeves2015}. 
 I also control for increased defense contracting demand during peak years in the global war on terror with a dummy variable that is equal to one from 2001 to 2011. 
 The final control adjusts for presidential partisanship by coding years with a Republican President with one. 
 
 
 The final adjustments in the model account for the data structure.
 First, I include state varying intercepts because observations cluster within states. 
-Current contracting also depends on past contracting, as the defense industrial base concentrates in particular areas and moving is difficult. 
-I therefore include a state-specific lagged dependent variable, which allows temporal dependence in contracting to vary by state and is correlated with the state varying intercept.\citep{See the appendix for descriptive evidence that temporal dependence in contracting varies by state and the state-level autoregressive parameters.}
-Formally, the state-level equation is: 
+Current contracting also depends on past contracting, as the defense industrial base concentrates in particular states. 
+I therefore include a state-specific lagged dependent variable, which allows temporal dependence in contracting to vary by state.\footnote{See the appendix for descriptive evidence that temporal dependence in contracting varies by state and the state-level autoregressive parameters.}
 
-\begin{equation}
-\mu_{st}^{cont} = \alpha_{state} + \theta_s y_{st-1} + \rho_1 \mbox{Deals} + \rho_2 \mbox{Swing} + \rho_3 \mbox{Deals} * \mbox{Swing} + \textbf{G} \lambda
-\end{equation}
+
+%Formally, the state-level equation is: 
+%\begin{equation}
+%\mu_{st}^{cont} = \alpha_{state} + \theta_s y_{st-1} + \rho_1 \mbox{Deals} + \rho_2 \mbox{Swing} + \rho_3 \mbox{Deals} * \mbox{Swing} + \textbf{G} \lambda
+%\end{equation}
 
 
 This model is a useful test of the second hypothesis, as it assesses the impact of arms deals on swing states while adjusting for clustering, temporal variation and other predictors.%\footnote{In the appendix, I show that less complex approaches give similar inferences about the association between deals and contracts. These approaches include single-level models with observed rather than fitted deals and a model that uses 10 randomly sampled draws of the predicted outcome in the Poisson model.}
-The next section summarizes the estimates from this model, which are robust to omitting the state-specific autocorrelation parameters. 
+The next section summarizes the estimates from this model. 
 
 
 \subsection{Results}
 
 
-Because one of the interaction coefficients is not directly interpretable, I focus on marginal effects and predicted outcomes here, leaving coefficient estimates for the appendix.
+Because one of the interaction coefficients has no substantive meaning, I focus on marginal effects and predicted outcomes here, leaving coefficient estimates for the appendix.
 In \autoref{fig:deals-swing-me}, I present the impact of deals, swing state competition, and predictions from interaction.
 All these estimates suggest that deals increase defense contracting awards to swing states. 
+For all these estimates, I again use 90\% credible intervals, because these are less sensitive to simulation variance in the Bayesian models. 
 
 
-First, the marginal effect of increasing arms deals on defense contracting is near zero outside of swing states, but clearly positive in swing states. 
-One additional arms deal is associated with an increase of roughly .2 on the log scale.
-This is equal to roughly \$1.2 million in additional contract awards. 
+First, the marginal effect of increasing arms deals on defense contracting is unclear outside of swing states, but clearly positive in swing states. 
+In expectation, one additional arms deal increases defense contract awards to swing states by \$370 million. 
+There is substantial uncertainty in this relationship, as the lower bound is \$39 million and the upper bound is \$702 million. 
 
 
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{../figures/deals-swing-me.png}
-	\caption{Marginal effects and predicted outcomes from model linking defense contracting, swing state competition, and arms deals. The outcome is log defense contracts in the 50 US states from 2001 to 2020. }
+	\caption{Marginal effects and predicted outcomes from an interaction of swing state status and US arms deals. The outcome is annual defense contracts in the 50 US states from 2001 to 2020. Lines and points give the expected value, while the error bars summarize 90\% credible intervals.}
 	\label{fig:deals-swing-me}
 \end{figure}
 
 
-Second, the impact of swing state status increases in years with more arms deals. 
-When arms deals were at their lowest, there was no discernible difference between swing and other states in defense contracting levels. 
-Some of this is due to low deals and high defense contracting in many states during the global war on terror.\footnote{A model in the appendix that interacts the global war on terror, swing status, and deals supports this claim.}
-At the same time, it also reflects how some of the swing state contracting advantage is due to arms deals. 
+Second, swing states receive more defense contracts increases in years with more arms deals. 
+At the observed minimum of arms deals, swing states receive \$24 billion less in contracts, mostly because larger states like California and Texas have larger defense industrial ties. 
+When arms deals are near the observed maximum, swing states receive \$18 billion more in contracts. 
 
 
 Finally, predicted defense contracts increase as arms deals increase, but only in swing states, as the bottom panel of \autoref{fig:deals-swing-me} shows. 
 Holding all else equal, increasing arms deals lead to greater contracts in swing states. 
 But defense contracts in non-swing states do not respond to increasing arms deals.
 As a result, swing states receive more defense contracts in years with more arms deals. 
-At the observed maximum of arms deals, this translates into a difference of roughly \$3 million, all else equal. 
-In states with non-zero temporal autocorrelation, this will be slightly greater, as I describe below. 
+At the observed maximum of arms deals, this translates into a difference of roughly \$2 billion, all else equal. 
 
 
 These estimates support the defense contracts hypothesis. 
@@ -579,8 +588,10 @@ In the next section, I use these estimates and the model of arms deals to estima
 \section{Calculating the Defense Contracting Consequences of Arms Deals with Autocratic Allies}
 
 
-To connect the estimates about arms deals with the defense contracting model, I calculate the impact of deals on swing state contracts using hypothetical and observed data.\footnote{Estimating a joint model requires aggregating country-year deals into annual total deals, but doing so with fitted values creates an ecological inference problem.}
-The hypothetical data analysis 
+The following calculation is necessarily rough, as joint modeling of arms deals and defense contracts is challenging due to the divergent levels of analysis. 
+As noted above, aggregating country-year arms deals predictions into an annual measure that can apply to the model of contracts in U.S. states is inaccurate.%\footnote{A model predicting aggregate defense deals over time could work for this, but it would not show regime and alliance differences in arms deals.}
+To connect the arms deals and defense contracting estimates, I calculate the impact of deals on swing state contracts using hypothetical and observed data.
+ 
 
 
 \section{Which Arms Drive Deals and Contracts?} 

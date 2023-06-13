@@ -121,6 +121,13 @@ pred.cont <- predictions(deals.state, conf.level = .9,
                                       by = 1),
                           state = "Wisconsin")
                         )
+# rescale predictions
+pred.cont$estimate <- pred.cont$estimate * sum(state.data.deals$obligations, 
+                                               na.rm = T)
+pred.cont$conf.low <- pred.cont$conf.low * sum(state.data.deals$obligations, 
+                                               na.rm = T)
+pred.cont$conf.high <- pred.cont$conf.high * sum(state.data.deals$obligations, 
+                                               na.rm = T)
 pred.cont.plot <- ggplot(pred.cont, aes(x = deals, y = estimate,
                       fill = factor(swing))) +
   geom_line(linewidth = 2) +
@@ -226,82 +233,6 @@ ggsave("appendix/state-pars.png", height = 6, width = 8)
 
 
 
-# robustness check- hurdle model
-
-# use a lognormal hurdle instead 
-deals.state.hurdle <- brm(bf(obligations ~ 
-                               (1 + lag_obligations| state) +
-                               deals*swing + 
-                               gwot + time_to_elec + 
-                               rep_pres  +
-                               poptotal + ln_ngdp,
-                             hu ~ ln_ngdp,
-                             center = FALSE),
-                          family = hurdle_lognormal(),
-                          prior = c(
-                            set_prior("normal(0, 2)", class = "b")
-                          ),
-                          data = state.data.deals,
-                          cores = 4,
-                          backend = "cmdstanr",
-                          control = list(
-                            adapt_delta = .99,
-                            max_treedepth = 20)
-) 
-summary(deals.state.hurdle)
-pp_check(comp.deals)
-
-
-
-# check if negative on swing in main figure is down to GWOT- triple
-# add state VI and LDV 
-comp.deals.gwot <- brm(bf(obligations ~ 
-                       (1 + lag_obligations | state) +
-                       deals*swing*gwot +
-                       time_to_elec + 
-                       rep_pres  +
-                       poptotal + ln_ngdp,
-                     center = FALSE),
-                  family = student(),
-                  prior = c(
-                    set_prior("normal(0, 2)", class = "b"),
-                    set_prior("normal(0, 2)", class = "sd")
-                  ),
-                  data = state.data.deals,
-                  cores = 4,
-                  backend = "cmdstanr",
-                  control = list(
-                    adapt_delta = .99,
-                    max_treedepth = 20)
-) 
-summary(comp.deals.gwot)
-slope.deals.gwot <- plot_slopes(comp.deals.gwot, variable = "deals", 
-                                by = c("swing", "gwot")) +
-  geom_hline(yintercept = 0) +
-  scale_x_discrete(labels = c(`0` = "No", `1` = "Yes")) +
-  labs(
-    title = "Marginal Impact of Arms Deals",
-    x = "Swing State",
-    y = "Impact of Increasing Arms Deals"
-  )
-slope.deals.gwot
-
-slope.swing.gwot <- plot_slopes(comp.deals.gwot, variable = "swing", 
-                           by = c("deals", "gwot")) +
-  geom_hline(yintercept = 0) +
-  scale_color_grey(guide = "none") +
-  scale_fill_grey(labels = c(`0` = "No", `1` = "Yes")) +
-  labs(
-    title = "Marginal Impact of Swing States\nand Global War on Terror",
-    x = "Total Arms Deals",
-    fill = "Global War\nOn Terror", 
-    y = "Impact of Swing Status"
-  ) 
-slope.swing.gwot
-ggsave("appendix/swing-gwot.png", height = 6, width = 8)
-
-
-
 ### rough calculation of how arms deals feed defense contracts ### 
 
 # aggregate total deals by year, all else equal
@@ -397,3 +328,58 @@ ggplot(pred.sw.agg, aes(x = time_to_elec, y = estimate)) +
 
 # then calculate for states that are permanent swing states
 # grab coefs.var.state thetas and VIs 
+
+
+
+
+
+### Robustness Checks ### 
+
+
+# robustness check- hurdle model
+
+# use a lognormal hurdle instead 
+deals.state.hurdle <- brm(bf(obligations ~ 
+                               (1 + lag_obligations| state) +
+                               deals*swing + 
+                               gwot + time_to_elec + 
+                               rep_pres  +
+                               poptotal + ln_ngdp,
+                             hu ~ ln_ngdp,
+                             center = FALSE),
+                          family = hurdle_lognormal(),
+                          prior = c(
+                            set_prior("normal(0, 2)", class = "b")
+                          ),
+                          data = state.data.deals,
+                          cores = 4,
+                          backend = "cmdstanr",
+                          control = list(
+                            adapt_delta = .99,
+                            max_treedepth = 20)
+) 
+summary(deals.state.hurdle)
+pp_check(deals.state.hurdle)
+
+
+# use robust regression 
+deals.state.reg <- brm(bf(obligations ~ 
+                               (1 + lag_obligations| state) +
+                               deals*swing + 
+                               gwot + time_to_elec + 
+                               rep_pres  +
+                               poptotal + ln_ngdp,
+                             center = FALSE),
+                          family = student(),
+                          prior = c(
+                            set_prior("normal(0, 2)", class = "b")
+                          ),
+                          data = state.data.deals,
+                          cores = 4,
+                          backend = "cmdstanr",
+                          control = list(
+                            adapt_delta = .99,
+                            max_treedepth = 20)
+) 
+summary(deals.state.reg)
+pp_check(deals.state.reg)

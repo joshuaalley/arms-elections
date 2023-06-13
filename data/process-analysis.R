@@ -162,14 +162,16 @@ for(i in 1:10){
       # pred_deals = arm::rescale(pred_deals),
       lag_pred_deals = lag(pred_deals),
       change_pred_deals = pred_deals - lag_pred_deals,
+      obligations_rs = obligations / (sum(obligations, na.rm = T)),
+      lag_obligations_rs = lag(obligations_rs)
     ) %>% 
     ungroup()
 }
 
 
 
-comp.dist.mult <- brm(bf(ln_obligations ~  
-                           (1 + lag_ln_obligations | state) +
+comp.dist.mult <- ordbetreg(obligations_rs ~  
+                           (1 + lag_obligations_rs | state) +
                            pred_deals*swing + time_to_elec + 
                            rep_pres  + gwot +
                            poptotal + ln_ngdp,
