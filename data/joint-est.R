@@ -3,19 +3,27 @@
 
 
 ### state data with arms deals
+scale.factor <- sum(state.data.deals$obligations, na.rm = T)
 state.data.deals <- left_join(state.data, 
                               select(arms.deals.year,
                                      year, deals)) %>%
   group_by(state) %>% 
+  filter(state != "District of Columbia")  %>% 
   mutate(
     lag_deals = lag(deals),
     change_deals = deals - lag_deals,
     deals_rs = arm::rescale(deals),
-    lag_deals_rs = arm::rescale(lag_deals),
-    obligations_rs = obligations / (sum(obligations, na.rm = T)),
-    lag_obligations_rs = lag(obligations_rs)
+    lag_deals_rs = arm::rescale(lag_deals)
   ) %>%
-  filter(state != "District of Columbia")
+  group_by(year) %>%
+  mutate(   
+    sum_ob = sum(obligations, na.rm = TRUE),
+    obligations_rs = obligations / sum_ob
+  ) %>%
+  group_by(state) %>%
+  mutate(
+    lag_obligations_rs = lag(obligations_rs)
+             )
 
 summary(state.data.deals$obligations_rs)
 
@@ -43,50 +51,104 @@ ggplot(state.data.deals, aes(x = change_obligations)) + geom_histogram()
 ggplot(state.data.deals, aes(x = change_ln_obligations)) + geom_histogram()
 
 
-# no dynamics- really struggles when added
 # ordbeta reg for transformed outcomes
-
-deals.state <- ordbetareg(obligations_rs ~
-                      # LDV and intercept uncorrelated 
-                        (1 + lag_obligations_rs || state) +
-                        deals*swing + core +
-                        gwot + time_to_elec + 
-                        rep_pres  +
-                        poptotal + ln_ngdp,
+formula.state <- bf(obligations_rs ~
+                      # ar(time = year, gr = state,
+                      #    p = 1, cov = TRUE) +
+                      (lag_obligations_rs || state) +
+                      deals*swing + core +
+                      gwot + time_to_elec + 
+                      rep_pres  +
+                      poptotal + ln_ngdp,
+                    center = FALSE)
+deals.state <- ordbetareg(formula.state,
                   true_bounds = c(0, 1),
                    data = state.data.deals,
                    cores = 4,
-                   backend = "cmdstanr"
+                   backend = "cmdstanr",
+                  refresh = 200
 ) 
 summary(deals.state)
 pp_check(deals.state)
-plot_slopes(deals.state, conf_level = .90, variable = "deals", by = "swing")
-plot_slopes(deals.state, conf_level = .90, variable = "swing", by = "deals")
+fixef(deals.state)
 
 
-margin.deals <- marginaleffects(deals.state,
-                                conf_level = .90,
-                                variables = "deals", by = "swing")
-margin.deals
+# back to outcome scale: use median yearly contract sum
+scale.factor <- median(state.data.deals$sum_ob, na.rm = T)
 
-# back to outcome scale
-# comparisons with post transformation
+# negative deals coef implies that more deals reduce the share of 
+# contracts non-swing states receive. 
+
+# fake data
+hyp.data <- datagrid(model = deals.state,
+         swing = c(0, 1),
+         deals = seq(from = min(state.data.deals$deals),
+                      to = max(state.data.deals$deals), by = 1),
+         # deals = c(quantile(state.data.deals$deals)[2],
+         #           quantile(state.data.deals$deals)[4]),
+         gwot = 0,
+         rep_pres = 0,
+         core = 0,
+         time_to_elec = 1,
+         poptotal = median(state.data.deals$poptotal),
+         ln_ngdp = median(state.data.deals$ln_ngdp),
+         state = "Wisconsin") %>%
+         arrange(swing) 
+
+# smaller hypothetical- 1st to 3rd quartile deals
+hyp.data.iqr <- datagrid(model = deals.state,
+                     swing = c(0, 1),
+                     deals = c(quantile(state.data.deals$deals)[2],
+                               quantile(state.data.deals$deals)[4]),
+                     gwot = 0,
+                     rep_pres = 0,
+                     core = 0,
+                     time_to_elec = 1,
+                     poptotal = median(state.data.deals$poptotal),
+                     ln_ngdp = median(state.data.deals$ln_ngdp))
+
+ev.hyp <- fitted(deals.state, 
+                 newdata = hyp.data.iqr,
+                 scale = "response",
+                 summary = TRUE)
+ev.hyp <- apply(ev.hyp, 2, function(x)
+  quantile(x * scale.factor,
+           probs = c(.05, .5, .9)))
+
+
+# data and estimate
+hyp.data.est <- bind_cols(hyp.data.iqr, t(ev.hyp))
+
+# plot 
+ggplot(hyp.data.est, aes(x = factor(swing), y = `50%`,
+                         color = factor(deals))) +
+  geom_pointrange(aes(ymin = `5%`, ymax = `90%`),
+                  position = position_dodge(width = .5))
+
+# marginal effect of deals
 deals.est <- comparisons(deals.state,
-               variables = "deals",
-               by = "swing",
-               conf_level = .90,
-               transform_pre = "dydx",
-               transform_post = 
-                 function(x) x * sum(state.data.deals$obligations, na.rm = T))
+                         newdata = hyp.data,
+                         by = "swing",
+                         variables = "deals",
+                         conf_level = .90,
+                         transform_pre = "dydx"
+) %>%
+  mutate_at(
+    c("estimate", "conf.low", "conf.high"),
+    function(x) x * scale.factor 
+  )
 deals.est
 
 swing.est <- comparisons(deals.state,
+                         newdata = hyp.data,
                          variables = "swing",
                          by = "deals",
                          conf_level = .90,
-                         transform_pre = "dydx",
-                         transform_post = 
-                           function(x) x * sum(state.data.deals$obligations, na.rm = T))
+                         transform_pre = "dydx") %>%
+  mutate_at(
+    c("estimate", "conf.low", "conf.high"),
+    function(x) x * scale.factor 
+  )
 
 # plot everything
 slope.deals <- ggplot(deals.est, aes(x = factor(swing), y = estimate)) +
@@ -114,20 +176,13 @@ slope.swing <-  ggplot(swing.est, aes(x = deals, y = estimate)) +
 slope.swing
 
 pred.cont <- predictions(deals.state, conf.level = .9, 
-                        newdata = datagrid(model = deals.state, 
-                                           swing = c(0, 1),
-                          deals = seq(from = min(state.data.deals$deals),
-                                      to = max(state.data.deals$deals),
-                                      by = 1),
-                          state = "Wisconsin")
-                        )
-# rescale predictions
-pred.cont$estimate <- pred.cont$estimate * sum(state.data.deals$obligations, 
-                                               na.rm = T)
-pred.cont$conf.low <- pred.cont$conf.low * sum(state.data.deals$obligations, 
-                                               na.rm = T)
-pred.cont$conf.high <- pred.cont$conf.high * sum(state.data.deals$obligations, 
-                                               na.rm = T)
+                        newdata = hyp.data
+                        ) %>%
+  mutate_at(
+    c("estimate", "conf.low", "conf.high"),
+    function(x) x * scale.factor 
+  )
+# plot it
 pred.cont.plot <- ggplot(pred.cont, aes(x = deals, y = estimate,
                       fill = factor(swing))) +
   geom_line(linewidth = 2) +
@@ -208,26 +263,25 @@ ldv.state <- avg_slopes(deals.state,
 state.intercepts <- as.data.frame(coefs.joint$state[, , 1])
 state.intercepts$state <- gsub("\\..*","", row.names(state.intercepts))
   
+glimpse(state.intercepts)
 
-# summarize state intercepts and LDV estimates 
-coefs.var.state <- bind_rows("Intercept" = state.intercepts,
-                             "Lag Contracts" = ldv.state,
-                             .id = "Variable") 
 
 # order for plotting 
-coefs.var.state <- coefs.var.state %>%
-  group_by(Variable) %>%
+state.intercepts <- bind_rows("Intercept" = state.intercepts, 
+                              "Lagged DV" = ldv.state,
+                              .id = "variable") %>%
   arrange(Estimate, .by_group = TRUE) 
-coefs.var.state$state <- factor(coefs.var.state$state, ordered = TRUE,
-                                levels = coefs.var.state$state[1:50])
+state.intercepts$state <- factor(state.intercepts$state, ordered = TRUE,
+                                levels = state.intercepts$state[1:50])
 
-ggplot(coefs.var.state, aes(y = state, x = Estimate)) +
-  facet_wrap(~ Variable, scales = "free_x") +
+ggplot(state.intercepts, aes(y = state, x = Estimate)) +
+  facet_wrap(~ variable, scales = "free_x") +
   geom_vline(xintercept = 0) +
   geom_pointrange(aes(xmin = Q2.5, xmax = Q97.5)) +
   labs(
     y = "State",
-    title = "State Varying Intercepts and Temporal Autocorrelation"
+    x = "Estimate (Untransformed)",
+    title = "State Parameters"
   )
 ggsave("appendix/state-pars.png", height = 6, width = 8)
 
@@ -293,8 +347,17 @@ swing.data.pdeals <- state.data.deals %>%
                       left_join(pred.deals.all)
 
 # calculate predictions for observed swing states 
-pred.state.sw <- predictions(comp.deals,
-                              newdata = swing.data.pdeals)
+pred.state.sw <- predictions(deals.state,
+                              newdata = swing.data.pdeals) 
+
+
+
+ggplot(pred.state.sw, aes(x = time_to_elec, y = estimate,
+                          group = state,
+                          color = state)) +
+  facet_wrap(~ cycle) +
+  geom_line() +
+  scale_x_reverse()
 
 ggplot(pred.state.sw, aes(x = time_to_elec, y = estimate,
                           color = factor(cycle))) +
