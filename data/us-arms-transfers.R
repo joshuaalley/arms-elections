@@ -18,7 +18,7 @@ us.deals <- us.arms.cat %>%
                     ccode, year,
                     atop_defense, ally, ally_democ,
                     cold_war, gwot, democ_bin,
-                    v2x_polyarchy, 
+                    v2x_polyarchy, cowmidongoing,
                     rep_pres, time_to_elec, 
                     eu_member, ln_rgdp,
                     ln_pop, ln_distw,
@@ -132,7 +132,7 @@ pois.deals <- brm(bf(deals ~
                     cold_war + gwot +
                     eu_member +
                     rep_pres + 
-                    ln_rgdp + 
+                    ln_rgdp + cowmidongoing +
                     ln_pop + ln_distw + 
                     Comlang,
                     center = FALSE),
@@ -160,9 +160,9 @@ fivenum(us.deals.comp$v2x_polyarchy)
 # nice labeller
 democ.all.labs <- labeller(democ_bin = c(`1` = "Democracy", `0` = "Nondemocracy"),
                            v2x_polyarchy = c(`0.012` = "Minimum Democracy",
-                                              `0.183` = "1st Quartile\nDemocracy",
-                                              `0.387` = "Median Democracy",
-                                              `0.737` = "3rd Quartile\nDemocracy",
+                                              `0.176` = "1st Quartile\nDemocracy",
+                                              `0.363` = "Median Democracy",
+                                              `0.731` = "3rd Quartile\nDemocracy",
                                               `0.926` = "Maximum Democracy"),
                            ally = c(`1` = "US Ally", `0` = "Not Ally"))
 

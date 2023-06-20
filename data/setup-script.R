@@ -159,16 +159,17 @@ me.us.elec <- function(model, formula, rm.wt, data){
   
   # no dyad robust for US 
   # marginal effects 
-  me.est <- slopes(model, variables = c("ally"),
+  me.est <- slopes(model, variables = c("ally"), conf_level = .9,
                             newdata = datagrid(model = model, 
                                                time_to_elec = c(0, 1, 2, 3),
                                                v2x_polyarchy = fivenum))
   
-   me.def.plot <- plot_cme(model, variables = c("ally", "v2x_polyarchy"),
+   me.def.plot <- plot_cme(model, conf_level = .9,
+                          variables = c("ally", "v2x_polyarchy"),
                          condition = "time_to_elec", draw = FALSE)
   
   # predicted outcomes
-  pred.out <- predictions(model, 
+  pred.out <- predictions(model, conf_level = .9,
                           newdata = typical.func.us(model))
   
   # full fitted draws

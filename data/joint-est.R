@@ -3,7 +3,6 @@
 
 
 ### state data with arms deals
-scale.factor <- sum(state.data.deals$obligations, na.rm = T)
 state.data.deals <- left_join(state.data, 
                               select(arms.deals.year,
                                      year, deals)) %>%
@@ -129,7 +128,7 @@ ggplot(hyp.data.est, aes(x = factor(swing), y = `50%`,
 deals.est <- comparisons(deals.state,
                          newdata = hyp.data,
                          by = "swing",
-                         variables = "deals",
+                         variables = list(deals = c(130, 131)),
                          conf_level = .90,
                          transform_pre = "dydx"
 ) %>%
@@ -139,6 +138,7 @@ deals.est <- comparisons(deals.state,
   )
 deals.est
 
+# marginal effect of swing
 swing.est <- comparisons(deals.state,
                          newdata = hyp.data,
                          variables = "swing",
@@ -335,27 +335,28 @@ pred.deals.all
 ggplot(pred.deals.all, aes(x = time_to_elec, y = deals,
                            color = factor(cycle))) +
   geom_line(linewidth = 1) +
-  # geom_pointrange(aes(ymin = total_low,
-  #                     ymax = total_high),
-  #                 position = position_dodge(width = .5)) +
   scale_x_reverse()
 
 # get data for states 
 swing.data.pdeals <- state.data.deals %>%
-                      filter(swing == 1 & year >= 2005) %>%
+                      filter(year >= 2005) %>%
                       select(-deals) %>%
                       left_join(pred.deals.all)
 
 # calculate predictions for observed swing states 
-pred.state.sw <- predictions(deals.state,
-                              newdata = swing.data.pdeals) 
+pred.state <- predictions(deals.state,
+                              newdata = swing.data.pdeals) %>%
+                           mutate_at(
+                                c("estimate", "conf.low", "conf.high"),
+                                function(x) x * scale.factor 
+                              )
 
 
 
-ggplot(pred.state.sw, aes(x = time_to_elec, y = estimate,
+ggplot(pred.state, aes(x = time_to_elec, y = estimate,
                           group = state,
                           color = state)) +
-  facet_wrap(~ cycle) +
+  facet_wrap(~ cycle, scales = "free_y") +
   geom_line() +
   scale_x_reverse()
 
@@ -366,28 +367,20 @@ ggplot(pred.state.sw, aes(x = time_to_elec, y = estimate,
                       ymax = conf.high)) +
   scale_x_reverse()
 
-ggplot(pred.state.sw, aes(x = time_to_elec, y = estimate)) +
-  facet_wrap(cycle ~ state, scales = "free_y") +
-  geom_pointrange(aes(ymin = conf.low,
-                      ymax = conf.high)) +
-  scale_x_reverse()
+# look at specific states
+example.pred <- filter(pred.state,
+                          state == "Florida" |
+                          state == "North Carolina" |
+                         state == "Pennsylvania")
+ggplot(example.pred, aes(x = year, y = estimate,
+                          color = factor(cycle),
+                          shape = factor(swing))) +
+   facet_wrap(~ state, scales = "free_y") +
+  geom_point() +
+  geom_line()
+  
 
 
-# calculation for all swing states
-pred.sw.agg <- pred.state.sw %>%
-                 group_by(time_to_elec, cycle) %>%
-                 summarize(
-                   estimate = sum(estimate),
-                   conf.low = sum(conf.low),
-                   conf.high = sum(conf.high),
-                   .groups = "keep"
-                 )   
-
-ggplot(pred.sw.agg, aes(x = time_to_elec, y = estimate)) +
-  facet_wrap(~ cycle, scales = "free_y") +
-  geom_pointrange(aes(ymin = conf.low,
-                      ymax = conf.high)) +
-  scale_x_reverse()
 
 # then calculate for states that are permanent swing states
 # grab coefs.var.state thetas and VIs 
