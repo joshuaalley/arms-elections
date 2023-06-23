@@ -111,7 +111,7 @@ ev.hyp <- fitted(deals.state,
 ev.hyp <- apply(ev.hyp, 2, function(x)
   quantile(x * scale.factor,
            probs = c(.05, .5, .9)))
-
+ev.hyp
 
 # data and estimate
 hyp.data.est <- bind_cols(hyp.data.iqr, t(ev.hyp))

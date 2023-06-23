@@ -262,6 +262,10 @@ margins.swing.sector <- bind_rows(lapply(res.sector.cont, "[[", 3)) %>%
                          drop_na()
 glimpse(margins.swing.sector)
 
+margins.swing.sector$name <- gsub("deals_", "", margins.swing.sector$name)
+margins.swing.sector$name <- str_to_title(gsub("_", " & ",
+                                               margins.swing.sector$name))
+
 
 ggplot(margins.swing.sector, aes(x = deals, y = estimate)) +
   facet_wrap(~ name, scales = "free") +
@@ -274,9 +278,10 @@ ggplot(margins.swing.sector, aes(x = deals, y = estimate)) +
     x = "Arms Deals",
     y = "Impact of Swing Status"
   )
+ggsave("appendix/swing-margins-sector.png", height = 6, width = 8)
 
 
-pred.out.sector <- bind_rows(lapply(res.sector.cont, "[[", 4)) %>%
+ pred.out.sector <- bind_rows(lapply(res.sector.cont, "[[", 4)) %>%
   pivot_longer(cols = c(starts_with("deals_"))) %>%
   rename(deals = value) %>%
   group_by(name) %>%
