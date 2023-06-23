@@ -96,11 +96,14 @@ scale.sector
 present.sector.cont <- function(model, sector, scale.factor){
   
   deals.data <- select(ungroup(state.data.ord), paste0("deals_", sector))
-  min.deals <- min(deals.data, na.rm = TRUE)
-  max.deals <- max(deals.data, na.rm = TRUE)
+  min.deals <- round(min(deals.data, na.rm = TRUE), digits = 2)
+  max.deals <- round(max(deals.data, na.rm = TRUE), digits = 2)
   
   sector.lab <- paste0("deals_", sector)
+  sector.nice <- str_to_title(gsub("_", " & ",
+                                   sector))
   
+  # hypothetical data 
   hyp.data <- datagrid(model = model, 
                        swing = c(0, 1),
                        deals = seq(from = min.deals,
@@ -118,31 +121,89 @@ present.sector.cont <- function(model, sector, scale.factor){
                  )
   
   # marginal effect of deals
-  deals.est <- comparisons(model,
+  deals.est <- slopes(model,
                            newdata = hyp.data,
                            by = "swing",
                            variables = sector.lab,
                            conf_level = .90,
-                           transform_pre = "dydx"
   ) %>%
     mutate_at(
       c("estimate", "conf.low", "conf.high"),
       function(x) x * scale.factor
     )
   deals.est
+  
+  
+  # all draws 
+  deals.draws <- prepare_predictions(model)
+  deals.inter <- as.data.frame(deals.draws$dpars$mu$fe$b)
+  
+  # use separate plots 
+  deals.post <- as.data.frame(deals.inter[, 2] * scale.factor)
+  colnames(deals.post) <- c("Deals")
+  deals.pos <- round(sum(deals.post > 0) / 4000, digits = 2)
+  
+  deals.swing.post <- as.data.frame(deals.inter[, 10] * scale.factor)
+  colnames(deals.swing.post) <- c("Deals:Swing")
+  deals.swing.pos <- round(sum(deals.swing.post > 0) / 4000, digits = 2)
+  
+  deals.post.all <- bind_cols(deals.post, deals.swing.post)
+  
+  xmin <- min(deals.post.all)
+  xmax <- max(deals.post.all)
+  
+  deals.dens <- ggplot(deals.post.all, aes(x = Deals)) +
+    geom_density()
+  deals.dens
+  dens.data <- ggplot_build(deals.dens)$data[[1]]
+  dens.med <- quantile(dens.data$y)[4]
+  
+  deals.dens <- deals.dens + geom_area(data = subset(dens.data, x > 0),
+                                       aes(x=x, y=y), fill="darkgrey") +
+    xlim(xmin, xmax) +
+    labs(x = "", y = "Density",
+         title = "Deals") +
+    annotate("text", x = xmin, y = dens.med, label = as.character(deals.pos), 
+             size = 6, parse = TRUE) +
+    theme_bw(base_size = 12)
+  deals.dens
+  
+  
+  deals.swing.dens <- ggplot(deals.post.all, aes(x = `Deals:Swing`)) +
+    geom_density()
+  deals.swing.dens
+  dens.data <- ggplot_build(deals.swing.dens)$data[[1]]
+  dens.med <- quantile(dens.data$y)[4]
+  
+  deals.swing.dens <- deals.swing.dens + geom_area(data = subset(dens.data, x > 0),
+                                                   aes(x=x, y=y), fill="darkgrey") +
+    xlim(xmin, xmax) +
+    labs(x = "", y = "Density",
+         title = "Deals: Swing") +
+    annotate("text", x = xmin, y = dens.med, label = as.character(deals.swing.pos), 
+             size = 6, parse = TRUE) +
+    theme_bw(base_size = 12)
+  deals.swing.dens
+  
+  grid.arrange(deals.dens, deals.swing.dens, 
+                            top = grid::textGrob(sector.nice,
+                                  gp = grid::gpar(col = "black", fontsize = 20)))
+  deals.inter.plot <- arrangeGrob(deals.dens, deals.swing.dens,
+                                  top = grid::textGrob(sector.nice, 
+                                  gp = grid::gpar(col = "black", fontsize = 20)))
+  
 
   # marginal effect of swing
-  swing.est <- comparisons(model,
+  swing.est <- slopes(model,
                            newdata = hyp.data,
                            variables = "swing",
                            by = sector.lab,
-                           conf_level = .90,
-                           transform_pre = "dydx") %>%
+                           conf_level = .90) %>%
     mutate_at(
       c("estimate", "conf.low", "conf.high"),
       function(x) x * scale.factor
     )
-
+  
   pred.cont <- predictions(model, conf.level = .9,
                            newdata = hyp.data
   ) %>%
@@ -151,10 +212,11 @@ present.sector.cont <- function(model, sector, scale.factor){
       function(x) x * scale.factor
     )
 
-  list(hyp.data, deals.est, swing.est, pred.cont)
+  list(hyp.data, deals.est, swing.est, pred.cont, deals.inter.plot)
   
 }
 
+# apply function to models, data, and sectors, each with unique scale factor
 res.sector.cont <- mapply(present.sector.cont, 
                           model = sector.models, 
                           sector = sector.list,
@@ -179,8 +241,21 @@ ggplot(margins.deals.sector, aes(x = factor(swing), y = estimate)) +
     x = "Swing State",
     y = "Impact of Arms Deals\n(Millions $)"
   )
-ggsave("figures/me-deals-sector.png", height = 6, width = 8)
 
+
+# combine the different sector plots
+grid.arrange(res.sector.cont$aircraft[[5]], res.sector.cont$arms[[5]],
+             res.sector.cont$electronics[[5]], res.sector.cont$missile_space[[5]],
+             res.sector.cont$ships[[5]], res.sector.cont$vehicles[[5]],
+             ncol = 3)
+me.deals.sector <- arrangeGrob(res.sector.cont$aircraft[[5]], res.sector.cont$arms[[5]],
+                               res.sector.cont$electronics[[5]], res.sector.cont$missile_space[[5]],
+                               res.sector.cont$ships[[5]], res.sector.cont$vehicles[[5]],
+                               ncol = 3)
+ggsave("figures/me-deals-sector.png", me.deals.sector, height = 8, width = 10)
+
+
+# swing state ME
 margins.swing.sector <- bind_rows(lapply(res.sector.cont, "[[", 3)) %>%
                          pivot_longer(cols = c(starts_with("deals_"))) %>%
                          rename(deals = value) %>%
@@ -219,6 +294,9 @@ ggplot(pred.out.sector, aes(x = deals, y = estimate,
        fill = "Electoral\nCompetition",
        y = "Predicted Defense Contracts",
        title = "Predicted Contracts by Weapon Type")
+
+
+
 
 
 ### examine the deals cycles by sector ###

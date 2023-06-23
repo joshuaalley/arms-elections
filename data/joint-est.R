@@ -83,8 +83,6 @@ hyp.data <- datagrid(model = deals.state,
          swing = c(0, 1),
          deals = seq(from = min(state.data.deals$deals),
                       to = max(state.data.deals$deals), by = 1),
-         # deals = c(quantile(state.data.deals$deals)[2],
-         #           quantile(state.data.deals$deals)[4]),
          gwot = 0,
          rep_pres = 0,
          core = 0,
@@ -125,30 +123,94 @@ ggplot(hyp.data.est, aes(x = factor(swing), y = `50%`,
                   position = position_dodge(width = .5))
 
 # marginal effect of deals
-deals.est <- comparisons(deals.state,
+deals.est <- slopes(deals.state,
                          newdata = hyp.data,
                          by = "swing",
-                         variables = list(deals = c(130, 131)),
-                         conf_level = .90,
-                         transform_pre = "dydx"
-) %>%
+                         variables = "deals",
+                         conf_level = .90) %>%
   mutate_at(
     c("estimate", "conf.low", "conf.high"),
     function(x) x * scale.factor 
   )
 deals.est
 
+# draws:
+deals.state.draws <- prepare_predictions(deals.state)
+deals.inter <- as.data.frame(deals.state.draws$dpars$mu$fe$b)
+hypothesis(deals.inter, c("b_deals:swing > b_deals"))
+hypothesis(deals.inter, c("b_deals:swing > 0"))
+hypothesis(deals.inter, c("b_deals > 0"))
+
+deals.pars <- select(deals.inter, "b_deals", "b_deals:swing") %>%
+                mutate(
+                  across(everything(), function(x) x * scale.factor),
+                ) %>%
+                pivot_longer(cols = everything()) %>%
+                group_by(name) 
+
+# deals parameters
+ggplot(deals.pars, aes(x = value, y = name)) +
+  geom_vline(xintercept = 0, linewidth = 1) +
+  geom_density_ridges(
+    scale = 0.9,
+    jittered_points = TRUE,
+    position = position_points_jitter(width = 0.05, height = 0),
+    point_shape = '|', point_size = 3, point_alpha = 1, alpha = 0.7,
+  )
+
+# use separate plots 
+deals.post <- as.data.frame(deals.inter$b_deals * scale.factor)
+colnames(deals.post) <- c("Deals")
+deals.swing.post <- as.data.frame(deals.inter$`b_deals:swing` * scale.factor)
+colnames(deals.swing.post) <- c("Deals:Swing")
+
+deals.dens <- ggplot(deals.post, aes(x = Deals)) +
+  geom_density()
+deals.dens
+dens.data <- ggplot_build(deals.dens)$data[[1]]
+
+deals.dens <- deals.dens + geom_area(data = subset(dens.data, x > 0),
+                       aes(x=x, y=y), fill="darkgrey") +
+  xlim(-425, 775) +
+  labs(x = "", y = "Density",
+       title = "Deals") +
+  annotate("text", x = -200, y = 0.0035, label = ".34", 
+           size = 10, parse = TRUE) 
+deals.dens
+
+
+deals.swing.dens <- ggplot(deals.swing.post, aes(x = `Deals:Swing`)) +
+  geom_density()
+deals.swing.dens
+dens.data <- ggplot_build(deals.swing.dens)$data[[1]]
+
+deals.swing.dens <- deals.swing.dens + geom_area(data = subset(dens.data, x > 0),
+                                     aes(x=x, y=y), fill="darkgrey") +
+             xlim(-425, 775) +
+             labs(x = "", y = "Density",
+                  title = "Deals: Swing") +
+             annotate("text", x = 500, y = 0.0025, label = ".97", 
+                      size = 10, parse = TRUE) 
+deals.swing.dens
+
+grid.arrange(deals.dens, deals.swing.dens)
+deals.inter.plot <- arrangeGrob(deals.dens, deals.swing.dens)
+
+# with hypothetical data 
+pred.out.hyp <- prepare_predictions(deals.state, newdata = hyp.data)
+
 # marginal effect of swing
-swing.est <- comparisons(deals.state,
+swing.est <- marginaleffects(deals.state,
                          newdata = hyp.data,
                          variables = "swing",
                          by = "deals",
-                         conf_level = .90,
-                         transform_pre = "dydx") %>%
+                         conf_level = .90) %>%
   mutate_at(
     c("estimate", "conf.low", "conf.high"),
     function(x) x * scale.factor 
   )
+
+
 
 # plot everything
 slope.deals <- ggplot(deals.est, aes(x = factor(swing), y = estimate)) +
@@ -196,11 +258,11 @@ pred.cont.plot <- ggplot(pred.cont, aes(x = deals, y = estimate,
 pred.cont.plot
 
 # combine it all 
-grid.arrange(slope.deals, slope.swing,
+grid.arrange(deals.inter.plot, slope.swing,
              pred.cont.plot,
              layout_matrix = rbind(c(1, 2),
                                    c(3, 3)))
-plot.state.inter <- arrangeGrob(slope.deals, slope.swing,
+plot.state.inter <- arrangeGrob(deals.inter.plot, slope.swing,
                                  pred.cont.plot,
                                  layout_matrix = rbind(c(1, 2),
                                                        c(3, 3)))

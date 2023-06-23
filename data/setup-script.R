@@ -164,7 +164,7 @@ me.us.elec <- function(model, formula, rm.wt, data){
                                                time_to_elec = c(0, 1, 2, 3),
                                                v2x_polyarchy = fivenum))
   
-   me.def.plot <- plot_cme(model, conf_level = .9,
+   me.def.plot <- plot_slopes(model, conf_level = .9,
                           variables = c("ally", "v2x_polyarchy"),
                          condition = "time_to_elec", draw = FALSE)
   
