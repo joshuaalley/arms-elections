@@ -340,7 +340,7 @@ us.deals.sector$nz_deals[is.na(us.deals.sector$nz_deals)] <- 0
 deals.sector <- vector(mode = "list", length = length(sector.list))
 for(i in 1:length(sector.list)){
   
-  deals.sector[[i]] <- brm(deals ~ 
+  deals.sector[[i]] <- brm(bf(deals ~ 
                       time_to_elec*ally*v2x_polyarchy +
                       cold_war + 
                       eu_member +
@@ -348,12 +348,15 @@ for(i in 1:length(sector.list)){
                       ln_rgdp + cowmidongoing +
                       ln_pop + ln_distw + 
                       Comlang,
-                    family = zero_inflated_poisson(link = "log"),
+                      hu ~ ally + cowmidongoing + ln_rgdp,
+                      center = FALSE),
+                    family = hurdle_poisson(link = "log"),
                     backend = "cmdstanr",
                     prior = c(prior(normal(0, .5), class = "b")),
                     cores = 4,
                     data = filter(us.deals.sector,
-                                  weapon.type == sector.list[[i]])
+                                  weapon.type == sector.list[[i]] |
+                                    deals == 0)
   )
 }
 
