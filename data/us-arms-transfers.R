@@ -135,11 +135,13 @@ pois.deals <- brm(bf(deals ~
                     ln_rgdp + cowmidongoing +
                     ln_pop + ln_distw + 
                     Comlang,
+                    hu ~ ally + cowmidongoing + ln_rgdp,
                     center = FALSE),
-                  family = zero_inflated_poisson(),
+                  family = hurdle_poisson(),
                   backend = "cmdstanr",
                   prior = c(prior(normal(0, .5), class = "b")),
                   cores = 4,
+                  refresh = 500,
                   data = us.deals.comp)
 summary(pois.deals)
 plot_slopes(pois.deals, variables = "time_to_elec", by = "ally")
@@ -283,8 +285,6 @@ me.us.deals
 
 # combine and export
 grid.arrange(pred.us.deals, me.us.deals, nrow = 1)
-us.arms.plots <- arrangeGrob(pred.us.deals, me.us.deals, nrow = 1)
-
 
 
 # check poisson with OLS model of deals 

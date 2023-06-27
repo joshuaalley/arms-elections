@@ -335,6 +335,7 @@ Arms transfers are more central to credible U.S. commitments to autocracies.
 The United States prefers ``offstage'' signals of support for autocrats, rather than public demonstrations of commitment \citep{McManusYarhi-Milo2017}.
 Arms transfers are a pivotal offstage signal and sometimes substitute entirely for formal security guarantees \citep{Yarhi-Miloetal2016}. 
 When arms are essential to U.S. security commitments, autocrats will be more willing to make arms deals that increase military capabilities and signal continued alignment with the United States.
+This mirrors how democracies often use aid to get foreign policy concessions from autocracies \citep{BDMSmith2009}, but cannot make similar bargains with countries that have larger winning coalitions. 
 
 
 % further need- no ideological affinity
@@ -418,17 +419,25 @@ Finally, deliveries often space out the total value of a shipment over several y
 % key independent variables- ally/partner, 
 The argument suggests that three variables interact to shape U.S. arms deals. 
 The first is electoral competition, which I measure with an indicator of the number of years to a presidential election. 
+As years to an election decrease, electoral competition increases. 
+
+
+
 The second key factor is whether a country is a U.S. ally. 
 I measure alliance status with a binary indicator of whether a country is a formal U.S. treaty ally using data from the ATOP project \citep{Leedsetal2002}.
 I also include three states that have not always had a formal treaty commitment but are widely seen as U.S. allies; Israel, Taiwan and Saudi Arabia. 
 I include informal allies because in some of these cases arms substitute for a formal alliance, but the United States is still supporting a partner's security \citep{Yarhi-Miloetal2016}. 
+All three countries with informal alliances have implicit security guarantees. 
+
+
 Finally, I measure country democracy using the VDem project's polyarchy measure \citep{Coppedgeetal2008}. 
-I interact all three of these variables to predict arms deals. 
+Polyarchy provides a fine-grained summary of democratic institutions and contestation.
+It also suggests that Saudi Arabia, Iran, and Latin American juntas are the most autocratic U.S. allies, so it has some face validity.  
 
 
 % models
-To estimate how alliances, democracy and election timing shape arms deals, I use a zero-inflated Poisson model.\footnote{Simple Poisson models under-predict zeros, while negative binomial models predict over-predict large values. See the appendix for details, including inferences from linear regression and regular Poisson models.} 
-This fits the annual count of arms deals well.
+Because many countries make no arms deals, I use a hurdle Poisson model to estimate how the interaction of alliances, democracy and election timing shape arms deals.\footnote{Simple Poisson models under-predict zeros, while negative binomial models predict over-predict large values. See the appendix for details, including inferences from linear regression, regular Poisson models and zero-inflated Poisson models.} 
+This hurdle captures that some countries are unlikely to make any arms deals, and fits the annual count of arms deals well.
 For ease of estimation and calculation, I use Bayesian estimation with the brms package for \textsf{R} \citep{Buerkner2017}. 
 I show in the appendix that using Gaussian and Poisson outcomes gives similar inferences. 
 
@@ -439,6 +448,11 @@ I also adjust for EU membership as a potential constraint on some states.
 Further country-year level controls include militarized dispute involvement, logged GDP, population, and distance the from United States, as well as a binary indicator of common language. 
 Finally, I adjust for presidential partisanship with a dummy indicator of years with a Republican president.  
 
+
+In the hurdle equation of the model, I use three predictors to capture whether a country will make any arms deals at all. 
+First, I include the binary indicator of alliance status, because non-allied states are less likely to make arms deals. 
+I also include an indicator of whether a country is engaged in an active militarized dispute. 
+Finally, I include the log of GDP, because wealthier countries have greater means to buy U.S. arms. 
 
 
 \subsection{Results}
@@ -452,7 +466,7 @@ Each facet fixes recipient democracy at the minimum, first quartile, median, thi
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{../figures/us-arms-plots.png}
-	\caption{Predicted arms deals between the United States and other states 1950 to 2014 based on presidential election proximity, democracy, and security alliances. Estimates derived from a zero-inflated Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}
+	\caption{Predicted arms deals between the United States and other states 1950 to 2014 based on presidential election proximity, democracy, and security alliances. Estimates derived from a hurdle Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}
 	\label{fig:us-arms-plots}
 \end{figure}
 
@@ -466,14 +480,14 @@ Minimally democratic U.S. allies receive one deal more in expectation, all else 
 
 
 The second inference is that electoral cycles in arms deals are present for autocratic allies and absent for democratic allies.
-When allied polyarchy is at the minimum, predicted arms deals rise from 1.4 to 1.7 throughout the presidential election cycle.
-Hypothesis tests of equality between allied arms deals at minimum democracy at each level suggest that the increase of .1 deals in each year of the electoral cycle is is clearly positive.\footnote{The entire posterior mass of the difference is positive, with a 90\% credible interval that ranges from .04 to .16.}
+When allied polyarchy is at the minimum, predicted arms deals rise from 2.08 to 2.43 throughout the presidential election cycle.
+Hypothesis tests of equality between allied arms deals at minimum democracy at each level suggest that the increase of .1 deals in each year of the electoral cycle is is clearly positive.\footnote{The entire posterior mass of the difference is positive, with a 90\% credible interval that ranges from .05 to .17.}
 The electoral cycles when democracy is at the 1st quartile or median are also clearly positive, but smaller.
 This cycle diminishes as allied democracy increases, so allies with a polyarchy score at the third quartile or higher see no change in arms deals as elections approach.  
 
 
 Electoral cycles are strongest for autocratic allies. 
-States that are not US allies see smaller changes in arms deals throughout the electoral cycle. 
+States that are not US allies see no change in arms deals throughout the electoral cycle. 
 Alliances increase the level of arms deals, and regime type increases responsiveness to presidential elections. 
 
 
@@ -500,8 +514,13 @@ In the interest of simplicity, this analysis uses observed annual deals, elector
 
 
 I draw the outcome measure from Department of Defense prime contract award data in the USAspending.gov database.\footnote{Link here: \url{https://www.usaspending.gov/download_center/custom_award_data}.} 
-This archive contains data on individual contract awards starting in the 2000 fiscal year, so the defense contracting analysis runs from 2000 to 2020.\footnote{Some state-level controls have limited coverage after 2020.}
-The key outcome is total defense contracts associated with arms production awarded to each state every year, measured in millions of US dollars.\footnote{This measure excludes other contracts besides weapons production because arms deals should have little impact on contracts for things like construction equipment or food.}
+This archive contains individual contract awards from 2000 to 2020.\footnote{I analyze defense contracting in these years because archive starts in the 2000 fiscal year and some state-level controls have limited coverage after 2020.}
+While other contracts data have longer temporal coverage, I use the individual contracts data because it provides enough detail to examine the role of electoral geography, and later to link specific types of arms deals with corresponding contracts. 
+
+
+The key outcome is total defense contracts awarded to each state every year, measured in millions of US dollars.
+I focus on contracts for arms production, because arms deals should have little impact on contracts for things like construction equipment or food.
+While there is no information connecting these contracts to foreign military sales, the narrow focus on arms production and later analysis matching weapons systems and contracts mean that this approach still provides a valid test. 
 
 
 Total defense contracts are also challenging to model, because some states have no weapons contract awards in a given year, and other states receive billions of dollars in contracts. 
@@ -641,6 +660,7 @@ Zero-inflation again improves model fit, as zero deals are more likely within se
 
 
 I also fit six models of defense contracts in each sector. 
+This analysis divides total contracts into contracts that are connected to each weapon type. 
 As in the analysis of aggregate defense contracting, I rescale the outcome between 0 and 1 using the annual sum of contracts for those defense goods. 
 I then fit ordered beta regression models of the rescaled outcome, using an identical specification to the aggregate defense contracting model.
 The key independent variables in these models are observed arms deals in each sector, the binary swing state indicator, and their interaction. 
