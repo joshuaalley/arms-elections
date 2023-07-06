@@ -52,8 +52,6 @@ ggplot(state.data.deals, aes(x = change_ln_obligations)) + geom_histogram()
 
 # ordbeta reg for transformed outcomes
 formula.state <- bf(obligations_rs ~
-                      # ar(time = year, gr = state,
-                      #    p = 1, cov = TRUE) +
                       (lag_obligations_rs || state) +
                       deals*swing + core +
                       gwot + time_to_elec + 
@@ -441,11 +439,6 @@ ggplot(example.pred, aes(x = year, y = estimate,
   geom_point() +
   geom_line()
   
-
-
-
-# then calculate for states that are permanent swing states
-# grab coefs.var.state thetas and VIs 
 
 
 
