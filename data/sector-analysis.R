@@ -281,7 +281,7 @@ ggplot(margins.swing.sector, aes(x = deals, y = estimate)) +
 ggsave("appendix/swing-margins-sector.png", height = 6, width = 8)
 
 
- pred.out.sector <- bind_rows(lapply(res.sector.cont, "[[", 4)) %>%
+pred.out.sector <- bind_rows(lapply(res.sector.cont, "[[", 4)) %>%
   pivot_longer(cols = c(starts_with("deals_"))) %>%
   rename(deals = value) %>%
   group_by(name) %>%

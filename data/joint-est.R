@@ -139,60 +139,67 @@ hypothesis(deals.inter, c("b_deals:swing > b_deals"))
 hypothesis(deals.inter, c("b_deals:swing > 0"))
 hypothesis(deals.inter, c("b_deals > 0"))
 
-deals.pars <- select(deals.inter, "b_deals", "b_deals:swing") %>%
-                mutate(
-                  across(everything(), function(x) x * scale.factor),
-                ) %>%
-                pivot_longer(cols = everything()) %>%
-                group_by(name) 
 
-# deals parameters
-ggplot(deals.pars, aes(x = value, y = name)) +
-  geom_vline(xintercept = 0, linewidth = 1) +
-  geom_density_ridges(
-    scale = 0.9,
-    jittered_points = TRUE,
-    position = position_points_jitter(width = 0.05, height = 0),
-    point_shape = '|', point_size = 3, point_alpha = 1, alpha = 0.7,
-  )
+deals.inter <- function(model, scale.factor){
+  
+  # all draws 
+  deals.draws <- prepare_predictions(model)
+  deals.inter <- as.data.frame(deals.draws$dpars$mu$fe$b)
+  
+  # use separate plots 
+  deals.post <- as.data.frame(deals.inter[, 2] * scale.factor)
+  colnames(deals.post) <- c("Deals")
+  deals.pos <- round(sum(deals.post > 0) / 4000, digits = 2)
+  
+  deals.swing.post <- as.data.frame(deals.inter[, 10] * scale.factor)
+  colnames(deals.swing.post) <- c("Deals:Swing")
+  deals.swing.pos <- round(sum(deals.swing.post > 0) / 4000, digits = 2)
+  
+  deals.post.all <- bind_cols(deals.post, deals.swing.post)
+  
+  xmin <- min(deals.post.all)
+  xmax <- max(deals.post.all)
+  
+  deals.dens <- ggplot(deals.post.all, aes(x = Deals)) +
+    geom_density()
+  deals.dens
+  dens.data <- ggplot_build(deals.dens)$data[[1]]
+  dens.med <- quantile(dens.data$y)[4]
+  
+  deals.dens <- deals.dens + geom_area(data = subset(dens.data, x > 0),
+                                       aes(x=x, y=y), fill="darkgrey") +
+    xlim(xmin, xmax) +
+    labs(x = "", y = "Density",
+         title = "Deals") +
+    annotate("text", x = xmin, y = dens.med, label = as.character(deals.pos), 
+             size = 6, parse = TRUE) +
+    theme_bw(base_size = 12)
+  deals.dens
+  
+  
+  deals.swing.dens <- ggplot(deals.post.all, aes(x = `Deals:Swing`)) +
+    geom_density()
+  deals.swing.dens
+  dens.data <- ggplot_build(deals.swing.dens)$data[[1]]
+  dens.med <- quantile(dens.data$y)[4]
+  
+  deals.swing.dens <- deals.swing.dens + geom_area(data = subset(dens.data, x > 0),
+                                                   aes(x=x, y=y), fill="darkgrey") +
+    xlim(xmin, xmax) +
+    labs(x = "", y = "Density",
+         title = "Deals: Swing") +
+    annotate("text", x = xmin, y = dens.med, label = as.character(deals.swing.pos), 
+             size = 6, parse = TRUE) +
+    theme_bw(base_size = 12)
+  deals.swing.dens
+  
+  grid.arrange(deals.dens, deals.swing.dens)
+  deals.inter.plot <- arrangeGrob(deals.dens, deals.swing.dens)
+  deals.inter.plot 
+  
+}
 
-# use separate plots 
-deals.post <- as.data.frame(deals.inter$b_deals * scale.factor)
-colnames(deals.post) <- c("Deals")
-deals.swing.post <- as.data.frame(deals.inter$`b_deals:swing` * scale.factor)
-colnames(deals.swing.post) <- c("Deals:Swing")
-
-deals.dens <- ggplot(deals.post, aes(x = Deals)) +
-  geom_density()
-deals.dens
-dens.data <- ggplot_build(deals.dens)$data[[1]]
-
-deals.dens <- deals.dens + geom_area(data = subset(dens.data, x > 0),
-                       aes(x=x, y=y), fill="darkgrey") +
-  xlim(-425, 775) +
-  labs(x = "", y = "Density",
-       title = "Deals") +
-  annotate("text", x = -200, y = 0.0035, label = ".34", 
-           size = 10, parse = TRUE) 
-deals.dens
-
-
-deals.swing.dens <- ggplot(deals.swing.post, aes(x = `Deals:Swing`)) +
-  geom_density()
-deals.swing.dens
-dens.data <- ggplot_build(deals.swing.dens)$data[[1]]
-
-deals.swing.dens <- deals.swing.dens + geom_area(data = subset(dens.data, x > 0),
-                                     aes(x=x, y=y), fill="darkgrey") +
-             xlim(-425, 775) +
-             labs(x = "", y = "Density",
-                  title = "Deals: Swing") +
-             annotate("text", x = 500, y = 0.0025, label = ".97", 
-                      size = 10, parse = TRUE) 
-deals.swing.dens
-
-grid.arrange(deals.dens, deals.swing.dens)
-deals.inter.plot <- arrangeGrob(deals.dens, deals.swing.dens)
+deals.inter.plot <- deals.inter(deals.state, scale.factor)
 
 # with hypothetical data 
 pred.out.hyp <- prepare_predictions(deals.state, newdata = hyp.data)
@@ -451,8 +458,8 @@ ggplot(example.pred, aes(x = year, y = estimate,
 
 # use a lognormal hurdle instead 
 deals.state.hurdle <- brm(bf(obligations ~ 
-                               (1 + lag_obligations| state) +
-                               deals*swing + 
+                               (lag_obligations || state) +
+                               deals*swing + core +
                                gwot + time_to_elec + 
                                rep_pres  +
                                poptotal + ln_ngdp,
@@ -474,9 +481,9 @@ pp_check(deals.state.hurdle)
 
 
 # use robust regression 
-deals.state.reg <- brm(bf(obligations ~ 
-                               (1 + lag_obligations| state) +
-                               deals*swing + 
+deals.state.reg <- brm(bf(change_obligations ~ 
+                               (1 | state) +
+                               deals*swing + core +
                                gwot + time_to_elec + 
                                rep_pres  +
                                poptotal + ln_ngdp,
@@ -494,3 +501,86 @@ deals.state.reg <- brm(bf(obligations ~
 ) 
 summary(deals.state.reg)
 pp_check(deals.state.reg)
+
+
+deals.inter.probs <- function(model, scale.factor, model.name){
+  
+  # all draws 
+  deals.draws <- prepare_predictions(model)
+  deals.inter <- as.data.frame(deals.draws$dpars$mu$fe$b)
+  
+  # use separate plots 
+  deals.post <- as.data.frame(deals.inter[, 2] * scale.factor)
+  colnames(deals.post) <- c("Deals")
+  deals.pos <- round(sum(deals.post > 0) / 4000, digits = 2)
+  
+  deals.swing.post <- as.data.frame(deals.inter[, 10] * scale.factor)
+  colnames(deals.swing.post) <- c("Deals:Swing")
+  deals.swing.pos <- round(sum(deals.swing.post > 0) / 4000, digits = 2)
+  
+  deals.post.all <- bind_cols(deals.post, deals.swing.post)
+  
+  xmin <- min(deals.post.all)
+  xmax <- max(deals.post.all)
+  
+  deals.dens <- ggplot(deals.post.all, aes(x = Deals)) +
+    geom_density()
+  deals.dens
+  dens.data <- ggplot_build(deals.dens)$data[[1]]
+  dens.med <- quantile(dens.data$y)[4]
+  
+  deals.dens <- deals.dens + geom_area(data = subset(dens.data, x > 0),
+                                       aes(x=x, y=y), fill="darkgrey") +
+    xlim(xmin, xmax) +
+    labs(x = "", y = "Density",
+         title = "Deals") +
+    annotate("text", x = xmin, y = dens.med, label = as.character(deals.pos), 
+             size = 6, parse = TRUE) +
+    theme_bw(base_size = 12)
+  deals.dens
+  
+  
+  deals.swing.dens <- ggplot(deals.post.all, aes(x = `Deals:Swing`)) +
+    geom_density()
+  deals.swing.dens
+  dens.data <- ggplot_build(deals.swing.dens)$data[[1]]
+  dens.med <- quantile(dens.data$y)[4]
+  
+  deals.swing.dens <- deals.swing.dens + geom_area(data = subset(dens.data, x > 0),
+                                                   aes(x=x, y=y), fill="darkgrey") +
+    xlim(xmin, xmax) +
+    labs(x = "", y = "Density",
+         title = "Deals: Swing") +
+    annotate("text", x = xmin, y = dens.med, label = as.character(deals.swing.pos), 
+             size = 6, parse = TRUE) +
+    theme_bw(base_size = 12)
+  deals.swing.dens
+  
+  grid.arrange(deals.dens, deals.swing.dens,
+               top = grid::textGrob(model.name,
+            gp = grid::gpar(col = "black", fontsize = 20)))
+  
+  deals.inter.plot <- arrangeGrob(deals.dens, deals.swing.dens,
+                                top = grid::textGrob(model.name,
+                      gp = grid::gpar(col = "black", fontsize = 20)))
+  
+  deals.inter.plot 
+
+}
+
+models.check.deals <- list(deals.state.hurdle, deals.state.reg)
+models.check <- c("Log-Normal Hurdle", "Student-T: Contract Changes")
+
+res.deals.check <- mapply(deals.inter.probs, 
+                          model = models.check.deals, 
+                          model.name = models.check,
+                          scale.factor = scale.factor,
+                          SIMPLIFY = FALSE, USE.NAMES = TRUE)
+res.deals.check[[1]]
+
+
+me.deals.check <- grid.arrange(res.deals.check[[1]], res.deals.check[[2]])
+me.deals.check
+me.deals.check <- arrangeGrob(res.deals.check[[1]], res.deals.check[[2]])
+ggsave("appendix/me-deals-check.png", me.deals.check, 
+       height = 6, width = 8)
