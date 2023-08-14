@@ -584,3 +584,12 @@ me.deals.check
 me.deals.check <- arrangeGrob(res.deals.check[[1]], res.deals.check[[2]])
 ggsave("appendix/me-deals-check.png", me.deals.check, 
        height = 6, width = 8)
+
+
+# posterior prob difference
+# draws:
+state.reg.draws <- prepare_predictions(deals.state.reg)
+reg.inter <- as.data.frame(state.reg.draws$dpars$mu$fe$b)
+hypothesis(reg.inter, c("b_deals:swing > b_deals"))
+hypothesis(reg.inter, c("b_deals:swing > 0"))
+hypothesis(reg.inter, c("b_deals > 0"))
