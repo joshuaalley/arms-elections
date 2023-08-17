@@ -150,10 +150,12 @@ deals.inter <- function(model, scale.factor){
   deals.post <- as.data.frame(deals.inter[, 2] * scale.factor)
   colnames(deals.post) <- c("Deals")
   deals.pos <- round(sum(deals.post > 0) / 4000, digits = 2)
+  deals.pos <- sub("^0+", "", deals.pos)
   
   deals.swing.post <- as.data.frame(deals.inter[, 10] * scale.factor)
   colnames(deals.swing.post) <- c("Deals:Swing")
   deals.swing.pos <- round(sum(deals.swing.post > 0) / 4000, digits = 2)
+  deals.swing.pos <- sub("^0+", "", deals.swing.pos)
   
   deals.post.all <- bind_cols(deals.post, deals.swing.post)
   
@@ -272,7 +274,7 @@ plot.state.inter <- arrangeGrob(deals.inter.plot, slope.swing,
                                  layout_matrix = rbind(c(1, 2),
                                                        c(3, 3)))
 ggsave("figures/deals-swing-me.png", plot.state.inter,
-       height = 8, width = 10)
+       height = 10, width = 12)
 
 # state varying coefs
 coefs.joint <- coef(deals.state) 
