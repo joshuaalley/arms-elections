@@ -214,6 +214,22 @@ ggplot(pois.democ.pred, aes(y = estimate,
 ggsave("figures/democ-deals-pred.png", height = 6, width = 8)
 
 
+# full fitted draws
+# full fitted draws
+fit.democ <- posterior_epred(pois.deals.democ, 
+                           newdata = datagrid(model = pois.deals.democ,
+                                              time_to_elec = c(0, 1, 2, 3),
+                                              v2x_polyarchy = fivenum)) 
+
+pois.comp.dmin <- pois.democ.pred  %>%
+             filter(
+      v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[1]) 
+
+key.pois.draws <- as.data.frame(fit.democ[, pois.comp.dmin$rowid])
+colnames(key.pois.draws) <- c("a", "b", "c", "d")
+hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"))
+hypothesis(key.pois.draws, c("a > d"))
+
 # hurdle poisson model of deals: ally and time to election
 pois.deals.ally <- brm(bf(deals ~ 
                        time_to_elec*ally
@@ -293,11 +309,12 @@ ggsave("appendix/pp-check-deals.png", height = 6, width = 8)
 pois.deals.est <- me.us.elec(pois.deals, data = us.deals.comp)  
 
 
-ggplot(pois.deals.est[[2]], aes(y = estimate, 
+pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate, 
                                 x = time_to_elec,
                                 group = factor(ally),
                                 color = factor(ally))) +
-  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs) + 
+  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs,
+             ncol = 5) + 
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
   geom_line() +
@@ -307,17 +324,17 @@ ggplot(pois.deals.est[[2]], aes(y = estimate,
                    start = 0.7,
                    end = 0.1,
                    labels = c(`0` = "No", `1` = "Yes")) +
-  labs(title = "Elections and Arms Deals",
+  labs(title = "Elections, Democracy, Alliances and Arms Deals",
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election") 
-
+pred.us.deals
+ggsave("figures/us-arms-plots.png", height = 6, width = 8)
 
 
 # alternative expression
-pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate, 
+ggplot(pois.deals.est[[2]], aes(y = estimate, 
                                 x = time_to_elec)) +
-  facet_grid(ally ~ v2x_polyarchy, labeller = democ.all.labs,
-             scales = "free_y") + 
+  facet_grid(ally ~ v2x_polyarchy, labeller = democ.all.labs) + 
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
   geom_line() +
@@ -326,8 +343,7 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
   labs(title = "Elections, Democracy, Alliances and Arms Deals",
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election") 
-pred.us.deals
-ggsave("figures/us-arms-plots.png", height = 6, width = 8)
+
 
 
 # test difference 

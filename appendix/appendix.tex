@@ -128,6 +128,18 @@ As a result, the hurdle Poisson predicts zero values well, underpredicts some la
 \end{figure}
 
 
+Relative to the hurdle, a regular Poisson model under-predicts zeros, as \autoref{fig:pois-pp-check} demonstrates. 
+This also moves the model fit and reduces predictive accuracy for non-zero deals. 
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{pois-pp-check.png}
+	\caption{Posterior predictive check of a Poisson model of US arms deals. In this rootogram, the fitted line gives the expected counts and bars show the observed distribution.}
+	\label{fig:pois-pp-check}
+\end{figure}
+
+
 While the lumpy distribution of deals complicates predictions with a Poisson likelihood, a negative binomial likelihood fits poorly. 
 As \autoref{fig:nb-pp-check} demonstrates, the extra variance in a negative binomial results in underpredicting almost all observed values, and some predictions that are far above the range of the observed data. 
 This is why I rely on models with a Poisson likelihood and do not report negative binomial estimates. 
