@@ -202,7 +202,8 @@ pois.democ.pred <- predictions(pois.deals.democ, conf_level = .9,
 
 ggplot(pois.democ.pred, aes(y = estimate, 
                            x = time_to_elec)) +
-  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs) +
+  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs,
+             ncol = 5) +
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
   geom_line() +
