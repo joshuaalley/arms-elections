@@ -630,3 +630,55 @@ modelsummary(deals.state.models,
   kable_styling(font_size = 8, full_width = FALSE,
                 latex_options = c("HOLD_position")) %>%
   footnote(general = "90% Credible Intervals in parentheses.")
+
+
+
+# additional check- does the association between deals and contracts in swing states rise with electoral proximity?
+# ordbeta reg for transformed outcomes
+formula.state.prox <- bf(obligations_rs ~
+                      (lag_obligations_rs || state) +
+                      deals*swing*time_to_elec + core +
+                      gwot +
+                      rep_pres  +
+                      poptotal + ln_ngdp,
+                    center = FALSE)
+deals.state.prox <- ordbetareg(formula.state.prox,
+                          true_bounds = c(0, 1),
+                          data = state.data.deals,
+                          cores = 4,
+                          backend = "cmdstanr",
+                          refresh = 200
+) 
+summary(deals.state.prox)
+fixef(deals.state.prox)
+
+# results: me of deals 
+deals.me <- slopes(deals.state.prox, variables = c("deals"),
+                   conf_level = .9,
+                   newdata = 
+                     datagrid(model = deals.state.prox,
+                              time_to_elec = c(0, 1, 2, 3),
+                              swing = c(0, 1)))
+deals.me <- mutate(deals.me,
+                          estimate = estimate * scale.factor,
+                          conf.low = conf.low * scale.factor,
+                          conf.high = conf.high * scale.factor)
+
+
+ggplot(deals.me, aes(y = estimate, 
+                      x = time_to_elec,
+                      group = factor(swing),
+                      color = factor(swing))) +
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line() +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1)) +
+  scale_color_grey("Swing\nState", 
+                   start = 0.7,
+                   end = 0.1,
+                   labels = c(`0` = "No", `1` = "Yes")) +
+  labs(title = "Marginal Impact of Arms Deals by Swing State and Election Proximity",
+       y = "Estimated Marginal Effect",
+       x = "Years to Presidential Election")
+ggsave("appendix/deals-me-prox.png", height = 6, width = 8)
