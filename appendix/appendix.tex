@@ -19,13 +19,15 @@
 \usepackage{afterpage}
 \usepackage{array}
 \usepackage{lscape}
+\usepackage{longtable}
+\usepackage{float}
 \sectionfont{\Large}
 \subsectionfont{\noindent\large\textit}
 \subsubsectionfont{\normalsize}
 
 
 \singlespace
-\title{\textbf{Appendix: Arms and Electoral Influence: How Arms Deals with Autocratic Allies Shape Defense Contracting in the United States}}
+\title{\textbf{Appendix: Arms and Electoral Influence: How Arms Deals with Autocracies Shape Defense Contracting in the United States}}
 %\author{Joshua Alley} 
 \date{}
 
@@ -66,6 +68,21 @@ More democratic allies receive more arms deals than non-allied states, but deals
 		\includegraphics[width=0.95\textwidth]{deals-democ-raw.png}
 	\caption{Average arms deals with the United States per country in each quartile of democracy throughout U.S. presidential election cycles. Colors divide states based on whether they are U.S. allies.}
 	\label{fig:deals-democ-raw}
+\end{figure}
+
+
+\subsubsection{General Arms Deal Cycles}
+
+In addition to the raw data, arms deal cycles are apparent even without interacting the time to presidential election measure with the autocracy indicator.
+I plot predicted arms deals in \autoref{fig:elec-pred-deals}. 
+The increase of .05 deals across a presidential election cycle is small but distinguishable from zero. 
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{elec-pred-deals.png}
+	\caption{Predicted arms deals by the United States across the presidential election cycle, all else equal. Estimates from a hurdle Poisson model of arms deals between 1950 and 2014. }
+	\label{fig:elec-pred-deals}
 \end{figure}
 
 
@@ -153,10 +170,6 @@ This is why I rely on models with a Poisson likelihood and do not report negativ
 \end{figure}
 
 
-
-
-
-
 \section{Contracts Model Checks} 
 
 This section checks the second analysis, which examines the interaction between arms deals and contract awards in the 50 states. 
@@ -206,6 +219,22 @@ Results from the student-t model of contract changes also suggest that arms deal
 99\% of the posterior mass in the interaction coefficient between deals and states is positive.
 While 92\% of the posterior mass in the deals term is positive, which suggests increased deals lead to increased changes in contracts for other states as well, there is a 95\% posterior probability that the relationship between arms deals and contracts in swing states is larger. 
 As a result, arms deals increase defense contracts more in swing states than in other states. 
+
+
+\newpage
+
+\section{Coefficient Estimates}
+
+The section presents tables with coefficient estimates. 
+\autoref{tab:pois-regs} summarizes the hurdle Poisson coefficient estimates.\footnote{All tables built with modelsummary \citep{ArelBundock2022}}. 
+\autoref{tab:cont-regs} summarizes the three deals models.
+
+
+\include{deals-reg-tabs.tex}
+
+
+\include{cont-reg-tabs.tex}
+
 
 
 \newpage

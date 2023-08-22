@@ -289,7 +289,7 @@ pois.deals <- brm(bf(deals ~
                     ln_rgdp + cowmidongoing +
                     ln_pop + ln_distw + 
                     Comlang,
-                    hu ~ ally + cowmidongoing + ln_rgdp,
+                    hu ~ v2x_polyarchy + ally + cowmidongoing + ln_rgdp,
                     center = FALSE),
                   family = hurdle_poisson(),
                   backend = "cmdstanr",
@@ -330,20 +330,6 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
        x = "Years to Presidential Election") 
 pred.us.deals
 ggsave("figures/us-arms-plots.png", height = 6, width = 8)
-
-
-# alternative expression
-ggplot(pois.deals.est[[2]], aes(y = estimate, 
-                                x = time_to_elec)) +
-  facet_grid(ally ~ v2x_polyarchy, labeller = democ.all.labs) + 
-  scale_x_reverse() + # decreasing time to election
-  geom_hline(yintercept = 0) +
-  geom_line() +
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
-  labs(title = "Elections, Democracy, Alliances and Arms Deals",
-       y = "Predicted Arms Deals",
-       x = "Years to Presidential Election") 
 
 
 
@@ -601,3 +587,53 @@ pp_check(nb.deals, type = "rootogram",
          style = "hanging") +
   labs(title = "Negative Binomial Posterior Predictive Check: Arms Deals")
 ggsave("appendix/nb-pp-check.png", height = 6, width = 8)
+
+
+
+# table with model coefficients for appendix
+# nice names
+coef.names.deals.brm = c("b_time_to_elec" = "Years to Election",
+                   "b_v2x_polyarchy" = "Polyarchy",
+                   "b_ally" = "US Ally",
+                   "v2x_polyarchy" = "Polyarchy",
+                   "ally" = "US Ally",
+                   "b_time_to_elec × v2x_polyarchy" = "Polyarchy x Years to Election",
+                   "b_time_to_elec × ally" = "Ally x Years to Election",
+                   "b_ally × v2x_polyarchy" = "Ally x Polyarchy",
+                   "b_time_to_elec × ally × v2x_polyarchy" = "Ally x Years to Election\nx Polyarchy",
+                   "b_cowmidongoing" = "Ongoing MID",
+                   "b_ln_pop" = "Log Population",
+                   "b_ln_rgdp" = "Log GDP",
+                   "b_ln_distw" = "Log Distance",
+                   "b_eu_member" = "EU Member",
+                   "b_gwot" = "Global War on Terror",
+                   "b_cold_war" = "Cold War",
+                   "b_rep_pres" = "Republican President",
+                   "b_Comlang" = "Common Language",
+                   "b_Intercept" = "Intercept",
+                   "b_hu_v2x_polyarchy" = "Hurdle: Polyarchy",
+                   "b_hu_ally" = "Hurdle: US Ally",
+                   "b_hu_ln_rgdp" = "Hurdle: Log GDP",
+                   "b_hu_cowmidongoing" = "Hurdle: Ongoing MID",
+                   "b_hu_Intercept" = "Hurdle: Intercept")
+
+pois.models <- list(pois.deals.cycle, pois.deals.democ, pois.deals)
+names(pois.models) <- c("Generic Cycle", "Regime Cycle", "Regime and Ally Cycle")
+modelsummary(pois.models,
+             #output = "latex",
+             output = "appendix/deals-reg-tabs.tex", 
+             gof_map = "none",
+             conf.level = .9,
+             longtable = TRUE,
+             fmt = fmt_significant(2),
+             coef_rename = coef.names.deals.brm,
+             statistic = "({conf.low}, {conf.high})",
+             #notes = list('90\\% Credible Intervals in parentheses.'),
+             title = "\\label{tab:pois-regs}: Coefficient estimates from hurdle Poisson models of US arms deals.") %>%
+  kable_styling(font_size = 10,
+                latex_options = c("HOLD_position")) %>%
+  footnote(general = "90% Credible Intervals in parentheses.")
+
+# robustness check models
+modelsummary(list(ols.deals, pois.deals, zip.deals),
+             gof_map = "none")

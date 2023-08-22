@@ -312,7 +312,6 @@ ggplot(drop_na(coef.joint, var), aes(y = fct_rev(var), x = estimate)) +
     title = element_text(size = 15),
     strip.text = element_text(size = 9)
   )
-ggsave("appendix/coef-joint-state.png", height = 6, width = 8)
 
 
 # state ldv estimates
@@ -595,3 +594,39 @@ reg.inter <- as.data.frame(state.reg.draws$dpars$mu$fe$b)
 hypothesis(reg.inter, c("b_deals:swing > b_deals"))
 hypothesis(reg.inter, c("b_deals:swing > 0"))
 hypothesis(reg.inter, c("b_deals > 0"))
+
+
+
+
+# tabulate results for appendix 
+coef.names.cont.brm = c("b_deals" = "Arms Deals",
+                        "b_swing" = "Swing State",
+                        "swing" = "Swing State",
+                        "b_core" = "Core State",
+                        "b_time_to_elec" = "Time to Election",
+                         "b_poptotal" = "Population (Rescaled)",
+                         "b_ln_ngdp" = "Log GDP",
+                        "b_hu_ln_ngdp" = "Hurdle: Log GDP",
+                         "b_gwot" = "Global War on Terror",
+                         "b_rep_pres" = "Republican President",
+                         "phi" = "$\\phi$",
+                         "sigma" = "$\\sigma$",
+                         "b_Intercept" = "Intercept",
+                         "b_hu_Intercept" = "Hurdle: Intercept")
+
+deals.state.models <- list(deals.state, deals.state.hurdle, deals.state.reg)
+names(deals.state.models) <- c("Rescaled Ordered Beta", "Log-Normal Hurdle", "Student-T: Contract Changes")
+modelsummary(deals.state.models,
+             output = "appendix/cont-reg-tabs.tex", 
+             gof_map = "none",
+             conf.level = .9,
+             coef_omit = c("sd"),
+             longtable = TRUE,
+             escape = FALSE,
+             fmt = fmt_significant(2),
+             coef_rename = coef.names.cont.brm,
+             statistic = "({conf.low}, {conf.high})",
+             title = "\\label{tab:cont-regs}: Coefficient estimates from models of defense contract awards.") %>%
+  kable_styling(font_size = 8, full_width = FALSE,
+                latex_options = c("HOLD_position")) %>%
+  footnote(general = "90% Credible Intervals in parentheses.")

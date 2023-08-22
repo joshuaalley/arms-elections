@@ -24,7 +24,7 @@ library(fastDummies)
 library(vdemdata)
 library(ordbetareg)
 library(ggridges)
-
+library(kableExtra)
 
 # set seed
 set.seed(12)
