@@ -185,10 +185,10 @@ present.sector.cont <- function(model, sector, scale.factor){
     theme_bw(base_size = 12)
   deals.swing.dens
   
-  grid.arrange(deals.dens, deals.swing.dens, 
+  grid.arrange(deals.swing.dens, deals.dens, 
                             top = grid::textGrob(sector.nice,
                                   gp = grid::gpar(col = "black", fontsize = 20)))
-  deals.inter.plot <- arrangeGrob(deals.dens, deals.swing.dens,
+  deals.inter.plot <- arrangeGrob(deals.swing.dens, deals.dens, 
                                   top = grid::textGrob(sector.nice, 
                                   gp = grid::gpar(col = "black", fontsize = 20)))
   
