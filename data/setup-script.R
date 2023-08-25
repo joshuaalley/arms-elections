@@ -25,6 +25,7 @@ library(vdemdata)
 library(ordbetareg)
 library(ggridges)
 library(kableExtra)
+library(interflex)
 
 # set seed
 set.seed(12)
