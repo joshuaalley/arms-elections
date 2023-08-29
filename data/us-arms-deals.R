@@ -302,7 +302,7 @@ summary(pois.deals)
 # posterior predictive check
 pp_check(pois.deals, type = "rootogram", 
          style = "hanging") +
-  labs(title = "Posterior Predictive Check: Arms Deals")
+  labs(title = "Hurdle Poisson Posterior Predictive Check: Arms Deals")
 ggsave("appendix/pp-check-deals.png", height = 6, width = 8)
 
 

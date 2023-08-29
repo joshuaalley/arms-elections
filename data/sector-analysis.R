@@ -278,7 +278,6 @@ ggplot(margins.swing.sector, aes(x = deals, y = estimate)) +
     x = "Arms Deals",
     y = "Impact of Swing Status"
   )
-ggsave("appendix/swing-margins-sector.png", height = 6, width = 8)
 
 
 pred.out.sector <- bind_rows(lapply(res.sector.cont, "[[", 4)) %>%
@@ -299,8 +298,6 @@ ggplot(pred.out.sector, aes(x = deals, y = estimate,
        fill = "Electoral\nCompetition",
        y = "Predicted Defense Contracts",
        title = "Predicted Contracts by Weapon Type")
-
-
 
 
 
@@ -384,8 +381,8 @@ pred.inter.sector <- pred.inter.sector %>%
                               v2x_polyarchy == min(v2x_polyarchy)) %>%
                      mutate(
                        dem.labs = case_when(
-                         v2x_polyarchy == max(v2x_polyarchy) ~ "Maximum Democ",
-                         v2x_polyarchy == min(v2x_polyarchy) ~ "Minimum Democ",
+                         v2x_polyarchy == max(v2x_polyarchy) ~ "Maximum Democracy",
+                         v2x_polyarchy == min(v2x_polyarchy) ~ "Minimum Democracy",
                        )
                      )
 
@@ -430,3 +427,48 @@ ggsave("figures/deals-sector.png", height = 7, width = 10)
 
 summary(deals.sector[[1]])
 summary(deals.sector[[2]])
+
+
+# coefficient tables for appendix: deals
+names(deals.sector) <- c("Aircraft", 
+                         "Arms",
+                         "Electronics",
+                         "Missile and Space",
+                         "Ships", "Vehicles")
+deals.sector.tab <- modelsummary(deals.sector,
+             output = "latex",
+             gof_map = "none",
+             conf.level = .9,
+             longtable = FALSE,
+             fmt = fmt_significant(2),
+             coef_rename = coef.names.deals.brm,
+             statistic = "({conf.low}, {conf.high})",
+             #notes = list('90\\% Credible Intervals in parentheses.'),
+             title = "\\label{tab:pois-regs-sector}: Coefficient estimates from hurdle Poisson models of U.S. arms deals by sector.") %>%
+  kable_styling(font_size = 8, 
+                latex_options = c("scale_down")) %>%
+  footnote(general = "90% Credible Intervals in parentheses.")
+save_kable(deals.sector.tab, "appendix/deals-reg-sector.tex")
+
+# table for appendix: contracts
+names(sector.models) <- c("Aircraft", 
+                          "Arms",
+                          "Electronics",
+                          "Missile and Space",
+                          "Ships", "Vehicles")
+sector.mod.tab <- modelsummary(sector.models,
+             output = "latex", 
+             gof_map = "none",
+             conf.level = .9,
+             coef_omit = c("sd"),
+             longtable = FALSE,
+             escape = FALSE,
+             fmt = fmt_significant(1),
+             coef_rename = coef.names.cont.brm,
+             statistic = "({conf.low}, {conf.high})",
+             title = "\\label{tab:cont-regs-sector}: Coefficient estimates from models of defense contract awards by sector.") %>%
+  kable_styling(font_size = 8, 
+                latex_options = c("scale_down")) %>%
+  footnote(general = "90% Credible Intervals in parentheses.")
+save_kable(sector.mod.tab, "appendix/cont-reg-sector.tex")
+

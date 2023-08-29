@@ -601,6 +601,12 @@ hypothesis(reg.inter, c("b_deals > 0"))
 # tabulate results for appendix 
 coef.names.cont.brm = c("b_deals" = "Arms Deals",
                         "b_swing" = "Swing State",
+                        "b_deals_aircraft" = "Aircraft Deals",
+                        "b_deals_arms" = "Arms Deals",
+                        "b_deals_electronics" = "Electronics Deals",
+                        "b_deals_missile_space" = "Missile \\& Space Deals",
+                        "b_deals_ships" = "Ships Deals",
+                        "b_deals_vehicles" = "Vehicles Deals",
                         "swing" = "Swing State",
                         "b_core" = "Core State",
                         "b_time_to_elec" = "Time to Election",
