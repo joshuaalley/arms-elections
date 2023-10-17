@@ -1,6 +1,21 @@
 # Joshua Alley
 # raw arms deals
 
+
+# simple information on deals
+# raw data on delivery duration
+table(us.trade.regis$deliv.lag)
+2008 / nrow(us.trade.regis)
+median(us.trade.regis$deliv.lag, na.rm = TRUE)
+table(us.trade.regis$weapon.type, us.trade.regis$deliv.lag)
+table(us.trade.regis$aid)
+
+# duration of deliveries
+table(us.trade.regis$deliv.dur)
+median(us.trade.regis$deliv.dur, na.rm = TRUE)
+table(us.trade.regis$weapon.type, us.trade.regis$deliv.dur)
+
+
 # runs before us-arms-deals 
 
 ### raw by country
@@ -8,7 +23,7 @@
 us.deals <- us.arms.cat %>%
   group_by(ccode, year) %>%
   select(
-    country, ccode, year, deals
+    country, ccode, year, deals, aid, ordered,
   ) %>%
   summarize(
     deals = sum(deals, na.rm = TRUE),
@@ -16,7 +31,7 @@ us.deals <- us.arms.cat %>%
   ) %>%
   right_join(select(us.trade.ally,
                     ccode, year,
-                    atop_defense, ally, ally_democ,
+                    atop_defense, ally, 
                     cold_war, gwot, democ_bin,
                     v2x_polyarchy, cowmidongoing,
                     rep_pres, time_to_elec, 
@@ -28,7 +43,17 @@ us.deals <- us.arms.cat %>%
   group_by(ccode) %>%
   mutate(
     var_democ = sd(v2x_polyarchy, na.rm = TRUE),
-    nz_deals = ifelse(deals > 0, 1, 0)
+    nz_deals = ifelse(deals > 0, 1, 0),
+      democ_grp = case_when(
+        v2x_polyarchy <= fivenum(us.deals$v2x_polyarchy)[2] ~
+          "1st Quartile",
+        v2x_polyarchy > fivenum(us.deals$v2x_polyarchy)[2] &
+          v2x_polyarchy <= fivenum(us.deals$v2x_polyarchy)[3] ~ 
+          "2nd Quartile",
+        v2x_polyarchy > fivenum(us.deals$v2x_polyarchy)[3] &
+          v2x_polyarchy <= fivenum(us.deals$v2x_polyarchy)[4] ~ "3rd Quartile",
+        v2x_polyarchy > fivenum(us.deals$v2x_polyarchy)[4] ~ "4th Quartile"
+        )
   ) %>% # pakistan/east pak duplicate gives warning- drop
   distinct() 
 # NA from right join- move to zero
@@ -193,11 +218,42 @@ ggplot(filter(us.deals,
        aes(x = year,
            y = deals, 
            group = country,
-           color = factor(democ_bin))) +
+           color = democ_grp)) +
   facet_wrap(~ country) +
   geom_line()
 
-# now group it 
+# a few key states
+ggplot(filter(us.deals,
+              str_detect(country, 
+      "Argentina|Brazil|Chile|Greece|Peru|South Korea|Taiwan"
+              )), 
+       aes(x = year,
+           y = deals, 
+           group = country,
+           color = factor(democ_bin))) +
+  facet_wrap(~ country) +
+  geom_point(aes(shape = factor(time_to_elec)),
+             size = 2) +
+  geom_bar(stat = "identity")
+
+
+# Gulf States
+ggplot(filter(us.deals,
+              str_detect(country, 
+                         "Saudi Arabia|Iran|United Arab Emirates|Bahrain"
+              )), 
+       aes(x = year,
+           y = deals, 
+           group = country,
+           fill = factor(time_to_elec))) +
+  facet_wrap(~ country) +
+  scale_fill_grey(start = .1, end = .8) +
+  geom_bar(stat = "identity")
+
+
+
+
+# now group it and summarize 
 us.deals.democ.change <- filter(us.deals,
                                 var_democ >= .1917) %>% 
                group_by(country, democ_bin, time_to_elec) %>%
@@ -208,14 +264,32 @@ us.deals.democ.change <- filter(us.deals,
                  deals.year = deals / n,
                  .groups = "keep"
                ) %>%
-              filter(ally == 1)
+              filter(ally == 1) %>%
+              mutate(
+                democ_bin = ifelse(democ_bin == 1,
+                                   "Democracy",
+                                   "Non-Democracy")
+              )
 # compare deals in autocratic and democratic
 ggplot(us.deals.democ.change, aes(x = time_to_elec,
                                   y = deals.year,
-                          group = factor(democ_bin),
-                          fill = factor(democ_bin))) +
+                          group = democ_bin,
+                          fill = democ_bin)) +
          facet_wrap(~ country) +
          scale_x_reverse() +
          geom_bar(stat = "identity",
                   position = "dodge") 
   
+# focus on a few countries
+us.deals.democ.key <- filter(us.deals.democ.change,
+                             str_detect(country, 
+                    "Argentina|Brazil|Chile|Greece|Peru|South Korea|Taiwan"
+                             ))
+ggplot(us.deals.democ.key, aes(x = time_to_elec,
+                                  y = deals.year,
+                                  group = democ_bin,
+                                  fill = democ_bin)) +
+  facet_wrap(~ country) +
+  scale_x_reverse() +
+  geom_bar(stat = "identity",
+           position = "dodge") 

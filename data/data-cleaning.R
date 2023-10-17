@@ -285,9 +285,6 @@ us.trade.ally$ally[us.trade.ally$ccode == 713] <- 1 # taiwan
 us.trade.ally$democ_bin <- ifelse(us.trade.ally$v2x_polyarchy > 
                                     mean(us.trade.ally$v2x_polyarchy, na.rm = T),
                                   1, 0)
-# allies w/ above average democ score
-us.trade.ally$ally_democ <- us.trade.ally$ally * us.trade.ally$democ_bin
-table(us.trade.ally$ally, us.trade.ally$ally_democ)
 
 
 # add GDP data from wb
@@ -486,6 +483,7 @@ us.trade.regis <- drop_na(us.trade.regis, year) %>%
                       cost.mr = str_extract(comments, "\\$\\d+\\-\\d+[:space:][m]"),
                       cost.b = str_extract(comments, "\\$\\d+[:space:][b]")
                     )
+
 # combine the costs and clean up
 us.trade.regis <- unite(us.trade.regis,
                                   cost.m, 
@@ -769,40 +767,6 @@ ggplot(us.arms.cat, aes(x = deals)) + geom_histogram()
 ggplot(us.arms.cat, aes(x = aid)) + geom_histogram()
 ggplot(us.arms.cat, aes(x = second.hand)) + geom_histogram()
 
-
-
-# summarize by category and ally
-us.arms.cat.all <- us.arms.cat %>%
-  group_by(ally, year, weapon.type) %>%
-  summarize(
-    deals = sum(deals),
-    prop.aid = mean(prop.aid, na.rm = TRUE),
-    ordered = mean(ordered, na.rm = TRUE),
-    .groups = "keep"
-  ) %>% 
-  left_join(elections.data) %>%
-  drop_na(time_to_elec, ally)
-
-deal.all <- ggplot(us.arms.cat.all, aes(x = factor(time_to_elec,
-                                ordered = TRUE,
-                                levels = c("3", "2",
-                                        "1", "0")),
-                            y = deals,
-                            color = factor(ally)
-                            )) +
-                facet_wrap(~ weapon.type, scales = "free_y") +
-                geom_boxplot(outlier.shape = NA)
-deal.all
-
-
-ggplot(us.arms.cat.all, aes(x = factor(time_to_elec,
-                                       ordered = TRUE,
-                                       levels = c("3", "2",
-                                                  "1", "0")),
-                            y = prop.aid,
-                            color = factor(ally))) +
-  facet_wrap(~ weapon.type, scales = "free_y") +
-  geom_boxplot(outlier.shape = NA)
 
 # wide formatted data 
 arms.cat.all <- pivot_wider(us.arms.cat.all,
