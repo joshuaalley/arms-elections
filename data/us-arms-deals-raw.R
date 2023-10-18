@@ -2,7 +2,7 @@
 # raw arms deals
 
 
-# simple information on deals
+# simple information on deals 
 # raw data on delivery duration
 table(us.trade.regis$deliv.lag)
 2008 / nrow(us.trade.regis)
@@ -35,6 +35,7 @@ us.deals <- us.arms.cat %>%
                     cold_war, gwot, democ_bin,
                     v2x_polyarchy, cowmidongoing,
                     rep_pres, time_to_elec, 
+                    ln_petrol_rev,
                     eu_member, ln_rgdp,
                     ln_pop, ln_distw,
                     Comlang,
@@ -225,7 +226,7 @@ ggplot(filter(us.deals,
 # a few key states
 ggplot(filter(us.deals,
               str_detect(country, 
-      "Argentina|Brazil|Chile|Greece|Peru|South Korea|Taiwan"
+      "Argentina|Brazil|Chile|Peru|South Korea|Taiwan"
               )), 
        aes(x = year,
            y = deals, 
@@ -283,7 +284,7 @@ ggplot(us.deals.democ.change, aes(x = time_to_elec,
 # focus on a few countries
 us.deals.democ.key <- filter(us.deals.democ.change,
                              str_detect(country, 
-                    "Argentina|Brazil|Chile|Greece|Peru|South Korea|Taiwan"
+                    "Argentina|Brazil|Chile|Peru|South Korea|Taiwan"
                              ))
 ggplot(us.deals.democ.key, aes(x = time_to_elec,
                                   y = deals.year,
@@ -292,4 +293,10 @@ ggplot(us.deals.democ.key, aes(x = time_to_elec,
   facet_wrap(~ country) +
   scale_x_reverse() +
   geom_bar(stat = "identity",
-           position = "dodge") 
+           position = "dodge") +
+  scale_fill_grey(start = .5, end = .2) +
+  theme(legend.position = "bottom") +
+  labs(x = "Years to Election",
+       y = "Deals per Year",
+       fill = "Regime",
+       title = "Regime Changes and Arms Deal Timing")

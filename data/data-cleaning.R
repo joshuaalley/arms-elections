@@ -14,6 +14,13 @@ vdem$ccode <- countrycode(vdem$country_id,
                           origin = "vdem",
                           destination = "cown")
 
+# add oil data
+petrol.data <- read.csv("data/petrol-revenue.csv") %>%
+                rename(petrol_rev = oil_gas_value_2014_PTO) %>%
+                mutate(ln_petrol_rev = log(petrol_rev + 1))
+# merge with vdem
+vdem <- left_join(vdem, petrol.data)
+summary(vdem$petrol_rev)
 
 # elections
 pres.elections <- seq(from = 1952, to = 2020, by = 4)
@@ -36,30 +43,6 @@ elections.data$time_to_elec <- rep(seq(from = 3, to = 0, by = -1),
                                     length.out = nrow(elections.data))
 
 
-
-# load Blankenship promises data
-promises.data <- read_dta("data/ReplicationData_ISQ_Promises.dta") %>%
-  select(ccode, year, statements_americas,
-         us_intervene_amer, 
-         lag_latency_pilot, lag_rivalry_thompson,
-         adv_signal_last3, log_distance,
-         sample_cow,
-         sample_atop)
-
-# create promises
-promises.annual <- promises.data %>%
-  group_by(year) %>%
-  summarize(
-    total_statements = sum(statements_americas, na.rm = TRUE),
-    .groups = "keep"
-  ) %>%
-  ungroup() %>%
-  mutate(
-    lag_statements = lag(total_statements)
-    ) %>%
-  left_join(elections.data)
-
-
 # use peacesciencer to 
 # generate dyad-year data on other dimensions
 dyadic.cont <- create_dyadyears(system = "cow",
@@ -70,8 +53,7 @@ dyadic.cont <- create_dyadyears(system = "cow",
   add_atop_alliance() %>%
   add_igos() %>%
   filter(year >= 1949)
-# flow1 is imports to ccode1 from ccode2
-# flow2 is vice-versa- imports by ccode2 from ccode1
+
 dyadic.cont$atop_defense[dyadic.cont$year == 2019] <- NA
 dyadic.cont$atop_defense[dyadic.cont$year == 2020] <- NA
 
@@ -234,6 +216,7 @@ dyadic.trade.major <- dyadic.trade.major %>%
 dyadic.trade.major$dyad.id <- group_indices(dyadic.trade.major, ccode1, ccode2) 
 
 
+
 # get us exports
 us.trade.ally <- filter(dyadic.trade.major, 
                         ccode1 == 2) %>%
@@ -245,7 +228,6 @@ us.trade.ally <- filter(dyadic.trade.major,
   left_join(vdem) %>%
   right_join(select(elections.data, year, 
                    president, time_to_elec)) %>%
-  left_join(promises.data) %>%
   group_by(ccode) %>% 
   mutate(
     # presidential partisanship
@@ -261,13 +243,6 @@ us.trade.ally <- filter(dyadic.trade.major,
     cold_war = ifelse(year <= 1989, 1, 0),
     gwot = ifelse(year >= 2001 & year <= 2011, 
                   1, 0)
-  ) %>%
-  group_by(president, ccode) %>%
-  mutate(
-    # running mean stat
-    total_statements = rollapply(statements_americas, 2, sum,
-                                 align ='right', fill = 0),
-    ln_total_statements = log(total_statements + 1)
   ) %>%
   group_by(ccode) %>%
   fill(atop_defense, .direction = "down")
