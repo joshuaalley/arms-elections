@@ -3,13 +3,12 @@
 
 
 ### model arms deals 
-
 pois.deals.cycle <- brm(bf(deals ~ 
                             time_to_elec + ally
                           + v2x_polyarchy +
                             cold_war + gwot +
-                            eu_member +
                             rep_pres + 
+                            ln_petrol_rev + 
                             ln_rgdp + cowmidongoing +
                             ln_pop + ln_distw + 
                             Comlang,
@@ -24,7 +23,7 @@ pois.deals.cycle <- brm(bf(deals ~
 summary(pois.deals.cycle)
 
 pois.cycle.pred <- predictions(pois.deals.cycle, conf_level = .9,
-                              newdata = datagrid(model = pois.deals.ally,
+                              newdata = datagrid(model = pois.deals.cycle,
                                                  time_to_elec = c(0, 1, 2, 3)))
 ggplot(pois.cycle.pred, aes(y = estimate, 
                            x = time_to_elec)) +
@@ -38,12 +37,45 @@ ggplot(pois.cycle.pred, aes(y = estimate,
 ggsave("appendix/elec-pred-deals.png", height = 6, width = 8)
 
 # hurdle poisson model of deals: democracy and time to election
+# no control vars
+pois.deals.nocont <- brm(bf(deals ~ 
+                             time_to_elec*v2x_polyarchy,
+                           center = FALSE),
+                        family = poisson(),
+                        backend = "cmdstanr",
+                        prior = c(prior(normal(0, .5), class = "b")),
+                        cores = 4,
+                        refresh = 500,
+                        data = us.deals.comp)
+summary(pois.deals.nocont)
+
+
+pois.nocont.pred <- predictions(pois.deals.nocont, conf_level = .9,
+                               newdata = datagrid(model = pois.deals.nocont,
+                                                  time_to_elec = c(0, 1, 2, 3),
+                                                  v2x_polyarchy = fivenum))
+
+ggplot(pois.nocont.pred, aes(y = estimate, 
+                            x = time_to_elec)) +
+  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs,
+             ncol = 5) +
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line() +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1)) +
+  labs(title = "Elections, Democracy, and Arms Deals",
+       y = "Predicted Arms Deals",
+       x = "Years to Presidential Election")
+ggsave("appendix/nocont-deals-pred.png", height = 6, width = 8)
+
+# hurdle poisson model of deals: democracy and time to election
 pois.deals.democ <- brm(bf(deals ~ 
                             time_to_elec*v2x_polyarchy +
                             ally +
                             cold_war + gwot +
-                            eu_member +
                             rep_pres + 
+                             ln_petrol_rev + 
                             ln_rgdp + cowmidongoing +
                             ln_pop + ln_distw + 
                             Comlang,
@@ -74,10 +106,9 @@ ggplot(pois.democ.pred, aes(y = estimate,
   labs(title = "Elections, Democracy, and Arms Deals",
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election")
-ggsave("figures/democ-deals-pred.png", height = 6, width = 8)
+ ggsave("figures/democ-deals-pred.png", height = 6, width = 8)
 
 
-# full fitted draws
 # full fitted draws
 fit.democ <- posterior_epred(pois.deals.democ, 
                            newdata = datagrid(model = pois.deals.democ,
@@ -98,8 +129,8 @@ pois.deals.ally <- brm(bf(deals ~
                        time_to_elec*ally
                       + v2x_polyarchy +
                        cold_war + gwot +
-                       eu_member +
                        rep_pres + 
+                        ln_petrol_rev + 
                        ln_rgdp + cowmidongoing +
                        ln_pop + ln_distw + 
                        Comlang,
@@ -146,8 +177,8 @@ ggplot(pois.ally.pred, aes(y = estimate,
 pois.deals <- brm(bf(deals ~ 
                     time_to_elec*ally*v2x_polyarchy +
                     cold_war + gwot +
-                    eu_member +
                     rep_pres + 
+                      ln_petrol_rev + 
                     ln_rgdp + cowmidongoing +
                     ln_pop + ln_distw + 
                     Comlang,
@@ -283,8 +314,8 @@ grid.arrange(pred.us.deals, me.us.deals, nrow = 1)
 ols.deals <- brm(deals ~  
                   time_to_elec*ally*v2x_polyarchy +
                   cold_war + 
-                  eu_member +
                   rep_pres + 
+                   ln_petrol_rev + 
                   ln_rgdp + 
                   ln_pop + ln_distw + 
                   Comlang,
@@ -331,10 +362,10 @@ hypothesis(key.ols.draws, c("a > b", "b > c", "c > d"))
 
 # poisson 
 pc.deals <- brm(deals ~  
-                   time_to_elec*ally*v2x_polyarchy +
+                  time_to_elec*v2x_polyarchy + ally +
                    cold_war + 
-                   eu_member +
                    rep_pres + 
+                  ln_petrol_rev + 
                    ln_rgdp + 
                    ln_pop + ln_distw + 
                    Comlang,
@@ -343,18 +374,16 @@ pc.deals <- brm(deals ~
                  prior = c(prior(normal(0, .5), class = "b")),
                  backend = "cmdstanr",
                  data = us.deals.comp)
-
+summary(pc.deals)
 
 # check estimates: predictions 
 pc.deals.est <- me.us.elec(pc.deals, data = us.deals.comp)  
 
 ggplot(pc.deals.est[[2]], aes(y = estimate, 
-                               x = time_to_elec,
-                               group = factor(ally),
-                               color = factor(ally))) +
+                               x = time_to_elec)) +
   facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs) + 
   scale_x_reverse() + # decreasing time to election
-  geom_hline(yintercept = 0) +
+  #geom_hline(yintercept = 0) +
   geom_line() +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
                   position = position_dodge(width = .1)) +
@@ -376,10 +405,10 @@ hypothesis(key.pc.draws, c("a > b", "b > c", "c > d"))
 
 # zero-inflated poisson 
 zip.deals <- brm(deals ~  
-                   time_to_elec*ally*v2x_polyarchy +
+                   time_to_elec*v2x_polyarchy + ally +
                    cold_war + 
-                   eu_member +
                    rep_pres + 
+                   ln_petrol_rev + 
                    ln_rgdp + 
                    ln_pop + ln_distw + 
                    Comlang,
@@ -395,9 +424,7 @@ zip.deals.est <- me.us.elec(zip.deals, data = us.deals.comp)
 
 
 ggplot(zip.deals.est[[2]], aes(y = estimate, 
-                               x = time_to_elec,
-                               group = factor(ally),
-                               color = factor(ally))) +
+                               x = time_to_elec)) +
   facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs) + 
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
@@ -424,10 +451,10 @@ hypothesis(key.zip.draws, c("a > b", "b > c", "c > d"))
 ### Show predictions with standard poisson and negative binomial
 # negative binomial 
 nb.deals <- brm(deals ~  
-                   time_to_elec*ally*v2x_polyarchy +
+                   time_to_elec*v2x_polyarchy + ally +
                    cold_war + 
                    eu_member +
-                   rep_pres + 
+                  ln_petrol_rev + 
                    ln_rgdp + 
                    ln_pop + ln_distw + 
                    Comlang,
@@ -465,6 +492,7 @@ coef.names.deals.brm = c("b_time_to_elec" = "Years to Election",
                    "b_time_to_elec × ally × v2x_polyarchy" = "Ally x Years to Election\nx Polyarchy",
                    "b_cowmidongoing" = "Ongoing MID",
                    "b_ln_pop" = "Log Population",
+                   "b_ln_petrol_rev" = "Log Petrol Revenue",
                    "b_ln_rgdp" = "Log GDP",
                    "b_ln_distw" = "Log Distance",
                    "b_eu_member" = "EU Member",
@@ -479,8 +507,8 @@ coef.names.deals.brm = c("b_time_to_elec" = "Years to Election",
                    "b_hu_cowmidongoing" = "Hurdle: Ongoing MID",
                    "b_hu_Intercept" = "Hurdle: Intercept")
 
-pois.models <- list(pois.deals.cycle, pois.deals.democ, pois.deals)
-names(pois.models) <- c("Generic Cycle", "Regime Cycle", "Regime and Ally Cycle")
+pois.models <- list(pois.deals.cycle, pois.deals.nocount, pois.deals.democ, pois.deals)
+names(pois.models) <- c("Generic Cycle", "Regime Cycle (No Controls)", "Regime Cycle", "Regime and Ally Cycle")
 modelsummary(pois.models,
              #output = "latex",
              output = "appendix/deals-reg-tabs.tex", 

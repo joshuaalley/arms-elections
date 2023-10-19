@@ -411,7 +411,7 @@ These dynamics are especially important for deals with many weapons or larger pl
 Most deal summaries do not have a monetary value, so might relying on deals overstate the importance of autocratic arms cooperation? 
 If democracies make fewer deals but purchase more valuable arms and autocracies buy many cheap platforms, deals might mislead. 
 As I demonstrate below, this is not the case. 
-Autocrats often purchase high-value platforms like aircraft, and these arms are the key facet of the electoral cycle. 
+High-value platforms like aircraft are central to arms deals with autocracies and democracies, and aircraft are the key platform in autocratic orders on the electoral cycle. 
 
 
 % key independent variables- ally/partner, 
@@ -427,9 +427,11 @@ It also suggests that Saudi Arabia, Iran, and Latin American juntas are among th
 
 % models
 Because many country-year observations have no arms deals, I use a hurdle Poisson model to estimate how the interaction of democracy and election timing shape arms deals.
-The hurdle component captures that some countries are unlikely to make any arms deals, and fits the annual count of arms deals well.\footnote{Standard Poisson models under-predict zeros, while negative binomial models predict over-predict large values. See the appendix for details.} 
+The hurdle component captures that some countries are unlikely to make any arms deals.
+Adding the hurdle with a Poisson outcome optimizes model fit.\footnote{Standard Poisson models under-predict zeros, while negative binomial models predict over-predict large values. See the appendix for details.} 
 For ease of estimation and substantive effect calculation, I use Bayesian estimation with the brms package for \textsf{R} \citep{Buerkner2017}.\footnote{The regression coefficients use a normal prior distribution with a mean of zero and standard deviation of .5.}
-I show in the appendix that Gaussian, Poisson and zero-inflated Poisson models give similar inferences. 
+I show in the appendix that Poisson and zero-inflated Poisson models give similar inferences. 
+Results are also robust to using a Poisson model without any hurdle component or controls.
 
 
 In addition to the interaction of election proximity and partner regime, I adjust for other correlates of arms deals and partner democracy. 
@@ -440,9 +442,13 @@ I include informal allies because arms sometimes substitute for a formal allianc
 %All three countries with informal alliances have implicit security guarantees that are similar to U.S. treaties with other countries. 
 
 
-Two other control variables are binary indicators of Cold War years and peak years in the Global War on Terror, as the United States worked with autocracies during these periods. 
-I also adjust for the supranational constraint of EU membership. 
-Further country-year controls include militarized dispute involvement, logged GDP, population, and distance from the United States, as well as a binary indicator of common language. 
+Other controls capture other factors that shape either the security motivation to seek U.S. arms or the means of doing so, and therefore may be correlated with autocracy and arms deals. 
+Two key security control variables are binary indicators of Cold War years and peak years in the Global War on Terror, as the United States worked with autocracies during these periods. 
+I also adjust for oil and gas revenues \citep{RossMahdavi2015}, as petrostates tend to be autocratic and have additional economic means to purchase U.S. arms.
+
+
+Further country-year controls include logged GDP, population to capture financial means and militarized dispute involvement to measure immediate threats.
+I also account for distance from the United States and common language, as these factors facilitate trade generally. 
 Finally, I adjust for presidential partisanship with a dummy indicator of Republican administrations.  
 
 
@@ -450,6 +456,7 @@ In the hurdle equation of the model, I use four predictors to capture whether a 
 First, I include the binary indicator of alliance status and the polyarchy democracy measure, because autocracies and non-allied states are less likely to make arms deals. 
 I also include the indicator of engagement in an active militarized dispute. 
 Finally, I include the log of GDP, because wealthier countries have greater means to buy arms.
+As I show in the appendix, alliances and greater wealth reduce the likelihood of zero deals, while greater democracy and ongoing conflict increase it. 
 
 
 \subsection{Results}

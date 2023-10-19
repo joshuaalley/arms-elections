@@ -91,16 +91,17 @@ The increase of .05 deals across a presidential election cycle is small but dist
 
 
 The same pattern is also apparent if I use three alternative likelihoods in the model of arms deals, election timing, autocracy and allies. 
-While the hurdle Poisson is the most theoretically appropriate specification, linear regression, standard Poisson and zero-inflated Poisson models all give similar inferences.
-I plot predicted arms deals across recipient democracy, alliance status and election timing from each of these models in \autoref{fig:deals-pred-ols},  \autoref{fig:deals-pred-pois} and \autoref{fig:deals-pred-zip}. 
+While the hurdle Poisson is the most theoretically appropriate specification, standard Poisson and zero-inflated Poisson models give similar inferences.
+Poisson results hold without controls as well.
+I plot predicted arms deals across recipient democracy, alliance status and election timing from each of these models in \autoref{fig:deals-pred-nocont},  \autoref{fig:deals-pred-pois} and \autoref{fig:deals-pred-zip}. 
 All three estimators suggest increasing arms deals for autocratic allies as elections approach, and little change in deals with democratic allies near presidential elections. 
 
 
 \begin{figure}[htpb]
 	\centering
-		\includegraphics[width=0.95\textwidth]{deals-pred-ols.png}
-	\caption{Predicted arms deals between the United States and other states 1950 to 2014 based on presidential election proximity, democracy, and security alliances, based on a linear regression model. Points mark the estimates and error bars summarize the 90\% credible interval.}
-	\label{fig:deals-pred-ols}
+		\includegraphics[width=0.95\textwidth]{nocont-deals-pred.png}
+	\caption{Predicted arms deals between the United States and other states 1950 to 2014 by presidential election proximity and partner democracy based on a Poisson regression model with only . Points mark the estimates and error bars summarize the 90\% credible interval.}
+	\label{fig:nocont-deals-pred}
 \end{figure}
 
 
@@ -108,7 +109,7 @@ All three estimators suggest increasing arms deals for autocratic allies as elec
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{deals-pred-pois.png}
-	\caption{Predicted arms deals between the United States and other states 1950 to 2014 based on presidential election proximity, democracy, and security alliances, based on a Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}
+	\caption{Predicted arms deals between the United States and other states 1950 to 2014 by presidential election proximity, democracy, and security alliances, based on a Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}
 	\label{fig:deals-pred-pois}
 \end{figure}
 

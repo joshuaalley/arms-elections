@@ -150,6 +150,13 @@ coef.names.map.state = c(
 # typical observations for US
 typical.func.us <- function(x){
   dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
+                  v2x_polyarchy = fivenum)
+  dat$rep_pres <- 0
+  dat 
+}
+
+typical.func.us.all <- function(x){
+  dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
                   ally = c(0, 1),
                   v2x_polyarchy = fivenum)
   dat$rep_pres <- 0

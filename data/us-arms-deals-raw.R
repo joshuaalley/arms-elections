@@ -79,8 +79,8 @@ fivenum(us.deals.comp$v2x_polyarchy)
 democ.all.labs <- labeller(democ_bin = c(`1` = "Democracy", `0` = "Nondemocracy"),
                            v2x_polyarchy = c(`0.012` = "Minimum\nDemocracy",
                                              `0.176` = "1st Quartile\nDemocracy",
-                                             `0.363` = "Median\nDemocracy",
-                                             `0.731` = "3rd Quartile\nDemocracy",
+                                             `0.36` = "Median\nDemocracy",
+                                             `0.734` = "3rd Quartile\nDemocracy",
                                              `0.926` = "Maximum\nDemocracy"),
                            ally = c(`1` = "US Ally", `0` = "Not Ally"))
 
