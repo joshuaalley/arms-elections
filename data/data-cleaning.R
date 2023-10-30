@@ -332,6 +332,8 @@ contracts.data <- read.csv("data/contracts-data.csv") %>%
 # move these to zero
 contracts.data$fed.obligation[contracts.data$fed.obligation < 0] <- 0
 
+# share of subcontracted
+sum(contracts.data$sub.contract) / sum(contracts.data$n.cont)
 
 # annual by program
 contracts.data.yr <- contracts.data %>%

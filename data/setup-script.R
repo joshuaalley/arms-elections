@@ -1,5 +1,5 @@
 # Joshua Alley
-# Set up script for economic bargaining in alliances
+# Set up script for arms deals and US elections
 
 
 # load packages
