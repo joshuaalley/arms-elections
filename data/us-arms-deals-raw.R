@@ -109,9 +109,10 @@ ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin) &
                 ccode < 200), 
        aes(x = year,
            y = deals,
-           color = factor(democ_bin))) +
-  facet_wrap(~ ccode) +
-  geom_point(aes(shape = factor(time_to_elec))) 
+           color = factor(time_to_elec),
+           shape = factor(democ_bin))) +
+  facet_wrap(~ country) +
+  geom_point() 
 
 # line plots in Asia/ME
 # time-series of deals
@@ -119,9 +120,11 @@ ggplot(filter(us.deals, ally == 1 & !is.na(democ_bin) &
                 ccode > 600), 
        aes(x = year,
            y = deals,
-           color = factor(democ_bin))) +
-  facet_wrap(~ ccode) +
-  geom_point(aes(shape = factor(time_to_elec))) 
+           color = factor(time_to_elec),
+           shape = factor(democ_bin))) +
+  facet_wrap(~ country) +
+  geom_point() 
+
 
 
 # aggregate summary 
@@ -155,7 +158,7 @@ table(us.deals.sum$democ_grp)
 ggplot(us.deals.sum, aes(x = time_to_elec,
                          y = deals.state,
                          color = factor(atop_defense))) +
-  facet_wrap(~ democ_grp) +
+  facet_wrap(~ democ_grp, ncol = 4) +
   scale_x_reverse() +
   scale_color_grey(
     start = 0.7,
@@ -165,7 +168,7 @@ ggplot(us.deals.sum, aes(x = time_to_elec,
   geom_line() +
   labs(x = "Time to Election",
        y = "Deals per Country in Group",
-       color = "Alliance")
+       color = "US Ally")
 ggsave("appendix/deals-democ-raw.png", height = 6, width = 8)
 
 
@@ -231,10 +234,27 @@ ggplot(filter(us.deals,
        aes(x = year,
            y = deals, 
            group = country,
-           color = factor(democ_bin))) +
+           fill = factor(time_to_elec),
+           shape = factor(democ_bin))) +
   facet_wrap(~ country) +
-  geom_point(aes(shape = factor(time_to_elec)),
-             size = 2) +
+  geom_point(size = 2) +
+  scale_fill_grey(start = .1, end = .8) +
+  geom_bar(stat = "identity")
+
+
+# a few key states
+ggplot(filter(us.deals,
+              str_detect(country, 
+                         "Greece|Portugal"
+              )), 
+       aes(x = year,
+           y = deals, 
+           group = country,
+           fill = factor(time_to_elec),
+           shape = factor(democ_bin))) +
+  facet_wrap(~ country) +
+  geom_point(size = 3) +
+  scale_fill_grey(start = .1, end = .8) +
   geom_bar(stat = "identity")
 
 
@@ -259,6 +279,7 @@ us.deals.democ.change <- filter(us.deals,
                                 var_democ >= .1917) %>% 
                group_by(country, democ_bin, time_to_elec) %>%
                summarize(
+                 var_democ = mean(var_democ),
                  ally = median(ally),
                  n = n(),
                  deals = sum(deals),
@@ -284,7 +305,7 @@ ggplot(us.deals.democ.change, aes(x = time_to_elec,
 # focus on a few countries
 us.deals.democ.key <- filter(us.deals.democ.change,
                              str_detect(country, 
-                    "Argentina|Brazil|Chile|Peru|South Korea|Taiwan"
+                    "Greece|Portugal"
                              ))
 ggplot(us.deals.democ.key, aes(x = time_to_elec,
                                   y = deals.year,
@@ -300,3 +321,4 @@ ggplot(us.deals.democ.key, aes(x = time_to_elec,
        y = "Deals per Year",
        fill = "Regime",
        title = "Regime Changes and Arms Deal Timing")
+ggsave("figures/deals-regime-change.png", height = 6, width = 8)

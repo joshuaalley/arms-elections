@@ -38,7 +38,7 @@
 
 
 \singlespace
-\title{\textbf{Arms and Electoral Influence: Arms Deals with Autocracies and Presidential Elections}}
+\title{\textbf{Arms and Electoral Influence: Arms Deals with Autocracies and U.S. Presidential Elections}}
 \author{Joshua Alley \\
 Assistant Professor \\
 University College Dublin\thanks{Thanks to Brian Blankenship, Rosella Capella, Jonathan Caverley, Jonathan Chu, Ben Fordham, Erik Lin-Greenberg, Zachary Markovitch, Leah Matchett, Andy Philips and Phil Potter, as well as participants in the Boston University Political Economy of Security Online Workshop Series and 2022 Meeting of the International Studies Association for helpful comments.} \\
@@ -66,8 +66,8 @@ joshua.alley@ucd.ie
 
 \begin{abstract} 
 As elections approach, U.S. leaders make additional arms deals with autocracies. 
-U.S. leaders make these deals to bolster their election prospects by claiming credit for providing jobs and increasing defense contracting in swing states.
-Autocratic arms recipients have greater political flexibility to strike arms deals near presidential elections and can increase their security. 
+U.S. leaders make these deals to bolster their electoral prospects by claiming credit for providing jobs and increasing defense contracting in swing states.
+Autocratic arms recipients have greater political flexibility to strike arms deals near presidential elections and increase their security by taking arms. 
 I provide three pieces of evidence for this argument.  
 First, I detail electoral cycles in arms deals between the United States and autocracies. 
 I then link arms deals to defense contract awards in swing states.
@@ -223,17 +223,22 @@ Munitions and smaller platforms take less time.}
 When they announce a deal, leaders can claim credit for creating or protecting defense industrial jobs. 
 Indeed, credit claiming is essential to budget cycles \citep{Bueno2021}. 
 Leaders will claim credit for jobs, and as confirmed orders stimulate contract awards, improvements in economic conditions substantiate these claims. 
-%Leaders can credibly claim credit because deals are correlated with increased contract awards in swing states. 
+
+
+% preservation vs creation
+When they claim credit for generating employment, leaders can argue that arms sales create and preserve jobs.
+Job preservation may be more important than job creation. 
+Arms sales add relatively few jobs, but sales of older equipment help keep production lines for older equipment open \citep{Caverley2018}. 
 
 
 % Credit claiming examples
 Many U.S. leaders claim that arms deals will generate employment and support the defense industry. 
 The Obama administration justified the \$60 billion sale to Saudi Arabia in those terms and first announced it in 2010 before orders began in 2012.
-For instance, Boeing and U.S. officials highlighted 77,000 jobs tied to the Saudi aircraft purchases during debates over approval.\footnote{url{https://www.reuters.com/article/idINIndia-51467020100914}.}
+For instance, Boeing and U.S. officials highlighted 77,000 jobs tied to the Saudi aircraft purchases during debates over approval.\footnote{\url{https://www.reuters.com/article/idINIndia-51467020100914}.}
 Donald Trump then attempted to claim credit for jobs tied to existing Saudi deals or letters of intent. 
+In 2020, a Department of Defense press release claimed that among U.S. workers, "up to 1 million ... depend on U.S. defense exports for their job security.''\footnote{\url{https://www.defense.gov/News/News-Stories/Article/Article/2435951/officials-describe-how-arms-sales-benefit-the-us-partners/}}
+The Clinton administration also engaged in more arms sales than observers anticipated, because as one defense industry executive argued that ``Clinton realizes these exports create jobs.''%\footnote{\url{https://www.bloomberg.com/news/articles/1993-06-27/meet-bill-clinton-arms-merchant#xj4y7vzkg}}
 
-
-% find another example
 
 % Congress- rarely blocks sales- occastional conditions 
 Leaders may also claim credit for the economic benefits of an arms deal to ensure Congressional approval. 
@@ -467,7 +472,7 @@ As I show in the appendix, alliances and greater wealth reduce the likelihood of
 
 
 I summarize the interaction of partner democracy and presidential election proximity in \autoref{fig:democ-deals-pred}.\footnote{See the appendix for coefficient estimates from all models and summaries of key variables.}
-This figure plots predicted arms deals based on proximity to a presidential election and partner democracy.\footnote{I use 90\% intervals because simulation variance in Bayesian estimation can lead to unstable inferences with 95\% intervals (CITE THIS).}
+This figure plots predicted arms deals based on proximity to a presidential election and partner democracy.\footnote{I use 90\% intervals because simulation variance in Bayesian estimation can lead to unstable inferences with 95\% intervals \citep{McElreath2016}, so 90\% is a common reporting default \citep{Goodrichetal2023}}.
 Each facet fixes recipient democracy at the minimum, first quartile, median, third quartile and maximum.
 
 
@@ -481,7 +486,7 @@ Each facet fixes recipient democracy at the minimum, first quartile, median, thi
 
 \autoref{fig:us-arms-plots} indicates that autocracies make more arms deals with the United States as elections approach.
 At minimum polyarchy, predicted arms deals rise from .77 to .97 throughout the presidential election cycle.
-Hypothesis tests suggest that for a maximally autocratic state, the increase of .06 deals in each year of the electoral cycle is is clearly positive.\footnote{The entire posterior mass of the difference between three and zero years to an election is positive, with a 95\% credible interval that ranges from .1 to .22.}
+Hypothesis tests suggest that for a maximally autocratic state, the increase of .06 deals in each year of the electoral cycle is is clearly positive.\footnote{The entire posterior mass of the difference between three and zero years to an election is positive, with a 90\% credible interval from .13 to .23.}
 Electoral cycles when democracy is at the 1st quartile or median are smaller but clearly positive.
 The arms deal cycle diminishes as democracy increases, so states with a polyarchy score from the third quartile on see no change in arms deals as elections approach.\footnote{I show in the appendix that the main interaction estimates are robust to using binning estimators.}  
 
@@ -538,13 +543,13 @@ Traditional approaches such as logging the outcome after adding one are sensitiv
 To overcome these issues, I fit two types of models.
 First, I rescale the defense contracts measure to fall between zero and one by expressing each state's contracts as a share of total defense contracting in that year.
 I then use ordered beta regression to predict the rescaled outcome \citep{Kubinec2022}.\footnote{\url{https://www.robertkubinec.com/post/logs/}} 
-Ordered beta regression is fits bounded data better than other models with more restrictive distributional assumptions. 
+Ordered beta regression is fits bounded data better than other models with more restrictive distributional assumptions by using ordered cut points for boundary and continuous observations. 
 This approach allows me to use a flexible outcome distribution and account for zeros.
 It also avoids scale-effects from log-transformations and deciding to work with outcomes in millions of dollars. 
 Converting the coefficients and marginal effects back to the outcome scale after estimation is straightforward, as I multiply the model estimates by the rescaling constant.
 
 
-Because ordered beta regression requires rescaling defense contracts, I present two additional checks in the appendix. 
+Because leveraging the flexibility and interpretability of ordered beta regression requires rescaling defense contracts, I present two additional checks in the appendix. 
 First, I also fit a a hurdle lognormal model of contracts without any transformation.
 Second, I model annual contract changes with a robust regression. 
 Both approaches give similar inferences.
@@ -664,40 +669,83 @@ As a result, swing states receive similar contracts to other states with larger 
 \section{Examining the Theoretical Process}
 
 
-The results so far corroborate two predictions of the argument, but require additional validation. 
-In the following, I check the low constraint and high security motivation mechanisms by showing that allies drive most of the electoral cycle in U.S. arms deals with autocracies.  
-Given a strong security motivation to make arms deals, autocratic allies have the necessary mix of means and motivation to make arms deals.
+In this section, I check the process behind the aggregate correlations above.  
+To begin, I check the argument that low constraint and additional security motivations drive autocracies to make arms deals.
+To examine constraint, I compare arms deal timing from four U.S. partners while they were autocracies or democracies.
+To assess security motivation, I show that autocratic allies of the United States are the primary source of deals cycles. 
 
 
-After examining the role of alliances in arms deals cycles, I establish that the same platforms in arms deals between the United States and autocratic allies are also strongly correlated with swing state contracts.
+After examining autocracies' rationale for making arms deals, I establish that the same platforms in arms deals between the United States and autocratic allies are also strongly correlated with swing state contracts.
 If the platforms that moved in deals cycles were uncorrelated with swing state contracts, that would suggest any connection between deal cycles and swing state contracts is coincidental.
-The sectoral consistency I find instead suggests that arms deals do translate into swing state contracts.\footnote{A third process check in the appendix shows that the marginal impact of arms deals on swing state contracts is positive in the year before and year of a presidential election and is closer to zero otherwise.}
+The sectoral consistency I find instead suggests that arms deals do translate into swing state contracts.
+
+
+A third process check in the appendix shows that the marginal impact of arms deals on swing state contracts is positive in the year before and year of a presidential election and is closer to zero otherwise.
+This implies that leaders are more likely to channel contracts from arms deals to swing states as elections approach. 
 
 
 
-\subsection{Autocratic Allies}
+\subsection{Why do Autocracies Make Arms Deals?}
 
 
 % mechanisms
 The argument claims that autocracies make arms deals with the United States near elections because their leaders have fewer constraints and reap security benefits. 
-The confluence of security need and freedom to make deals is necessary for cycles. 
-Autocratic allies of the United States have equal political flexibility and greater security motivation than other autocrats. 
-As a result, allied states should drive most of the electoral cycle in autocratic arms deals.
+Here, I show that within U.S. partners, changes in political regime lead to changes in arms deal timing, which suggests that constraints matter. 
+I then show that autocratic allies, who are especially dependent on the United States for security, are especially likely to make arms deals as elections approach.
 
 
-% potential markets: allies
-% take new or used stuff to make room
+\subsubsection{Low Constraint: Regime Changes}
+
+
+To show that constraint matters, I compare arms deal timing in four U.S. partners who have received U.S. arms as an autocracy and as a democracy. 
+Brazil, Greece, Peru and Portugal all underwent substantial changes in political regime, unlike other U.S. security partners that are consolidated democracies or autocracies. 
+I selected these two states because variation in their polyarchy score is two times greater than average, they made arms deals with the United States across all regime types, they both democratized at a similar time, and are early members of NATO. 
+Joint defense planning in NATO makes these cases a hard test for the political constraint mechanism.
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{../figures/deals-regime-change.png}
+	\caption{Average U.S. arms deals with Greece and Portugal in every year of the presidential election cycle, divided by regime type. Democracy years have mean or greater polyarchy.}
+	\label{fig:deals-regime-change}
+\end{figure}
+
+
+\autoref{fig:deals-regime-change} shows that for these four states, autocratic periods are associated with more arms deals near elections.
+Conversely, arms deals are more stable over time in periods of democracy. 
+When these states had a greater than average polyarchy score, average arms deals were lower during U.S. election years. 
+
+
+Both Greece and Portugal made more arms deals with the United States in election years when they were autocracies than when they were democracies.
+On average, the Salazar regime in Portugal made 2.5 more arms deals in Presidential election years than democratic leaders of Portugal.
+After transitioning to democracy, Greece made consistent arms deals with the United States across the electoral cycle.
+During military rule, Greece made more arms deals in the year before and year of presidential elections.
+
+
+Even within NATO, autocratic leaders have more flexibility to make arms deals near presidential elections. 
+Transitions to democracy attenuate this tendency, which suggests that democratic leaders face different constraints and incentives in when they acquire U.S. arms. 
+Autocratic allies like the Salazar regime and Greek junta also have additional security motivation, which I detail below. 
+
+
+
+\subsubsection{Security Motivation: Autocratic Allies}
+
+
+I test the security motivation by examining autocratic allies. 
+Because U.S. allies rely on the United States for security more than other autocracies, and and U.S. leaders rely on arms to support autocratic partners \citep{Yarhi-Miloetal2016}, autocratic allies have additional motivation to purchase U.S. arms. 
+U.S. leaders can also more easily justify selling arms to perceived allies. 
+As a result, allies should drive most of the increase in arms deals with autocracies near presidential elections. 
+
+
 Alliances increase arms transfers in general. 
 \citet{Thurneretal2019} find that while the importance of security and economic factors fluctuates, alliances consistently increase arms transfers.
-%Common security interests and defense industrial cooperation create economic and security ties that encourage arms trade \citep{Bitzinger1994}. 
 \citet[pg. 184-5]{IkenberryGrieco2003} note that states often use direct transfers to attract and sustain security commitments. 
-U.S. allies that rely on American weapons, systems and doctrines can also integrate purchases more easily and build on past orders. 
 
 
 % security need
-Autocratic allies also have additional security motivation to facilitate electoral arms deal cycles. 
-Deals that win favor with U.S. leaders increase the odds of U.S. support for a partner's foreign policy goals and political survival.  
-In addition to the capability boost of new arms, allies gain confidence in U.S. commitment because arms exports are a costly signal \citep{McManusYarhi-Milo2017}, and U.S. leaders rely on arms to support autocratic partners \citep{Yarhi-Miloetal2016}.
+Arms sales increase autocratic allies' security.
+First, deals that win favor with U.S. leaders increase the odds of U.S. support for a partner's foreign policy goals and political survival.  
+In addition to the capability boost of new arms, allies gain confidence in U.S. commitment because arms exports are a costly signal \citep{McManusYarhi-Milo2017}.
 
 
 % less export cycles to non-allies
@@ -705,7 +753,7 @@ In addition to the capability boost of new arms, allies gain confidence in U.S. 
 Furthermore, the security externalities of arms transfers reduce electoral cycles in arms exports to non-allies. 
 U.S. leaders will be less willing to increase the capability of states with fewer common interests, even if it facilitates contracting cycles.
 Justifying deals is still challenging, but it is more straightforward for autocratic allies. 
-
+U.S. allies that rely on American weapons, systems and doctrines can also integrate purchases more easily and build on past orders. 
 
 
 %Other U.S. elites are also more likely to object to arms deals outside alliances.
@@ -722,16 +770,12 @@ Justifying deals is still challenging, but it is more straightforward for autocr
 
 
 % sum it up
-Among autocracies, U.S. allies mix stronger security motivations with the same low constraints. 
-Autocratic allies thus have the necessary means and motivation to buy arms near elections. 
+Among autocracies, U.S. allies have stronger security motivations, so they have the same means and additional motivation to buy arms near elections, relative to other autocracies. 
 Alliances also make it easier for U.S. leaders to justify deals.
 As a result, most of the electoral cycle in arms deals with autocracies should occur with allied states. 
- 
 
- 
-\subsubsection{Results}
 
-I tweak the hurdle Poisson model of autocracies and electoral arms deals to examine the role of alliances. 
+I tweak the hurdle Poisson model of autocracies and arms deals to examine the role of alliances. 
 To do this, I add a dummy indicator of whether a state is a U.S. ally to the interaction of partner regime and presidential election proximity.\footnote{This includes formal and informal allies.}
 This creates a triple interaction of alliance, regime type, and election timing. 
 
@@ -756,8 +800,8 @@ Predicted deals with non-allied states are lower regardless of democracy.
 
 There are cycles in arms deals for autocracies with and without a U.S. alliance, but the cycles are much larger for allied states. 
 When allied polyarchy is at the minimum, predicted arms deals rise from 2.3 to 2.7 throughout the presidential election cycle.
-Hypothesis tests of equality between allied arms deals at minimum democracy indicate a clear increase of .13 deals in each year of the electoral cycle.\footnote{The 95\% credible interval ranges from .05 to .21.}
-Non-allied states with a minimal polyarchy score see predicted deals increase by roughly .05 a year.
+Hypothesis tests of equality between allied arms deals at minimum democracy indicate a clear increase of .13 deals in each year of the electoral cycle.\footnote{The 90\% credible interval ranges from .21 to .49.}
+Non-allied states with a minimal polyarchy score see predicted deals increase by roughly .03 a year.
 
 
 Unlike autocratic allies, democratic allies receive consistent arms deals. 

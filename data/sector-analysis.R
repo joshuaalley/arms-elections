@@ -314,11 +314,11 @@ us.deals.sector <- us.arms.cat %>%
   ) %>%
   right_join(select(us.trade.ally,
                     ccode, year,
-                    atop_defense, ally, ally_democ,
+                    atop_defense, ally,
                     cold_war, democ_bin,
                     v2x_polyarchy, cowmidongoing,
                     rep_pres, time_to_elec, 
-                    eu_member, ln_rgdp,
+                    ln_petrol_rev, ln_rgdp,
                     ln_pop, ln_distw,
                     Comlang,
                     Contig, Evercol)) %>%
@@ -340,9 +340,8 @@ for(i in 1:length(sector.list)){
   deals.sector[[i]] <- brm(bf(deals ~ 
                       time_to_elec*ally*v2x_polyarchy +
                       cold_war + 
-                      eu_member +
                       rep_pres + 
-                      ln_rgdp + cowmidongoing +
+                      ln_rgdp + cowmidongoing + ln_petrol_rev +
                       ln_pop + ln_distw + 
                       Comlang,
                       hu ~ ally + cowmidongoing + ln_rgdp,
@@ -372,7 +371,7 @@ deals.sector.est <- lapply(deals.sector,
 
 # take predictions
 pred.inter.sector <- bind_rows(sapply(deals.sector.est, function(x) x[2]))
-pred.inter.sector$weapon <- rep(sector.list, each = 40)
+pred.inter.sector$weapon <- rep(sector.list, each = 20)
 pred.inter.sector$weapon <- str_to_title(gsub("_", " & ", pred.inter.sector$weapon))
 # max and min only for interpretation
 pred.inter.sector <- pred.inter.sector %>% 
@@ -388,28 +387,10 @@ pred.inter.sector <- pred.inter.sector %>%
 
 # plot
 ggplot(pred.inter.sector, aes(y = estimate, 
-                                x = time_to_elec,
-                                group = factor(ally),
-                                color = factor(ally))) +
-  facet_grid(weapon ~ fct_rev(dem.labs)) + 
-  scale_x_reverse() + # decreasing time to election
-  geom_hline(yintercept = 0) +
-  geom_line() +
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
-  scale_color_grey("US Ally", 
-                   start = 0.7,
-                   end = 0.1,
-                   labels = c(`0` = "No", `1` = "Yes")) +
-  labs(title = "Elections and Arms Deals",
-       y = "Predicted Arms Deals",
-       x = "Years to Presidential Election")
-
-# switch axes in grid
-ggplot(pred.inter.sector, aes(y = estimate, 
                               x = time_to_elec,
                               group = factor(ally),
-                              color = factor(ally))) +
+                              color = factor(ally)
+                              )) +
   facet_grid(fct_rev(dem.labs) ~ weapon) + 
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +

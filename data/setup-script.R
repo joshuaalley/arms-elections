@@ -26,6 +26,7 @@ library(ordbetareg)
 library(ggridges)
 library(kableExtra)
 library(interflex)
+library(fixest)
 
 # set seed
 set.seed(12)
@@ -39,6 +40,7 @@ options(modelsummary_format_numeric_latex = "plain")
 conflict_scout()
 # set preferences 
 conflict_prefer("lag", "dplyr")
+conflict_prefer("lead", "dplyr")
 conflict_prefer("filter", "dplyr")
 conflict_prefer("recode", "dplyr")
 conflict_prefer("select", "dplyr")
@@ -168,13 +170,12 @@ me.us.elec <- function(model, formula, rm.wt, data){
   
   # no dyad robust for US 
   # marginal effects 
-  me.est <- slopes(model, variables = c("ally"), conf_level = .9,
+  me.est <- slopes(model, variables = c("time_to_elec"), conf_level = .9,
                             newdata = datagrid(model = model, 
-                                               time_to_elec = c(0, 1, 2, 3),
                                                v2x_polyarchy = fivenum))
   
    me.def.plot <- plot_slopes(model, conf_level = .9,
-                          variables = c("ally", "v2x_polyarchy"),
+                          variables = c("v2x_polyarchy"),
                          condition = "time_to_elec", draw = FALSE)
   
   # predicted outcomes
@@ -184,6 +185,32 @@ me.us.elec <- function(model, formula, rm.wt, data){
   # full fitted draws
   fit.out <- posterior_epred(model, 
                     newdata = typical.func.us(model))
+  
+  res <- list(me.est, pred.out, me.def.plot, fit.out)
+}
+
+
+# Marginal effects function 
+me.us.elec.all <- function(model, formula, rm.wt, data){
+  
+  # no dyad robust for US 
+  # marginal effects 
+  me.est <- slopes(model, variables = c("ally"), conf_level = .9,
+                   newdata = datagrid(model = model, 
+                                      time_to_elec = c(0, 1, 2, 3),
+                                      v2x_polyarchy = fivenum))
+  
+  me.def.plot <- plot_slopes(model, conf_level = .9,
+                             variables = c("ally", "v2x_polyarchy"),
+                             condition = "time_to_elec", draw = FALSE)
+  
+  # predicted outcomes
+  pred.out <- predictions(model, conf_level = .9,
+                          newdata = typical.func.us.all(model))
+  
+  # full fitted draws
+  fit.out <- posterior_epred(model, 
+                             newdata = typical.func.us.all(model))
   
   res <- list(me.est, pred.out, me.def.plot, fit.out)
 }
