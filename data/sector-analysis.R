@@ -367,11 +367,11 @@ pp.deals.sector
 # look at interactions
 deals.sector.est <- lapply(deals.sector,
                            function(x)
-                           me.us.elec(x, data = x$data))  
+                           me.us.elec.all(x, data = x$data))  
 
 # take predictions
 pred.inter.sector <- bind_rows(sapply(deals.sector.est, function(x) x[2]))
-pred.inter.sector$weapon <- rep(sector.list, each = 20)
+pred.inter.sector$weapon <- rep(sector.list, each = 40)
 pred.inter.sector$weapon <- str_to_title(gsub("_", " & ", pred.inter.sector$weapon))
 # max and min only for interpretation
 pred.inter.sector <- pred.inter.sector %>% 

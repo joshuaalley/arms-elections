@@ -2,6 +2,25 @@
 # joint model with arms deals and contracts
 
 
+# generate a list of swing states
+swing.list <- select(state.data, state, swing, year) %>%
+               filter(swing == 1) %>%
+               group_by(state) %>%
+               summarize(
+                 Start = min(year),
+                 End = max(year)
+               ) %>%
+               rename(State = state)
+swing.tab <- datasummary_df(swing.list, fmt = 0,
+               output = "latex",
+             caption = "\\label{tab:swing-list}: List of swing states.") %>%
+  kable_styling(font_size = 10,
+                latex_options = "hold_position") 
+swing.tab
+save_kable(swing.tab, "appendix/swing-list.tex")
+
+
+
 ### state data with arms deals
 state.data.deals <- left_join(state.data, 
                               select(arms.deals.year,
