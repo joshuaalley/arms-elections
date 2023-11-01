@@ -152,6 +152,7 @@ coef.names.map.state = c(
 # typical observations for US
 typical.func.us <- function(x){
   dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
+                  ally = 1,
                   v2x_polyarchy = fivenum)
   dat$rep_pres <- 0
   dat 
@@ -172,11 +173,12 @@ me.us.elec <- function(model, formula, rm.wt, data){
   # marginal effects 
   me.est <- slopes(model, variables = c("time_to_elec"), conf_level = .9,
                             newdata = datagrid(model = model, 
+                                               ally = 1,
                                                v2x_polyarchy = fivenum))
   
-   me.def.plot <- plot_slopes(model, conf_level = .9,
-                          variables = c("v2x_polyarchy"),
-                         condition = "time_to_elec", draw = FALSE)
+   # me.def.plot <- plot_slopes(model, conf_level = .9,
+   #                        variables = c("v2x_polyarchy"),
+   #                       condition = "time_to_elec", draw = FALSE)
   
   # predicted outcomes
   pred.out <- predictions(model, conf_level = .9,
@@ -186,7 +188,7 @@ me.us.elec <- function(model, formula, rm.wt, data){
   fit.out <- posterior_epred(model, 
                     newdata = typical.func.us(model))
   
-  res <- list(me.est, pred.out, me.def.plot, fit.out)
+  res <- list(me.est, pred.out, fit.out)
 }
 
 

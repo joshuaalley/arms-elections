@@ -301,6 +301,8 @@ ggplot(pred.out.sector, aes(x = deals, y = estimate,
 
 
 
+
+
 ### examine the deals cycles by sector ###
 # total deals- summarize at country-year level and add covariates
 us.deals.sector <- us.arms.cat %>%
@@ -331,25 +333,33 @@ us.deals.sector <- us.arms.cat %>%
 us.deals.sector$deals[is.na(us.deals.sector$deals)] <- 0
 us.deals.sector$nz_deals[is.na(us.deals.sector$nz_deals)] <- 0
 
-
+# deals by weapon type
+sector.deals.total <- us.deals.sector %>%
+                        group_by(weapon.type) %>%
+                        summarize(
+                          deals = sum(deals, na.rm = TRUE)
+                        )
+sector.deals.total
+5618 / sum(sector.deals.total$deals)
 
 # now set up formula
 deals.sector <- vector(mode = "list", length = length(sector.list))
 for(i in 1:length(sector.list)){
   
   deals.sector[[i]] <- brm(bf(deals ~ 
-                      time_to_elec*ally*v2x_polyarchy +
+                      time_to_elec*v2x_polyarchy + 
                       cold_war + 
                       rep_pres + 
                       ln_rgdp + cowmidongoing + ln_petrol_rev +
                       ln_pop + ln_distw + 
                       Comlang,
-                      hu ~ ally + cowmidongoing + ln_rgdp,
+                      hu ~ ally + cowmidongoing + ln_rgdp + v2x_polyarchy,
                       center = FALSE),
                     family = hurdle_poisson(link = "log"),
                     backend = "cmdstanr",
                     prior = c(prior(normal(0, .5), class = "b")),
                     cores = 4,
+                    refresh = 500,
                     data = filter(us.deals.sector,
                                   weapon.type == sector.list[[i]] |
                                     deals == 0)
@@ -367,11 +377,11 @@ pp.deals.sector
 # look at interactions
 deals.sector.est <- lapply(deals.sector,
                            function(x)
-                           me.us.elec.all(x, data = x$data))  
+                           me.us.elec(x, data = x$data))  
 
 # take predictions
 pred.inter.sector <- bind_rows(sapply(deals.sector.est, function(x) x[2]))
-pred.inter.sector$weapon <- rep(sector.list, each = 40)
+pred.inter.sector$weapon <- rep(sector.list, each = 20)
 pred.inter.sector$weapon <- str_to_title(gsub("_", " & ", pred.inter.sector$weapon))
 # max and min only for interpretation
 pred.inter.sector <- pred.inter.sector %>% 
@@ -383,27 +393,56 @@ pred.inter.sector <- pred.inter.sector %>%
                          v2x_polyarchy == max(v2x_polyarchy) ~ "Maximum Democracy",
                          v2x_polyarchy == min(v2x_polyarchy) ~ "Minimum Democracy",
                        )
-                     )
+                     ) %>%
+                     select(dem.labs, time_to_elec,
+                            weapon, 
+                            estimate, conf.low, conf.high)
+
+# total from summing across 
+pred.sector.total <- pred.inter.sector %>%
+                      group_by(dem.labs, time_to_elec) %>%
+                      summarize(
+                        estimate = sum(estimate),
+                        conf.low = sum(conf.low),
+                        conf.high = sum(conf.high),
+                        .groups = "keep"
+                       ) %>%
+                      mutate(
+                        weapon = "Total"
+                      )
+pred.sector.total
+
+# pred.inter.sector <- bind_rows(pred.inter.sector, 
+#                                pred.sector.total) %>%
+#                      mutate(
+#                        weapon = factor(weapon,
+#                                        ordered = TRUE,
+#                           levels = c("Aircraft", "Arms", "Electronics",
+#                                      "Missile & Space", "Ships",
+#                                      "Vehicles", "Total"))
+#                      )
 
 # plot
 ggplot(pred.inter.sector, aes(y = estimate, 
                               x = time_to_elec,
-                              group = factor(ally),
-                              color = factor(ally)
+                              group = dem.labs,
+                              color = dem.labs
                               )) +
-  facet_grid(fct_rev(dem.labs) ~ weapon) + 
+  facet_wrap( ~ weapon, ncol = 7,
+              scales = "free_y") + 
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
   geom_line() +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
-  scale_color_grey("US Ally", 
+                  position = position_dodge(width = .5),
+                  linewidth = 1) +
+  scale_color_grey("Regime",
                    start = 0.7,
-                   end = 0.1,
-                   labels = c(`0` = "No", `1` = "Yes")) +
+                   end = 0.1) +
   labs(title = "Elections and Arms Deals: Specific Sectors",
        y = "Predicted Arms Deals",
-       x = "Years to Presidential Election")
+       x = "Years to Presidential Election") +
+  theme(legend.position = "bottom")
 ggsave("figures/deals-sector.png", height = 7, width = 10)
 
 summary(deals.sector[[1]])

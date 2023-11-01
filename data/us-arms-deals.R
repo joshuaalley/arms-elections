@@ -72,7 +72,6 @@ ggsave("appendix/nocont-deals-pred.png", height = 6, width = 8)
 # hurdle poisson model of deals: democracy and time to election
 pois.deals.democ <- brm(bf(deals ~ 
                             time_to_elec*v2x_polyarchy +
-                            ally +
                             cold_war + gwot +
                             rep_pres + 
                              ln_petrol_rev + 
@@ -91,6 +90,7 @@ summary(pois.deals.democ)
 
 pois.democ.pred <- predictions(pois.deals.democ, conf_level = .9,
                               newdata = datagrid(model = pois.deals.democ,
+                                                 ally = 1,
                                                  time_to_elec = c(0, 1, 2, 3),
                                                  v2x_polyarchy = fivenum))
 
@@ -118,6 +118,7 @@ ggplot(pois.democ.pred, aes(y = estimate,
 # full fitted draws
 fit.democ <- posterior_epred(pois.deals.democ, 
                            newdata = datagrid(model = pois.deals.democ,
+                                              ally = 1,
                                               time_to_elec = c(0, 1, 2, 3),
                                               v2x_polyarchy = fivenum)) 
 
