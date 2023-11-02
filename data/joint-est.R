@@ -641,8 +641,8 @@ coef.names.cont.brm = c("b_deals" = "Arms Deals",
 
 deals.state.models <- list(deals.state, deals.state.hurdle, deals.state.reg)
 names(deals.state.models) <- c("Rescaled Ordered Beta", "Log-Normal Hurdle", "Student-T: Contract Changes")
-modelsummary(deals.state.models,
-             output = "appendix/cont-reg-tabs.tex", 
+deals.state.tab <- modelsummary(deals.state.models,
+             output = "latex", 
              gof_map = "none",
              conf.level = .9,
              coef_omit = c("sd"),
@@ -653,8 +653,10 @@ modelsummary(deals.state.models,
              statistic = "({conf.low}, {conf.high})",
              title = "\\label{tab:cont-regs}: Coefficient estimates from models of defense contract awards.") %>%
   kable_styling(font_size = 8, full_width = FALSE,
-                latex_options = c("HOLD_position")) %>%
+                latex_options = c("HOLD_position", "scale_down")) %>%
   footnote(general = "90% Credible Intervals in parentheses.")
+deals.state.tab
+save_kable(deals.state.tab, "appendix/cont-reg-tabs.tex")
 
 
 

@@ -313,34 +313,60 @@ us.deals.sector <- us.arms.cat %>%
   summarize(
     deals = sum(deals, na.rm = TRUE),
     .groups = "keep"
-  ) %>%
-  right_join(select(us.trade.ally,
-                    ccode, year,
-                    atop_defense, ally,
-                    cold_war, democ_bin,
-                    v2x_polyarchy, cowmidongoing,
-                    rep_pres, time_to_elec, 
-                    ln_petrol_rev, ln_rgdp,
-                    ln_pop, ln_distw,
-                    Comlang,
-                    Contig, Evercol)) %>%
-  filter(year >= 1950) %>%
-  mutate(
-    nz_deals = ifelse(deals > 0, 1, 0)
-  ) %>% # pakistan/east pak duplicate gives warning- drop
-  distinct()  
-# NA from right join- move to zero
-us.deals.sector$deals[is.na(us.deals.sector$deals)] <- 0
-us.deals.sector$nz_deals[is.na(us.deals.sector$nz_deals)] <- 0
+   ) %>%
+  pivot_wider(id_cols = c("ccode", "year"),
+              names_from = "weapon.type",
+              values_from = "deals")
+# zero deals with NA
+us.deals.sector[, 3:8][is.na(us.deals.sector[, 3:8])] <- 0
+
+
+# separate datasets
+weapon.type <- colnames(us.deals.sector)[3:8]
+
+sector.data.func <- function(sector){
+  data <- select(us.deals.sector,
+           ccode, year, {{sector}}) %>%
+    right_join(select(us.trade.ally,
+                      ccode, year,
+                      atop_defense, ally,
+                      cold_war, democ_bin,
+                      v2x_polyarchy, cowmidongoing,
+                      rep_pres, time_to_elec, 
+                      ln_petrol_rev, ln_rgdp,
+                      ln_pop, ln_distw,
+                      Comlang,
+                      Contig, Evercol)) %>%
+    rename(deals = {{sector}}) %>%
+    filter(year >= 1950) %>%
+    mutate(
+      nz_deals = ifelse(deals > 0, 1, 0)
+    ) %>% # pakistan/east pak duplicate gives warning- drop
+    distinct()  
+  # make sure zeros for no deals 
+  data$deals[is.na(data$deals)] <- 0
+  data$nz_deals[is.na(data$nz_deals)] <- 0
+  # output
+  data
+}
+
+us.deals.sector.list <- lapply(weapon.type, sector.data.func)
+
 
 # deals by weapon type
-sector.deals.total <- us.deals.sector %>%
-                        group_by(weapon.type) %>%
-                        summarize(
-                          deals = sum(deals, na.rm = TRUE)
-                        )
+sector.deals.total <- us.arms.cat %>%
+  group_by(weapon.type) %>%
+  summarize(
+    deals = sum(deals, na.rm = TRUE),
+    .groups = "keep"
+  ) 
 sector.deals.total
-5618 / sum(sector.deals.total$deals)
+5732 / sum(sector.deals.total$deals) # aircraft
+1567 / sum(sector.deals.total$deals) # vehicles
+1040 / sum(sector.deals.total$deals) # ships
+5732 / sum(sector.deals.total$deals) + # aircraft
+  1567 / sum(sector.deals.total$deals) + # vehicles
+    1040 / sum(sector.deals.total$deals) # ships
 
 # now set up formula
 deals.sector <- vector(mode = "list", length = length(sector.list))
@@ -360,9 +386,7 @@ for(i in 1:length(sector.list)){
                     prior = c(prior(normal(0, .5), class = "b")),
                     cores = 4,
                     refresh = 500,
-                    data = filter(us.deals.sector,
-                                  weapon.type == sector.list[[i]] |
-                                    deals == 0)
+                    data = us.deals.sector.list[[i]] # zero deals 
   )
 }
 
@@ -398,29 +422,6 @@ pred.inter.sector <- pred.inter.sector %>%
                             weapon, 
                             estimate, conf.low, conf.high)
 
-# total from summing across 
-pred.sector.total <- pred.inter.sector %>%
-                      group_by(dem.labs, time_to_elec) %>%
-                      summarize(
-                        estimate = sum(estimate),
-                        conf.low = sum(conf.low),
-                        conf.high = sum(conf.high),
-                        .groups = "keep"
-                       ) %>%
-                      mutate(
-                        weapon = "Total"
-                      )
-pred.sector.total
-
-# pred.inter.sector <- bind_rows(pred.inter.sector, 
-#                                pred.sector.total) %>%
-#                      mutate(
-#                        weapon = factor(weapon,
-#                                        ordered = TRUE,
-#                           levels = c("Aircraft", "Arms", "Electronics",
-#                                      "Missile & Space", "Ships",
-#                                      "Vehicles", "Total"))
-#                      )
 
 # plot
 ggplot(pred.inter.sector, aes(y = estimate, 
@@ -445,8 +446,39 @@ ggplot(pred.inter.sector, aes(y = estimate,
   theme(legend.position = "bottom")
 ggsave("figures/deals-sector.png", height = 7, width = 10)
 
-summary(deals.sector[[1]])
-summary(deals.sector[[2]])
+
+
+# get substantive comparisons: minimum democracy
+for(i in 1:length(deals.sector)){
+  
+  sector.dmin <- deals.sector.est[[i]][[2]] %>%
+    filter(
+      ally == 1 & 
+        v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[1]) 
+  
+  key.sector.draws <- as.data.frame(deals.sector.est[[i]][[3]][, sector.dmin$rowid])
+  
+  colnames(key.sector.draws) <- c("a", "b", "c", "d")
+  
+  print(sector.list[i]) 
+  print(hypothesis(key.sector.draws, c("a > d"), alpha = .1))
+  
+}
+
+
+# total from summing across 
+pred.sector.total <- pred.inter.sector %>%
+  group_by(dem.labs, time_to_elec) %>%
+  summarize(
+    estimate = sum(estimate),
+    conf.low = sum(conf.low),
+    conf.high = sum(conf.high),
+    .groups = "keep"
+  ) %>%
+  mutate(
+    weapon = "Total"
+  )
+pred.sector.total
 
 
 # coefficient tables for appendix: deals
@@ -466,7 +498,7 @@ deals.sector.tab <- modelsummary(deals.sector,
              #notes = list('90\\% Credible Intervals in parentheses.'),
              title = "\\label{tab:pois-regs-sector}: Coefficient estimates from hurdle Poisson models of U.S. arms deals by sector.") %>%
   kable_styling(font_size = 8, 
-                latex_options = c("scale_down")) %>%
+                latex_options = c("HOLD_position")) %>%
   footnote(general = "90% Credible Intervals in parentheses.")
 save_kable(deals.sector.tab, "appendix/deals-reg-sector.tex")
 
@@ -488,7 +520,8 @@ sector.mod.tab <- modelsummary(sector.models,
              statistic = "({conf.low}, {conf.high})",
              title = "\\label{tab:cont-regs-sector}: Coefficient estimates from models of defense contract awards by sector.") %>%
   kable_styling(font_size = 8, 
-                latex_options = c("scale_down")) %>%
+                latex_options = c("HOLD_position", "scale_down")) %>%
   footnote(general = "90% Credible Intervals in parentheses.")
+sector.mod.tab
 save_kable(sector.mod.tab, "appendix/cont-reg-sector.tex")
 

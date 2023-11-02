@@ -21,13 +21,14 @@
 \usepackage{lscape}
 \usepackage{longtable}
 \usepackage{float}
+\usepackage{afterpage}
 \sectionfont{\Large}
 \subsectionfont{\noindent\large\textit}
 \subsubsectionfont{\normalsize}
 
 
 \singlespace
-\title{\textbf{Appendix: Arms and Electoral Influence: How Arms Deals with Autocracies Shape Defense Contracting in the United States}}
+\title{\textbf{Appendix: Arms and Electoral Influence: Arms Deals with Autocracies and U.S. Presidential Elections}}
 %\author{Joshua Alley} 
 \date{}
 
@@ -90,10 +91,10 @@ The increase of .05 deals across a presidential election cycle is small but dist
 \subsection{Alternative Estimators}
 
 
-The same pattern is also apparent if I use three alternative likelihoods in the model of arms deals, election timing, autocracy and allies. 
+The same pattern is also apparent if I use three alternative likelihoods in the model of arms deals, election timing and autocracy. 
 While the hurdle Poisson is the most theoretically appropriate specification, standard Poisson and zero-inflated Poisson models give similar inferences.
 Poisson results hold without controls as well.
-I plot predicted arms deals across recipient democracy, alliance status and election timing from each of these models in \autoref{fig:deals-pred-nocont}, \autoref{fig:deals-pred-pois} and \autoref{fig:deals-pred-zip}. 
+I plot predicted arms deals across recipient democracy and election timing from each of these models in \autoref{fig:deals-pred-nocont}, \autoref{fig:deals-pred-pois} and \autoref{fig:deals-pred-zip}. 
 All three estimators suggest increasing arms deals for autocratic allies as elections approach, and little change in deals with democratic allies near presidential elections. 
 
 
@@ -109,7 +110,7 @@ All three estimators suggest increasing arms deals for autocratic allies as elec
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{deals-pred-pois.png}
-	\caption{Predicted arms deals between the United States and other states 1950 to 2014 by presidential election proximity, democracy, and security alliances, based on a Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}
+	\caption{Predicted arms deals between the United States and other states 1950 to 2014 by presidential election proximity and partner democracy based on a Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}
 	\label{fig:deals-pred-pois}
 \end{figure}
 
@@ -118,7 +119,7 @@ All three estimators suggest increasing arms deals for autocratic allies as elec
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{deals-pred-zip.png}
-	\caption{{Predicted arms deals between the United States and other states 1950 to 2014 based on presidential election proximity, democracy, and security alliances, based on a zero-inflated Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}}
+	\caption{{Predicted arms deals between the United States and other states 1950 to 2014 by presidential election proximity and partner democracy based on a zero-inflated Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}}
 	\label{fig:deals-pred-zip}
 \end{figure}
 
@@ -142,7 +143,7 @@ As a result, the hurdle Poisson predicts zero values well, underpredicts some la
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{pp-check-deals.png}
-	\caption{Posterior predictive check of the hurdle Poisson model of U.S. arms deals. In this rootogram, the fitted line gives the expected counts and bars show the observed distribution.}
+	\caption{Posterior predictive check of the hurdle Poisson model of U.S. arms deals. The fitted line gives the expected counts and bars show the observed distribution.}
 	\label{fig:pp-check-deals}
 \end{figure}
 
@@ -154,7 +155,7 @@ This also reduces predictive accuracy for non-zero deals.
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{pois-pp-check.png}
-	\caption{Posterior predictive check of a Poisson model of U.S. arms deals. In this rootogram, the fitted line gives the expected counts and bars show the observed distribution.}
+	\caption{Posterior predictive check of a Poisson model of U.S. arms deals. The fitted line gives the expected counts and bars show the observed distribution.}
 	\label{fig:pois-pp-check}
 \end{figure}
 
@@ -167,7 +168,7 @@ I therefore rely on models with a Poisson likelihood.
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{nb-pp-check.png}
-	\caption{Posterior predictive check of a negative binomial model of U.S. arms deals. In this rootogram, the fitted line gives the expected counts and bars show the observed distribution.}
+	\caption{Posterior predictive check of a negative binomial model of U.S. arms deals. The fitted line gives the expected counts and bars show the observed distribution.}
 	\label{fig:nb-pp-check}
 \end{figure}
 
@@ -199,10 +200,10 @@ States with higher contracting levels also have more consistent temporal autocor
 
 This section checks the results in the manuscript by adjusting the outcome measurement and estimation strategy in two ways.\footnote{All models estimated with brms \citep{Buerkner2017}.} 
 First, I do not transform the contracts measure in any way, and fit a log-normal hurdle model, which assumes that the outcome has a zero process and observed values that are approximately normal after a log transformation. 
-This approach does not model state-year observations with zero contracts well, but it fits non-zero contracts well. 
+This approach does not model state-year observations with zero contracts well, but it fits non-zero contracts tolerably. 
 As the top panel of \autoref{fig:me-deals-check} shows, the interaction between arms deals and swing state status is almost entirely positive.
 At the same time, the association between deals and the level of contracts outside of swing states is almost entirely negative. 
-This latter estimate is not part of the argument, and may be the result of difficulties accounting for zeros in the log-normal hurdle. 
+This latter estimate is not part of the argument, and may be due to difficulties accounting for zeros in the log-normal hurdle. 
  
 
 \begin{figure}[htpb]
@@ -226,7 +227,7 @@ As a result, arms deals increase changes in defense contracts more in swing stat
 
 \newpage 
 
-\section{Additional Mechanism Check}
+\section{Additional Mechanism}
 
 Here, I document an additional check of the connection between deals and swing state contracts. 
 The arms deals models show that deals with autocracies increase as presidential elections approach. 
@@ -253,7 +254,7 @@ This implies that arms deals with autocracies near elections feed increased swin
 
 \newpage 
 
-\section{Interaction Checks}
+\section{Interaction Robustness}
 
 The models in the manuscript use interactions that assume a linear functional form. 
 Violations of linearity and other issues can generate misleading inferences \citep{Hainmuelleretal2019}. 
@@ -290,15 +291,22 @@ Each bin deviates minimally from the linear relationship.
 
 \newpage
 
-\section{Swing State List}
+\section{Data Details}
+\afterpage{\clearpage}
+This section provides additional documentation, including tables of swing states, variables and sources, and coefficient estimates.  
 
+\subsection{Swing State List}
+\afterpage{\clearpage}
 \autoref{tab:swing-list} lists the set of swing states and the years they are swing states.
 For this classification, I draw on \citet{KrinerReeves2015}. 
 
 \include{swing-list.tex}
+%\afterpage{\clearpage}
+
+\subsection{Variables and Sources}
 
 
-\section{Coefficient Estimates}
+\subsection{Coefficient Estimates}
 
 The section presents tables with coefficient estimates. 
 \autoref{tab:pois-regs} summarizes the hurdle Poisson coefficient estimates for the aggregate deals model, while \autoref{tab:pois-regs-sector} summarizes the models of arms deals by type.\footnote{All tables built with modelsummary \citep{ArelBundock2022}}. 
@@ -306,7 +314,7 @@ The section presents tables with coefficient estimates.
 
 
 \include{deals-reg-tabs.tex}
-
+\afterpage{\clearpage}
 \include{deals-reg-sector.tex}
 
 \include{cont-reg-tabs.tex}
@@ -314,7 +322,7 @@ The section presents tables with coefficient estimates.
 \include{cont-reg-sector.tex}
 
 
-\newpage
+
 \singlespace
  
 \bibliography{../../MasterBibliography} 

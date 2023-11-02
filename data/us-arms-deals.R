@@ -235,7 +235,7 @@ pois.comp.dmin <- pois.deals.est[[2]] %>%
                        ally == 1 & 
                       v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[1]) 
 
-key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.dmin$rowid])
+key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.dmin$rowid])
 colnames(key.pois.draws) <- c("a", "b", "c", "d")
 hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
 hypothesis(key.pois.draws, c("a > d"), alpha = .1)
@@ -247,7 +247,7 @@ pois.comp.d1q <- pois.deals.est[[2]] %>%
     ally == 1 & 
       v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[2])
 
-key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.d1q$rowid])
+key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.d1q$rowid])
 colnames(key.pois.draws) <- c("a", "b", "c", "d")
 hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
 hypothesis(key.pois.draws, c("a > d"), alpha = .1)
@@ -259,7 +259,7 @@ pois.comp.d1q <- pois.deals.est[[2]] %>%
     ally == 0 & 
       v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[2])
 
-key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.d1q$rowid])
+key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.d1q$rowid])
 colnames(key.pois.draws) <- c("a", "b", "c", "d")
 hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
 hypothesis(key.pois.draws, c("a > d"), alpha = .1)
@@ -272,7 +272,7 @@ pois.comp.dmed <- pois.deals.est[[2]] %>%
     ally == 1 & 
       v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[3]) 
 
-key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.dmed$rowid])
+key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.dmed$rowid])
 colnames(key.pois.draws) <- c("a", "b", "c", "d")
 hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
 hypothesis(key.pois.draws, c("a > d"), alpha = .1)
@@ -285,7 +285,7 @@ pois.comp.d3q <- pois.deals.est[[2]] %>%
     ally == 1 & 
       v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[4])
 
-key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.d3q$rowid])
+key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.d3q$rowid])
 colnames(key.pois.draws) <- c("a", "b", "c", "d")
 hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
 hypothesis(key.pois.draws, c("a > d"), alpha = .1)
@@ -481,10 +481,10 @@ pois.mod.tab <- modelsummary(pois.models,
              #notes = list('90\\% Credible Intervals in parentheses.'),
              title = "\\label{tab:pois-regs}: Coefficient estimates from Poisson models of US arms deals.") %>%
   kable_styling(font_size = 8, 
-                latex_options = c("scale_down")) %>%
+                latex_options = c("HOLD_position", "scale_down")) %>%
   footnote(general = "90% Credible Intervals in parentheses.")
 pois.mod.tab
-save_kable(pois.mod.tab, "appendix/deals-reg-tabs.tex", )
+save_kable(pois.mod.tab, "appendix/deals-reg-tabs.tex")
 
 # robustness check models
 modelsummary(list(ols.deals, pois.deals, zip.deals),

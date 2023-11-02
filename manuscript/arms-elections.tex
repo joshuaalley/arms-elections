@@ -65,14 +65,14 @@ joshua.alley@ucd.ie
 \maketitle 
 
 \begin{abstract} 
-As elections approach, U.S. leaders make additional arms deals with autocracies. 
+As presidential elections approach, U.S. leaders make additional arms deals with autocracies. 
 U.S. leaders make these deals to bolster their electoral prospects by claiming credit for providing jobs and increasing defense contracting in swing states.
 Autocratic arms recipients have greater political flexibility to strike arms deals near presidential elections and increase their security by taking arms. 
 I provide three pieces of evidence for this argument.  
 First, I detail electoral cycles in arms deals between the United States and autocracies. 
 I then link arms deals to defense contract awards in swing states.
-Finally, I provide additional evidence for the process by showing that U.S. allies drive most of the autocratic arms deals cycle and that the same platforms that move in arms deals increase swing state contracts.  
-The argument and results help explain why U.S. security cooperation with autocracies endures despite normative and practical concerns.
+Finally, I unpack the process by showing how arms deals timing shifts when regimes change within countries, that U.S. allies drive most of the autocratic arms deals cycle and that the same platforms that move in arms deals increase swing state contracts.  
+The argument and results detail the electoral motivations and value of U.S. security cooperation with autocrats. 
 \end{abstract} 
 
 
@@ -679,8 +679,8 @@ I then show that autocratic allies, who are especially dependent on the United S
 
 
 To show that constraint matters, I compare arms deal timing in four U.S. partners who have received U.S. arms as an autocracy and as a democracy. 
-Brazil, Greece, Peru and Portugal all underwent substantial changes in political regime, unlike other U.S. security partners that are consolidated democracies or autocracies. 
-I selected these two states because variation in their polyarchy score is two times greater than average, they made arms deals with the United States across all regime types, they both democratized at a similar time, and are early members of NATO. 
+Greece and Portugal both underwent substantial changes in political regime, unlike other U.S. security partners that are consolidated democracies or autocracies. 
+I selected these two states because the total variation in their polyarchy score is two times greater than average, they made arms deals with the United States across all regime types, they both democratized in the middle of the Cold War, and are early members of NATO. 
 Joint defense planning in NATO makes these cases a hard test for the political constraint mechanism.
 
 
@@ -802,24 +802,31 @@ In the next section, I use specific defense industrial sectors to check that con
 
 The final analysis examines whether the weapons systems that change hands in U.S. arms deals with autocratic allies and are correlated with swing-state contract awards. 
 Showing that the United States makes more deals for specific weapons as elections approach, and that deals for those weapons correlate with defense contract awards in swing states increases confidence in the theoretical process.\footnote{These correlations do not link specific deals and contracts, however.}
-I find that aircraft are the most common subject of arms deals with autocrats near elections, and aircraft deals also increase swing state contracts for aircraft production.
-Because aircraft have a widely distributed production base and comprise 48\% of total deals in my data, these correlations are sensible. 
+I find that most of the the electoral rise in U.S. arms deals with autocracies includes deals for aircraft, ships and vehicles, all of which also increase swing state contracts for aircraft production.
+Aircraft deals are especially likely to increase swing state contracts, given dispersed supply chains and high value. 
+These three systems have a widely distributed production base and cover 69\% of total deals in my data.
 
 
-To analyze deals by sector, I divided arms deals and defense contracts into six matching sectors. 
+To analyze weapon types, I divided arms deals and defense contracts into six matching sectors. 
 These include aircraft, arms and munitions, military electronics, missiles and space technology, ships, and vehicles.  
 Each sector has a distinct production geography and arms deal distribution.
 
 
 I then fit six hurdle Poisson models of arms deals, one for each type of arms. 
-These models use the same predictors as the main arms deals model; the interaction of recipient democracy and election timing, along with a series of controls and a hurdle equation.
+This outcome is deals in each sector for every country-year observation. 
+These models use the same predictors as the main arms deals model; the interaction of recipient democracy and election timing, along with a hurdle equation and controls.
 Using the hurdle further improves model fit because more country-year observations have zero deals within sectors. 
 
 
 For ease of presentation, I plot predicted arms deals at the minimum and maximum of partner democracy in \autoref{fig:deals-sector}.
 The estimates suggest that a combination of weapons systems drive electoral cycles in arms deals with autocratic allies.  
-Aircraft deals are the most common overall, and autocracies take slightly more aircraft as presidential elections approach. 
-While aircraft deals with democratic allies are also common, they respond half as much to election timing. 
+The total increase in predicted arms deals with a fully autocratic state in \autoref{fig:democ-deals-pred} is .42. 
+Summing the predictions across all six sectors suggests a similar increase in total arms deals across the electoral cycle. 
+
+
+Aircraft deals are the most common overall with 48\% of all deals, and autocracies take slightly more aircraft as presidential elections approach.
+In expectation, aircraft deals with autocrats rise by .1 as presidential elections draw closer, so roughly 25\% of the total increase in deals is due to aircraft.\footnote{This difference between 3 years to an election and an election year has a 90\% credible interval from 0.02 to 0.18.}
+While aircraft deals with democratic allies are also common, they respond half as much to elections, so there is not a clear difference.  
 
 
 
@@ -831,34 +838,33 @@ While aircraft deals with democratic allies are also common, they respond half a
 \end{figure}
 
 
-Among autocracies, ship, v deals increase with electoral proximity. 
-Allies make more ship deals at all levels of democracy, but only autocratic allies make more deals near elections. 
-Ships could also move in arms deals that feed defense contracting. 
-
-
-Other weapons show less evidence of cycles in arms deals. 
+Among autocracies, electronics, ship and vehicle deals also increase with electoral proximity. 
+Electronics deals rise by .07, in expectation.
+Ships deals rise by between 0.01 and 0.05, and vehicle deals by between .02 and .09.\footnote{90\% credible interval estimates based on the difference between an election year and three years to an election. In all three sectors, there is at least 97\% positive posterior probability in the difference.}
+Democratic deals for these weapons do not move in the same way.
 Deals for arms and other munitions do not depend on democracy or election timing. 
-Democratic allies are more likely to make deals for military electronics and missile/space systems. 
-The importance of democracy and alliances for these goods likely reflects joint production and planning in formal U.S. alliances. 
 
 
-%Neither electronics nor missile and space systems see electoral deal cycles.
-%Deals for military vehicles do not track the electoral cycle either. 
-%Among autocracies, alliances make no difference for vehicle deals. 
-%Allied democracies see small decreases in deals as elections approach. 
+Other weapons show less evidence of autocratic cycles in arms deals. 
+Democratic allies are more likely to make deals for missiles and space systems, and deal timing is similar across regimes. 
+The importance of democracy and alliances for missile technology likely reflects joint production and planning in formal U.S. alliances. 
+
+
+Aircraft, electronics, ships and vehicles all change hands in autocratic deal cycles. 
+These deals are all positively correlated with swing state contracts, though the magnitude of the associations varies. 
+
 
 \subsubsection{Deals and Defense Contracts by Sector}
 
 
-Next, I fit six models of defense contracts to examine the deals and contracts hypothesis for each sector and check if the sectors with deal cycles have a clear positive association between deals and swing state contracts. 
+I fit six models of defense contracts to examine the deals and contracts hypothesis for each sector and check if the sectors with deal cycles have a clear positive association between deals and swing state contracts. 
 This analysis divides total contracts by sector using the product description for each contract. 
-As in the analysis of aggregate defense contracting, I rescale the outcome between 0 and 1 using the annual sum of contracts for those defense goods. 
+As in the analysis of aggregate defense contracting, I rescale the outcome between 0 and 1 using the annual sum of contracts for those sectors. 
 I then fit ordered beta regression models of the rescaled outcomes, using an identical specification to the aggregate defense contracting model.
 The key independent variables in these models are observed arms deals in each sector, the binary swing state indicator, and their interaction. 
-I also include the same terms to capture state varying intercepts, state-specific autocorrelation, and other controls. 
+I also include the same set of state varying intercepts, state-specific autocorrelation, and other controls. 
 
 
-Aircraft deals are strongly correlated with aircraft contracts in swing states. 
 \autoref{fig:me-deals-sector} plots the interaction between different deal types and swing state status.  
 These estimates show the deals coefficients from six ordered beta models, transformed back to the outcome scale. 
 Again, I focus on the positive posterior mass, as this gives the evidence consistent with a directional hypothesis.
@@ -872,62 +878,71 @@ Again, I focus on the positive posterior mass, as this gives the evidence consis
 \end{figure}
 
 
-While deals for most systems like arms, vehicles, and missile and space components have largely positive associations with related swing state contracts, aircraft deals have the greatest positive association. 
+While deals for arms, vehicles, and missile and space components have largely positive associations with related swing state contracts, aircraft deals have the greatest positive association. 
 95\% of the posterior mass in the interaction of aircraft deals and swing state status is positive.
-This probably reflects the diffuse aircraft supply chain, which incorporates engines, airframes, and other essential components. 
+This probably reflects a diffuse supply chain for engines, airframes, and other components. 
 
 
 In addition to aircraft, ships and electronic deals are correlated with greater swing state contracts. 
-Increases in ships deals are associated with \$300 million more contracts in a hypothetical swing state. 
+More ship deals are associated with \$300 million more contracts in a hypothetical swing state. 
 Annual ships deals range from one to 11, so these deals are rare but lucrative. 
-The impact also may not concentrate in shipyards, as most ships deals cover whole platforms, which require components from other regions. 
-
- 
-While electronics arms deals are less cyclical, most of the association between electronics deals and swing state contracts for military electronics is positive as well.
-Electronics manufacturing does not come from electorally-driven arms deals, but electronics deals also feed swing state contracts. 
-Similarly, much of the vehicles posterior mass is positive in swing states, though the direction of that association is less clear. 
-Only missile and space production, which is geographically concentrated, has greater positive mass on the association between deals and contracts outside of swing states.
+The impact also may not concentrate in coastal state shipyards, as most ships deals cover whole platforms, which require components from other regions. 
 
 
-These results suggest that aircraft are the main component in arms deal cycles and aircraft deals often increase swing state contracts. 
-Other deals in sectors like arms, electronics and ships may also increase swing state contracts, but these have less cyclical arms deals. 
-Overall, this supports a connection between arms deals with autocratic allies and swing state contracts.  
+Similarly, much of the vehicles posterior mass is positive in swing states, though the direction of that association is less clear.
+Most of the association between electronics deals and swing state contracts for military electronics is positive as well.
+As a result, the main platforms that move in deals near elections also increase swing state contracts. 
+
+
+Only missile and space production, which is geographically concentrated, has greater positive mass on the association between deals and contracts outside of swing states. 
+Perhaps as a result, autocracies do not acquire more of these arms near presidential elections. 
+Munitions have a positive association with swing state contracts, but there is little evidence of cyclical deals in this sector. 
+
+
+These results suggest that autocratic deals for aircraft, ships, vehicles and electronics drive increasing swing state contracts.
+Aircraft and ship deals are particularly lucrative. 
+Overall, these results further detail the connection between arms deals with autocratic allies and swing state contracts.  
 
 
 
 \section{Discussion and Conclusion}
 
 
-Arms deals with autocratic allies help U.S. leaders increase defense contracting awards in swing states. 
-Arms deals with autocracies increase as presidential elections approach.
-Deals then increase swing state contract awards. 
-Much of this cooperation sends arms to autocratic U.S. allies like the Cold War era Brazilian junta and Saudi Arabia.
+Arms deals with autocracies have electoral value for U.S. leaders, as they help increase defense contracting awards in swing states. 
+To improve or maintain economic conditions in electorally critical areas, leaders strike additional arms deals with autocracies as presidential elections approach.
+Deals then increase swing state contract awards and allow leaders to claim credit for protecting or adding jobs.
+Electoral competition thus encourages arms transfers to autocracies like the Cold War Brazilian junta and Saudi Arabia.
+For their part, autocracies take arms because they gain security and have greater political flexibility to negotiate deals. 
+
+
+As a result, the argument and results bridge two disparate literatures on security cooperation and political budget cycles. 
+Security cooperation with arms sales helps leaders award contracts with less attention to the budget process and force planning of the U.S. military.
+This is the mirror image of how states manipulate international economic ties to undermine adversarial leaders \citep{ChyzhUrbatsch2021, KimMargalit2021}.
 
 
 % alliance value and autoc alliance durability
-This note helps explain why U.S. security cooperation with autocracies endures despite normative and practical criticisms. 
+Along with adding an electoral explanation for U.S. arms sales to autocracies, this paper helps explain why U.S. security cooperation with autocracies endures despite normative and practical criticisms. 
 Arms deals increase autocratic allies' security and help U.S. leaders win elections.
 While not a part of formal treaties, these informal linkages are essential to bargains between the United States and its security prot{\'e}g{\'e}s.
 Electoral arms deals sustain regular cooperation across regimes.
 %Allies need not undertake these cycles deliberately, but making arms deals is part of a cooperative bundle of ties.
 
 
-In addition to helping explain U.S. security cooperation with autocracies, these findings add an international security component to the political budget cycle literature.
-Alliance partnerships can help leaders manipulate economic conditions for electoral gain. 
-By providing an outlet for defense contracting, allies help leaders award contracts with less attention to the budget process and force planning of the U.S. military.
-The results also complement findings that states manipulate international economic ties to undermine adversarial leaders \citep{ChyzhUrbatsch2021, KimMargalit2021}, by showing how some partners aid cycles via security cooperation. 
-
+% limitations 
+There are some limitations to the argument and findings.
+First, the Electoral College, corresponding strategic behavior by defense firms locating production and fixed election timing mean that this argument applies best and perhaps exclusively to the United States.
+Other democracies likely use arms deals to support employment, but the process is likely quite different. 
+Second, the results do not present a unified model of deals and contracts, and do not link specific deals and contracts. 
 
 
 Future research could proceed in several directions. 
-Exploring the role of defense industry integration and intermediate goods in these arms cycles is potentially interesting.
-Whether there are similar cycles outside the United States is also a worthy subject of future study. 
-Other alliance patrons may take similar actions in different ways.
+Exploring the role of defense industry integration and intermediate goods in these arms cycles is interesting.
+Scholars might also examine other ways that leaders leverage security cooperation to try and remain in office. 
 
 
 Electoral competition reshapes international security cooperation.
-Efforts to use defense contracting to improve the economy in swing states encourage U.S. security cooperation with autocracies.
-While these deals may empower states that misuse U.S. arms, electoral considerations take precedence. 
+Efforts to use defense contracting to improve the economy in swing states encourage U.S. arms deals with autocracies.
+While these deals may send U.S. arms to risky destinations, electoral considerations take precedence. 
 
 
 \newpage
