@@ -100,9 +100,11 @@ ggplot(pois.democ.pred, aes(y = estimate,
              ncol = 5) +
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
-  geom_line() +
+  geom_line(linewidth = 1) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
+                  position = position_dodge(width = .1),
+                  size = 1,
+                  linewidth = 2) +
   labs(title = "Elections, Democracy, and Arms Deals",
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election")
