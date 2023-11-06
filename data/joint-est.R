@@ -2,73 +2,6 @@
 # joint model with arms deals and contracts
 
 
-# generate a list of swing states
-swing.list <- select(state.data, state, swing, year) %>%
-               filter(swing == 1) %>%
-               group_by(state) %>%
-               summarize(
-                 Start = min(year),
-                 End = max(year)
-               ) %>%
-               rename(State = state)
-swing.tab <- datasummary_df(swing.list, fmt = 0,
-               output = "latex",
-             caption = "\\label{tab:swing-list}: List of swing states.") %>%
-  kable_styling(font_size = 10,
-                latex_options = "hold_position") 
-swing.tab
-save_kable(swing.tab, "appendix/swing-list.tex")
-
-
-
-### state data with arms deals
-state.data.deals <- left_join(state.data, 
-                              select(arms.deals.year,
-                                     year, deals)) %>%
-  group_by(state) %>% 
-  filter(state != "District of Columbia")  %>% 
-  mutate(
-    lag_deals = lag(deals),
-    change_deals = deals - lag_deals,
-    deals_rs = arm::rescale(deals),
-    lag_deals_rs = arm::rescale(lag_deals)
-  ) %>%
-  group_by(year) %>%
-  mutate(   
-    sum_ob = sum(obligations, na.rm = TRUE),
-    obligations_rs = obligations / sum_ob
-  ) %>%
-  group_by(state) %>%
-  mutate(
-    lag_obligations_rs = lag(obligations_rs)
-             )
-
-summary(state.data.deals$obligations_rs)
-
-# look at state-level contracts
-ggplot(state.data.deals, aes(x = year, y = obligations,
-                             group = state)) +
-  geom_line()
-
-ggplot(state.data.deals, aes(x = year, y = obligations)) +
-  facet_wrap(~ state, nrow = 10, scales = "free_y") +
-  geom_line() +
-  labs(
-    x = "Year",
-    y = "Defense Contracts",
-    title = "State Defense Contracts: 2001-2020"
-  )
-ggsave("appendix/state-dynamics.png", height = 10, width = 12)
-
-
-# outcome plot
-ggplot(state.data.deals, aes(x = ln_obligations)) + geom_histogram()
-ggplot(state.data.deals, aes(x = obligations)) + geom_histogram()
-ggplot(state.data.deals, aes(x = obligations_rs)) + geom_histogram()
-ggplot(state.data.deals, aes(x = change_obligations)) + geom_histogram()
-ggplot(state.data.deals, aes(x = change_ln_obligations)) + geom_histogram()
-
-
 # ordbeta reg for transformed outcomes
 formula.state <- bf(obligations_rs ~
                       (lag_obligations_rs || state) +
@@ -709,3 +642,4 @@ ggplot(deals.me, aes(y = estimate,
        y = "Estimated Marginal Effect",
        x = "Years to Presidential Election")
 ggsave("appendix/deals-me-prox.png", height = 6, width = 8)
+

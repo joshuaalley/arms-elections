@@ -215,9 +215,11 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
              ncol = 5) + 
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
-  geom_line() +
+  geom_line(linewidth = 1) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
+                  position = position_dodge(width = .1),
+                  size = 1,
+                  linewidth = 2) +
   scale_color_grey("US Ally", 
                    start = 0.7,
                    end = 0.1,

@@ -322,3 +322,18 @@ ggplot(us.deals.democ.key, aes(x = time_to_elec,
        fill = "Regime",
        title = "Regime Changes and Arms Deal Timing")
 ggsave("figures/deals-regime-change.png", height = 6, width = 8)
+
+
+# summary table:
+sum.data.deals <- select(ungroup(us.deals),
+                   deals, time_to_elec, ally, v2x_polyarchy,
+                     cold_war, gwot,
+                     rep_pres, 
+                     ln_petrol_rev, 
+                     ln_rgdp, cowmidongoing,
+                     ln_pop, ln_distw, 
+                     Comlang)
+colnames(sum.data.deals) <- coef.names.map[colnames(sum.data.deals)]
+datasummary_skim(data = sum.data.deals,
+            output = "latex",
+            histogram = FALSE)
