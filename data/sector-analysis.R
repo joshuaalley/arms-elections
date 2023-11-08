@@ -433,10 +433,11 @@ ggplot(pred.inter.sector, aes(y = estimate,
               scales = "free_y") + 
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
-  geom_line() +
+  geom_line(linewidth = 1) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .5),
-                  linewidth = 1) +
+                  position = position_dodge(width = .1),
+                  size = 1,
+                  linewidth = 2) +
   scale_color_grey("Regime",
                    start = 0.7,
                    end = 0.1) +
