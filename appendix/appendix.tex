@@ -28,7 +28,7 @@
 
 
 \singlespace
-\title{\textbf{Appendix: Arms and Electoral Influence: Arms Deals with Autocracies and U.S. Presidential Elections}}
+\title{\textbf{Appendix: Arms and Electoral Influence: Arms Deals with Autocracies, Defense Contracting and U.S. Presidential Elections}}
 %\author{Joshua Alley} 
 \date{}
 
@@ -52,7 +52,7 @@
 
 In this section, I check the hurdle Poisson models of U.S. arms deals in three steps. 
 First, I show similar patterns in raw data. 
-Second, I demonstrate that OLS, Poisson, and zero-inflated Poisson models give similar inferences to the hurdle Poisson models in the manuscript. 
+Second, I demonstrate that two different Poisson model specifications and a zero-inflated Poisson model give similar inferences to the hurdle Poisson models in the manuscript. 
 Finally, I use posterior predictive checks to show that a hurdle Poisson outcome likelihood fits the observed data best. 
 
 
@@ -74,9 +74,9 @@ More democratic allies receive more arms deals than non-allied states, but deals
 
 \subsubsection{General Arms Deal Cycles}
 
-In addition to the raw data, arms deal cycles are apparent even without interacting the time to presidential election measure with the autocracy indicator.
-I plot predicted arms deals as a function of years to a presidential election from a model that does not interact the election timing variable with anything else \autoref{fig:elec-pred-deals}. 
-The increase of .05 deals across a presidential election cycle is small but distinguishable from zero. 
+In addition to the raw data, arms deal cycles are apparent even without interacting the time to presidential election measure with polyarchy.
+I plot predicted arms deals as a function of years to a presidential election from a model that does not interact the election timing variable with anything else in \autoref{fig:elec-pred-deals}. 
+Because it averages across all states, the increase of .05 deals across a presidential election cycle is small but distinguishable from zero. 
 
 
 \begin{figure}[htpb]
@@ -91,9 +91,9 @@ The increase of .05 deals across a presidential election cycle is small but dist
 \subsection{Alternative Estimators}
 
 
-The same pattern is also apparent if I use three alternative likelihoods in the model of arms deals, election timing and autocracy. 
+The same pattern is also apparent if I use three alternative models of arms deals, election timing and autocracy. 
 While the hurdle Poisson is the most theoretically appropriate specification, standard Poisson and zero-inflated Poisson models give similar inferences.
-Poisson results hold without controls as well.
+The Poisson results hold without controls as well.
 I plot predicted arms deals across recipient democracy and election timing from each of these models in \autoref{fig:deals-pred-nocont}, \autoref{fig:deals-pred-pois} and \autoref{fig:deals-pred-zip}. 
 All three estimators suggest increasing arms deals for autocratic allies as elections approach, and little change in deals with democratic allies near presidential elections. 
 
@@ -101,7 +101,7 @@ All three estimators suggest increasing arms deals for autocratic allies as elec
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{nocont-deals-pred.png}
-	\caption{Predicted arms deals between the United States and other states 1950 to 2014 by presidential election proximity and partner democracy based on a Poisson regression model with only those variables and no controls. Points mark the estimates and error bars summarize the 90\% credible interval.}
+	\caption{Predicted arms deals between the United States and other states 1950 to 2014 by presidential election proximity and partner democracy based on a Poisson regression model with only those two variables and no controls. Points mark the estimates and error bars summarize the 90\% credible interval.}
 	\label{fig:deals-pred-nocont}
 \end{figure}
 
@@ -128,12 +128,12 @@ All three estimators suggest increasing arms deals for autocratic allies as elec
 \subsection{Posterior Predictive Checks}
 
 
-This final check shows the predictive performance of the hurdle Poisson model, relative to a negative binomial likelihood. 
-While neither model captures the lumpy outcome distribution, the hurdle Poisson is much better 
+This final check shows the predictive performance of the hurdle Poisson model, relative to a Poisson and negative binomial specification. 
+While no model perfectly captures the lumpy outcome distribution, the hurdle Poisson is much better 
 First, I show the posterior predictive check for the hurdle Poisson in \autoref{fig:pp-check-deals}. 
 
 
-Both \autoref{fig:pp-check-deals} and \autoref{fig:nb-pp-check} are rootograms, which plot expected counts against observed counts. 
+\autoref{fig:pp-check-deals}, \autoref{fig:pois-pp-check} and \autoref{fig:nb-pp-check} are rootograms, which plot expected counts against observed counts. 
 In both figures, the line gives the expected counts based on the model, and the bars mark observed counts. 
 Bars that exceed zero are counts the model under predicts, while bars above zero show underpredicted values. 
 As a result, the hurdle Poisson predicts zero values well, underpredicts some large values, and overpredicts a few small values. 
@@ -172,11 +172,11 @@ I therefore rely on models with a Poisson likelihood.
 	\label{fig:nb-pp-check}
 \end{figure}
 
-\newpage
+%\newpage
 
 \section{Contracts Model Checks} 
 
-This section checks the second analysis, which examines the interaction between arms deals and contract awards in the 50 states. 
+This section checks the second analysis, which examines the interaction between arms deals and contract awards in the 50 U.S. states. 
 First, I present some raw data. 
 After that, I present additional estimates from the ordered beta regression- the state varying intercepts and lagged dependent variables. 
 I then show that student-t and hurdle log-normal models of defense contract changes and levels also suggest that arms deals increase contract awards to swing states. 
@@ -210,7 +210,7 @@ States with higher contracting levels also have more consistent temporal autocor
 
 \subsection{Alternative Estimators}
 
-This section checks the results in the manuscript by adjusting the outcome measurement and estimation strategy in two ways.\footnote{All models estimated with brms \citep{Buerkner2017}.} 
+This section checks the results in the manuscript by adjusting the outcome measurement and estimation strategy in two ways.
 First, I do not transform the contracts measure in any way, and fit a log-normal hurdle model, which assumes that the outcome has a zero process and observed values that are approximately normal after a log transformation. 
 This approach does not model state-year observations with zero contracts well, but it fits non-zero contracts tolerably. 
 As the top panel of \autoref{fig:me-deals-check} shows, the interaction between arms deals and swing state status is almost entirely positive.
@@ -237,7 +237,7 @@ While 92\% of the posterior mass in the deals term is positive, which suggests i
 As a result, arms deals increase changes in defense contracts more in swing states than in other states. 
 
 
-\newpage 
+%\newpage 
 
 \section{Additional Mechanism}
 
@@ -264,7 +264,7 @@ But as a presidential election approaches, the marginal impact of deals on swing
 There is no clear impact of deals non-swing state contracts at any point in the electoral cycle. 
 This implies that arms deals with autocracies near elections feed increased swing state contracts. 
 
-\newpage 
+%\newpage 
 
 \section{Interaction Robustness}
 
