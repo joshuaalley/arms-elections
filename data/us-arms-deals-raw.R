@@ -72,6 +72,14 @@ us.deals.comp <- drop_na(us.deals) %>%
     change_deals = deals - lag(deals),
   )
 
+# create dummies for years to election
+us.deals.comp <- us.deals.comp %>%
+  mutate(
+    time_to_elec_0 = ifelse(time_to_elec == 0, 1, 0),
+    time_to_elec_1 = ifelse(time_to_elec == 1, 1, 0),
+    time_to_elec_2 = ifelse(time_to_elec == 2, 1, 0)
+  )
+
 # check for labels
 fivenum(us.deals.comp$v2x_polyarchy)
 

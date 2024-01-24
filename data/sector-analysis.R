@@ -346,6 +346,15 @@ sector.data.func <- function(sector){
   # make sure zeros for no deals 
   data$deals[is.na(data$deals)] <- 0
   data$nz_deals[is.na(data$nz_deals)] <- 0
+  
+  # time to election dummies
+  data <- data %>%
+    mutate(
+    time_to_elec_0 = ifelse(time_to_elec == 0, 1, 0),
+    time_to_elec_1 = ifelse(time_to_elec == 1, 1, 0),
+    time_to_elec_2 = ifelse(time_to_elec == 2, 1, 0)
+  )
+  
   # output
   data
 }
@@ -373,7 +382,9 @@ deals.sector <- vector(mode = "list", length = length(sector.list))
 for(i in 1:length(sector.list)){
   
   deals.sector[[i]] <- brm(bf(deals ~ 
-                      time_to_elec*v2x_polyarchy + 
+                                time_to_elec_0*v2x_polyarchy +
+                                time_to_elec_1*v2x_polyarchy +
+                                time_to_elec_2*v2x_polyarchy +
                       cold_war + 
                       rep_pres + 
                       ln_rgdp + cowmidongoing + ln_petrol_rev +
@@ -462,7 +473,7 @@ for(i in 1:length(deals.sector)){
   colnames(key.sector.draws) <- c("a", "b", "c", "d")
   
   print(sector.list[i]) 
-  print(hypothesis(key.sector.draws, c("a > d"), alpha = .1))
+  print(hypothesis(key.sector.draws, c("d > a"), alpha = .1))
   
 }
 

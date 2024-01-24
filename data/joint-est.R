@@ -666,9 +666,21 @@ save_kable(deals.state.tab, "appendix/cont-reg-tabs.tex")
 
 # additional check- does the association between deals and contracts in swing states rise with electoral proximity?
 # ordbeta reg for transformed outcomes
+# create dummies for years to election
+state.data.deals <- state.data.deals %>%
+  mutate(
+    time_to_elec_0 = ifelse(time_to_elec == 0, 1, 0),
+    time_to_elec_1 = ifelse(time_to_elec == 1, 1, 0),
+    time_to_elec_2 = ifelse(time_to_elec == 2, 1, 0)
+  )
+
+
 formula.state.prox <- bf(obligations_rs ~
                       (lag_obligations_rs || state) +
-                      deals*swing*time_to_elec + core +
+                      deals*swing*time_to_elec_0 +
+                        deals*swing*time_to_elec_1 +
+                        deals*swing*time_to_elec_2 +
+                        core +
                       gwot +
                       rep_pres  +
                       poptotal + ln_ngdp,
@@ -678,7 +690,7 @@ deals.state.prox <- ordbetareg(formula.state.prox,
                           data = state.data.deals,
                           cores = 4,
                           backend = "cmdstanr",
-                          refresh = 200
+                          refresh = 500
 ) 
 summary(deals.state.prox)
 fixef(deals.state.prox)
@@ -688,12 +700,29 @@ deals.me <- slopes(deals.state.prox, variables = c("deals"),
                    conf_level = .9,
                    newdata = 
                      datagrid(model = deals.state.prox,
-                              time_to_elec = c(0, 1, 2, 3),
+                              time_to_elec_0 = c(0, 1),
+                              time_to_elec_1 = c(0, 1),
+                              time_to_elec_2 = c(0, 1),
                               swing = c(0, 1)))
 deals.me <- mutate(deals.me,
                           estimate = estimate * scale.factor,
                           conf.low = conf.low * scale.factor,
-                          conf.high = conf.high * scale.factor)
+                          conf.high = conf.high * scale.factor) %>%
+  rowwise() %>%
+  mutate(
+    dum_sum = sum(time_to_elec_0, time_to_elec_1, time_to_elec_2)
+  ) %>%
+  filter(dum_sum <= 1) %>%
+  mutate(
+    time_to_elec = case_when(
+      time_to_elec_0 == 1 ~ 0,
+      time_to_elec_1 == 1 ~ 1,
+      time_to_elec_2 == 1 ~ 2,
+      (time_to_elec_0 == 0 &
+         time_to_elec_1 == 0 &
+         time_to_elec_2 == 0) ~ 3
+    )
+  )
 
 
 ggplot(deals.me, aes(y = estimate, 
@@ -702,9 +731,9 @@ ggplot(deals.me, aes(y = estimate,
                       color = factor(swing))) +
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
-  geom_line() +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
+                  position = position_dodge(width = .1),
+                  linewidth = 2, size = 1) +
   scale_color_grey("Swing\nState", 
                    start = 0.7,
                    end = 0.1,

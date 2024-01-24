@@ -128,7 +128,10 @@ coef.names.map.state = c(
 
 # typical observations for US
 typical.func.us <- function(x){
-  dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
+  dat <- datagrid(model = x, 
+                  time_to_elec_0 = c(0, 1),
+                  time_to_elec_1 = c(0, 1),
+                  time_to_elec_2 = c(0, 1),
                   ally = 1,
                   v2x_polyarchy = fivenum)
   dat$rep_pres <- 0
@@ -136,7 +139,10 @@ typical.func.us <- function(x){
 }
 
 typical.func.us.all <- function(x){
-  dat <- datagrid(model = x, time_to_elec = c(0, 1, 2, 3),
+  dat <- datagrid(model = x, 
+                  time_to_elec_0 = c(0, 1),
+                  time_to_elec_1 = c(0, 1),
+                  time_to_elec_2 = c(0, 1),
                   ally = c(0, 1),
                   v2x_polyarchy = fivenum)
   dat$rep_pres <- 0
@@ -148,7 +154,7 @@ me.us.elec <- function(model, formula, rm.wt, data){
   
   # no dyad robust for US 
   # marginal effects 
-  me.est <- slopes(model, variables = c("time_to_elec"), conf_level = .9,
+  me.est <- slopes(model, variables = c("time_to_elec_0"), conf_level = .9,
                             newdata = datagrid(model = model, 
                                                ally = 1,
                                                v2x_polyarchy = fivenum))
@@ -159,7 +165,22 @@ me.us.elec <- function(model, formula, rm.wt, data){
   
   # predicted outcomes
   pred.out <- predictions(model, conf_level = .9,
-                          newdata = typical.func.us(model))
+                          newdata = typical.func.us(model))  %>%
+    rowwise() %>%
+    mutate(
+      dum_sum = sum(time_to_elec_0, time_to_elec_1, time_to_elec_2)
+    ) %>%
+    filter(dum_sum <= 1) %>%
+    mutate(
+      time_to_elec = case_when(
+        time_to_elec_0 == 1 ~ 0,
+        time_to_elec_1 == 1 ~ 1,
+        time_to_elec_2 == 1 ~ 2,
+        (time_to_elec_0 == 0 &
+           time_to_elec_1 == 0 &
+           time_to_elec_2 == 0) ~ 3
+      )
+    )
   
   # full fitted draws
   fit.out <- posterior_epred(model, 
@@ -176,16 +197,33 @@ me.us.elec.all <- function(model, formula, rm.wt, data){
   # marginal effects 
   me.est <- slopes(model, variables = c("ally"), conf_level = .9,
                    newdata = datagrid(model = model, 
-                                      time_to_elec = c(0, 1, 2, 3),
+                                      time_to_elec_0 = c(0, 1),
+                                      time_to_elec_1 = c(0, 1),
+                                      time_to_elec_2 = c(0, 1),
                                       v2x_polyarchy = fivenum))
   
   me.def.plot <- plot_slopes(model, conf_level = .9,
                              variables = c("ally", "v2x_polyarchy"),
-                             condition = "time_to_elec", draw = FALSE)
+                             condition = "time_to_elec_0", draw = FALSE)
   
   # predicted outcomes
   pred.out <- predictions(model, conf_level = .9,
-                          newdata = typical.func.us.all(model))
+                          newdata = typical.func.us.all(model))  %>%
+    rowwise() %>%
+    mutate(
+      dum_sum = sum(time_to_elec_0, time_to_elec_1, time_to_elec_2)
+    ) %>%
+    filter(dum_sum <= 1) %>%
+    mutate(
+      time_to_elec = case_when(
+        time_to_elec_0 == 1 ~ 0,
+        time_to_elec_1 == 1 ~ 1,
+        time_to_elec_2 == 1 ~ 2,
+        (time_to_elec_0 == 0 &
+           time_to_elec_1 == 0 &
+           time_to_elec_2 == 0) ~ 3
+      )
+    )
   
   # full fitted draws
   fit.out <- posterior_epred(model, 
@@ -195,3 +233,35 @@ me.us.elec.all <- function(model, formula, rm.wt, data){
 }
 
 
+# function to transfer dummy estimates to year count 
+# after making model predictions
+year.dum.pred <- function(estimates){
+  dum.pred <- predictions(estimates, conf_level = .9,
+                             newdata = datagrid(model = estimates,
+                                                ally = 1,
+                                                time_to_elec_0 = c(0, 1),
+                                                time_to_elec_1 = c(0, 1),
+                                                time_to_elec_2 = c(0, 1),
+                                                v2x_polyarchy = fivenum))
+
+# transfer predictions back
+dum.pred <- dum.pred %>%
+  rowwise() %>%
+  mutate(
+    dum_sum = sum(time_to_elec_0, time_to_elec_1, time_to_elec_2)
+  ) %>%
+  filter(dum_sum <= 1) %>%
+  mutate(
+    time_to_elec = case_when(
+      time_to_elec_0 == 1 ~ 0,
+      time_to_elec_1 == 1 ~ 1,
+      time_to_elec_2 == 1 ~ 2,
+      (time_to_elec_0 == 0 &
+         time_to_elec_1 == 0 &
+         time_to_elec_2 == 0) ~ 3
+    )
+  )
+
+dum.pred
+
+}
