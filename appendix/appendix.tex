@@ -88,6 +88,37 @@ Because it averages across all states, the increase of .05 deals across a presid
 
 
 
+\subsection{Dropping Potential Outliers}
+
+Another possibility is that the results are due to a few outlier countries, such as Saudi Arabia. 
+If one country is responsible for the overall pattern, then this argument has limited generalizability. 
+To check this, I refit the hurdle poisson model of arms deals six times, dropping Saudi Arabia, the United Arab Emirates, Iran, Brazil and Argentina as potential outlier autocracies who purchased many U.S. arms. 
+As \autoref{fig:democ-deals-pred-drop} shows, dropping potential outliers does not change the results. 
+The presidential election year increase in deals is slightly smaller when I remove Saudi Arabia, but there is still a clear jump in arms purchases by autocracies.  
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{democ-deals-pred-drop.png}
+	\caption{Predicted arms deals by the United States across the presidential election cycle in six models, each of which drops a potential outlier arms purchaser. Estimates from a hurdle Poisson model of arms deals between 1950 and 2014. Polyarchy fixed to minimum and maximum for predictions.}
+	\label{fig:democ-deals-pred-drop}
+\end{figure}
+
+
+\subsection{Linear Estimate of Time to Election}
+
+In the manuscript, I use dummy variables marking years to a presidential election to capture election proximity. 
+As I show here, using one measure of years to an election gives similar inferences. 
+The downside is that it smooths over the fall in autocratic deals in years between Congressional and Presidential elections, as \autoref{fig:democ-deals-pred-lin} makes clear. 
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{democ-deals-pred-lin.png}
+	\caption{Predicted arms deals by the United States across the presidential election cycle in six models, each of which drops a potential outlier arms purchaser. Estimates from a hurdle Poisson model of arms deals between 1950 and 2014. Polyarchy fixed to minimum and maximum for predictions.}
+	\label{fig:democ-deals-pred-lin}
+\end{figure}
+
 \subsection{Alternative Estimators}
 
 

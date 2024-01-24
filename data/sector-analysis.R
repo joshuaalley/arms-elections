@@ -512,6 +512,7 @@ deals.sector.tab <- modelsummary(deals.sector,
   kable_styling(font_size = 8, 
                 latex_options = c("HOLD_position")) %>%
   footnote(general = "90% Credible Intervals in parentheses.")
+deals.sector.tab
 save_kable(deals.sector.tab, "appendix/deals-reg-sector.tex")
 
 # table for appendix: contracts
