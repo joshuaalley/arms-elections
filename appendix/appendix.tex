@@ -268,7 +268,42 @@ While 92\% of the posterior mass in the deals term is positive, which suggests i
 As a result, arms deals increase changes in defense contracts more in swing states than in other states. 
 
 
-%\newpage 
+\subsection{Electoral Geography: 2008 Presidential Election}
+
+Here, I plot the geography of defense contracting from 2007 to 2008 based on electoral competition.
+Again, I use the swing and core variables of \citep{KrinerReeves2015}. 
+To do this, I take the posterior draws of predicted defense contracting in 2007 and 2008 across all states, using the model in the manuscript. 
+I then calculate the difference between these predicted values. 
+I examine 2007 and 2008 because total arms deals increased by 32, so the difference between these years matches the theory and should show the swing state contracting increase from deals. 
+
+
+\autoref{fig:est-08-cycle} maps the median difference in arms contracting awards across three groups of states- competitive swing states, core members of the Republican coalition, and states that were core parts of the Democratic coalition, making them neither swing nor core. 
+Texas, which was George Bush's home state and the cornerstone of the Republican coalition, saw a large increase in contracts, but the model also predicts more contracts for large swing states such as Virginia, Florida, Wisconsin and Pennsylvania. 
+These were the most important swing states, as they each carried at least 10 Electoral Votes. 
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{est-08-cycle.png}
+	\caption{List of swing states and years of swing status.}
+	\label{fig:est-08-cycle}
+\end{figure}
+
+
+\autoref{fig:est-08-cycle-facet} presents the same estimates, but with uncertainty. 
+This shows that besides Texas, the largest increases in defense contracting went to swing states. 
+The model also picks up a large increase in contracts to Arizona, which was Republican nominee John McCain's home state.
+Arizona was therefore more competitive than the coding of \citet{KrinerReeves2015} suggests. 
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{est-08-cycle-facet.png}
+	\caption{Estimated difference in defense contracting from 2007 to 2008. .}
+	\label{fig:est-08-cycle-facet}
+\end{figure}
+
+\newpage 
 
 \section{Additional Mechanism}
 
@@ -347,6 +382,7 @@ This section provides additional documentation, including tables of swing states
 	\caption{List of swing states and years of swing status.}
 	\label{tab:swing-list}
 \end{figure}
+
 
 
 \subsection{Variables and Sources}

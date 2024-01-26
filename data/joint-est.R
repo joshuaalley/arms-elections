@@ -378,6 +378,147 @@ ggsave("appendix/state-pars.png", height = 6, width = 8)
 
 
 
+### Predictions by state- take 2012
+
+# state data from 2007/2008
+state.data.08 <- state.data.deals %>%
+                  filter(year == 2007 | year == 2008)
+scale.08 <- state.data.deals %>% 
+             filter(year == 2008) %>%
+             ungroup() %>%
+             distinct(sum_ob)
+
+scale.07 <- state.data.deals %>% 
+  filter(year == 2007) %>%
+  ungroup() %>%
+  distinct(sum_ob)
+
+
+# predictions of contracts
+pred.state.08 <- predictions(deals.state, newdata = state.data.08)
+
+# posterior draws for difference 
+# gives list.cols, so 
+
+
+list.diff <- function(l08, l07){
+  l08 = l08 * as.numeric(scale.08)
+  l07 = l07 * as.numeric(scale.07)
+            return(mapply(`-`, l08, l07))
+   }
+pred.08.draws <- posteriordraws(pred.state.08) %>%
+                   select(state, year, draw, swing, core) %>%
+                   pivot_wider(id_cols = c("state", "swing", "core"),
+                              names_from = c("year"),
+                               values_from = c("draw")
+                               ) %>%
+                    rowwise() %>%
+                    mutate(
+                      diff = list(list.diff(l08 = `2008`, 
+                                            l07 = `2007`)),
+                      diff.median = median(diff),
+                      diff.upper = quantile(diff, probs = .95),
+                      diff.lower = quantile(diff, probs = .05),
+                    )
+
+pred.08.key <- pred.08.draws %>%
+                select(state, swing, core, diff.median,
+                       diff.upper, diff.lower) %>%
+                mutate(
+                  comp = factor(case_when(
+                    swing == 1 ~ "Swing",
+                    core == 1 ~ "Core: Republican",
+                    .default = "Neither: Democrat"
+                  ),
+                  ordered = TRUE,
+                  levels = c("Swing", "Core: Republican", "Neither: Democrat")),
+                  linesize = case_when(
+                    swing == 1 ~ .9,
+                    core == 1 ~ .8,
+                    .default = .7
+                  ),
+                )
+
+ggplot(pred.08.key, aes(y = state, x = diff.median)) +
+  facet_wrap(~ comp, scales = "free_y",
+             ncol = 1) +
+  geom_vline(xintercept = 0) +
+  geom_pointrange(aes(xmin = diff.lower, xmax = diff.upper)) +
+  labs(
+    x = "Difference in Contracts",
+    y = "State",
+    title = "Defense Contracting by State",
+    subtitle = "2007-2008"
+  )
+ggsave("appendix/est-08-cycle-facet.png", height = 8, width = 8)
+
+# map 
+# Map of respondents
+states <- map_data("state") %>%
+  rename(state = region) %>%
+  mutate(state = str_to_title(state))
+states.08.data <- left_join(states, pred.08.key) %>%
+                   filter(state != "District Of Columbia")
+
+
+ggplot(data = states.08.data, aes(x = long, y=lat,
+                                  fill = diff.median,
+                                  group = group)) +
+  facet_wrap(~ comp, ncol = 2) +
+  geom_polygon(aes(group = group,
+                  # color = comp
+                   ),
+               color = "white",
+               linewidth = 1
+                ) +
+  scale_fill_distiller(type = "seq",
+                       direction = 1,
+                       palette = "Greys") +
+ # scale_color_brewer(palette = "Dark2") +
+  labs(title = "Geogrpahy of Defense Contracting Changes",
+       subtitle = "2007-2008: 32 Additional Arms Deals",
+       #color = "Electoral\nCompetition",
+       fill = "Posterior\nMedian\nDifference") +
+  theme_classic(base_size = 14) +
+  theme(
+    legend.position = c(0.75, 0.3),
+  axis.title.x = element_blank(),
+  axis.text.x = element_blank(),
+  axis.ticks.x = element_blank(),
+  axis.title.y = element_blank(),
+  axis.text.y = element_blank(),
+  axis.ticks.y = element_blank())
+ggsave("appendix/est-08-cycle.png", height = 6, width = 8)
+
+# deals rise by 32
+table(state.data.08$year, state.data.08$deals)
+
+pred.state.08 <- left_join(pred.state.08, states)
+
+ggplot(pred.state.08, aes(y = state, x = estimate,
+                          color = factor(year))) +
+  facet_wrap(~ swing, scales = "free") +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high),
+                  position = position_dodge(width = .5))
+
+# map the years not helpful
+ggplot(data = pred.state.08, aes(x = long, y=lat)) + 
+  facet_wrap(~ year) +
+  geom_polygon(aes(group = group,
+                   fill = estimate),
+               color="white", linewidth = 0.4) +
+  scale_fill_distiller(type = "seq",
+                       direction = 1,
+                       palette = "Greys") +
+  labs(x = "Longitude",
+       y = "Latitude",
+       fill = "Posterior\nMedian\nPrediction") +
+  theme_minimal()
+
+
+
+
+
 ### rough calculation of how arms deals feed defense contracts ### 
 
 # aggregate total deals by year, all else equal
@@ -411,7 +552,7 @@ us.deals.comp.2000 <- us.deals.comp %>%
 glimpse(us.deals.comp.2000)
 
 # predictions from observed data
-pred.deals.all <- predictions(pois.deals,
+pred.deals.all <- predictions(pois.deals.democ,
                               newdata = us.deals.comp.2000) %>%
   group_by(time_to_elec, cycle) %>% 
   summarize(
@@ -464,8 +605,7 @@ example.pred <- filter(pred.state,
                           state == "North Carolina" |
                          state == "Pennsylvania")
 ggplot(example.pred, aes(x = year, y = estimate,
-                          color = factor(cycle),
-                          shape = factor(swing))) +
+                          color = factor(cycle))) +
    facet_wrap(~ state, scales = "free_y") +
   geom_point() +
   geom_line()
