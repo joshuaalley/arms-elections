@@ -17,7 +17,7 @@ swing.tab <- datasummary_df(swing.list, fmt = 0,
   kable_styling(font_size = 10,
                 latex_options = "hold_position") 
 swing.tab
-save_kable(swing.tab, "appendix/swing-list.tex")
+save_kable(swing.tab, "figures/swing-list.tex")
 
 
 
