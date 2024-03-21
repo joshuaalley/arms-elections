@@ -462,8 +462,6 @@ The hurdle component captures that some countries are unlikely to make any arms 
 This model thus works like common hurdle regression estimators.  
 Adding the hurdle with a Poisson outcome improves model fit.\footnote{Standard Poisson models under-predict zeros, while negative binomial models predict over-predict large values. See the appendix for details.} 
 For ease of estimation and substantive effect calculation, I use Bayesian estimation with the brms package for \texttt{R} \citep{Buerkner2017}.\footnote{The regression coefficients use a normal prior distribution with a mean of zero and standard deviation of .5.}
-I show in the appendix that raw data as well as Poisson and zero-inflated Poisson models give similar inferences. 
-Results are also robust to fitting a Poisson model without any hurdle or controls, using a linear measure of election proximity, other interaction estimators, and dropping potential outliers.
 
 
 In the hurdle equation of the model, I use four predictors to capture whether a country makes any arms deals with the United States. 
@@ -523,6 +521,12 @@ Early in presidential terms, democracies make more arms deals.
 Democratic deals remain roughly constant across the electoral calendar because democracies engage in more peacetime defense cooperation. 
 But in presidential election years, autocracies buy more U.S. arms. 
 Thus, the political composition of U.S. arms deals depends on elections. 
+
+
+These results are robust to a variety of checks. 
+I show in the appendix that raw data as well as Poisson and zero-inflated Poisson models give similar inferences. 
+I also fit a series of models that drop individual autocracies such as Saudi Arabia that bought many arms from the United States to ensure that a few states do not drive the results. 
+Results are also robust to fitting a Poisson model without any hurdle or controls, using a linear measure of election proximity, other interaction estimators, and removing potential post-treatment variables such as conflict involvement. 
 
 
 In presidential and congressional election years, U.S. arms deals with autocracies rise.
@@ -662,6 +666,11 @@ The gap in defense contracting between swing and other states thus disappears in
 All three of the quantities in  \autoref{fig:deals-swing-me} are consistent with one another and with the argument that leaders use arms deals to increase swing state contracts. 
 Increasing arms deals are correlated with greater defense contracts in swing states. 
 As a result, in years with more arms deals, swing states receive similar contracts to other states with larger economies and less electoral competition.
+
+
+These estimates are robust to a series of changes, including models with different control specifications, alternative estimators, and examining raw data.
+I also show in Section 3 of the appendix that the marginal impact of arms deals on swing state contracts is positive in the year of a presidential election and is closer to zero otherwise.
+This implies that leaders are more likely to channel contracts from arms deals to swing states around elections. 
 
 
 \section{Examining the Theoretical Process}
