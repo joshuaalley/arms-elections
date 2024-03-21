@@ -5,6 +5,9 @@
 # old code
 old-files
 
+# revision memo
+revision-memo
+
 # Session Data files
 .RData
 

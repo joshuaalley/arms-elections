@@ -252,7 +252,7 @@ me.deals.sector <- arrangeGrob(res.sector.cont$aircraft[[5]], res.sector.cont$ar
                                res.sector.cont$electronics[[5]], res.sector.cont$missile_space[[5]],
                                res.sector.cont$ships[[5]], res.sector.cont$vehicles[[5]],
                                ncol = 3)
-ggsave("figures/me-deals-sector.png", me.deals.sector, height = 8, width = 10)
+ggsave("figures/me-deals-sector.png", me.deals.sector, height = 4, width = 6)
 
 
 # swing state ME
@@ -456,7 +456,7 @@ ggplot(pred.inter.sector, aes(y = estimate,
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election") +
   theme(legend.position = "bottom")
-ggsave("figures/deals-sector.png", height = 7, width = 10)
+ggsave("figures/deals-sector.png", height = 4, width = 7)
 
 
 

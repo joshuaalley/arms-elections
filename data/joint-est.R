@@ -17,7 +17,7 @@ swing.tab <- datasummary_df(swing.list, fmt = 0,
   kable_styling(font_size = 10,
                 latex_options = "hold_position") 
 swing.tab
-save_kable(swing.tab, "figures/swing-list.tex")
+save_kable(swing.tab, "appendix/swing-list.tex")
 
 
 
@@ -297,7 +297,7 @@ plot.state.inter <- arrangeGrob(deals.inter.plot, slope.swing,
                                 top = grid::textGrob("Arms Deals, Swing States, and Defense Contracts",
                                                      gp = grid::gpar(fontsize = 20)))
 ggsave("figures/deals-swing-me.png", plot.state.inter,
-       height = 10, width = 12)
+       height = 6, width = 8)
 
 # state varying coefs
 coefs.joint <- coef(deals.state) 

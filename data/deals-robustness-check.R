@@ -125,13 +125,176 @@ ggsave("appendix/democ-deals-pred-lin.png", height = 6, width = 8)
 
 ### alternative autocracy measures
 
+# load CGV data
+cgv.data <- read_dta("data/cgv-dd.dta") %>%
+             select(
+               cowcode, year, democracy
+             ) %>%
+             rename(
+               ccode = cowcode
+             )
+max(cgv.data$year)
+
+us.deals.comp.autoc <- left_join(us.deals.comp, cgv.data)
+summary(us.deals.comp.autoc$democracy)
+
+
+# use cgv democracy dummy
+pois.deals.cgv <- brm(bf(deals ~ 
+                             time_to_elec_0*democracy +
+                             time_to_elec_1*democracy +
+                             time_to_elec_2*democracy +
+                             cold_war + gwot + ally +
+                             rep_pres + 
+                             ln_petrol_rev + 
+                             ln_rgdp + cowmidongoing +
+                             ln_pop + ln_distw + 
+                             Comlang,
+                           hu ~ ally + democracy + cowmidongoing + ln_rgdp,
+                           center = FALSE),
+                        family = hurdle_poisson(),
+                        backend = "cmdstanr",
+                        prior = c(prior(normal(0, .5), class = "b")
+                        ),
+                        cores = 4,
+                        refresh = 500,
+                        data = us.deals.comp.autoc)
+summary(pois.deals.cgv)
+
+# predictions with CGV data
+pred.deals.cgv <- predictions(pois.deals.cgv, conf_level = .9,
+                              newdata = datagrid(model = pois.deals.cgv,
+                                                 ally = 1,
+                                                 time_to_elec_0 = c(0, 1),
+                                                 time_to_elec_1 = c(0, 1),
+                                                 time_to_elec_2 = c(0, 1),
+                                                 democracy = c(0, 1))) %>%
+  rowwise() %>%
+  mutate(
+    dum_sum = sum(time_to_elec_0, time_to_elec_1, time_to_elec_2)
+  ) %>%
+  filter(dum_sum <= 1) %>%
+  mutate(
+    time_to_elec = case_when(
+      time_to_elec_0 == 1 ~ 0,
+      time_to_elec_1 == 1 ~ 1,
+      time_to_elec_2 == 1 ~ 2,
+      (time_to_elec_0 == 0 &
+         time_to_elec_1 == 0 &
+         time_to_elec_2 == 0) ~ 3
+    )
+  )
+
+plot.cgv <- ggplot(pred.deals.cgv, aes(y = estimate, 
+                       x = time_to_elec)) +
+  facet_wrap(~ democracy, labeller = labeller(democracy = c(`0` = "Not Democracy",
+                                                            `1` = "Democracy")),
+             ncol = 5) +
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1),
+                  size = 1,
+                  linewidth = 2) +
+  labs(title = "CGV Democracy Measure",
+       y = "Predicted Arms Deals",
+       x = "Years to Presidential Election")
+plot.cgv
+
+
+# model with geddes wright and franz data
+gwf.data <- read_dta("data/GWF_AllPoliticalRegimes.dta") %>%
+  mutate(
+    gwf_autoc = ifelse(
+      gwf_nonautocracy == "NA", 0, 1
+    )
+  ) %>%
+  rename(
+    ccode = cowcode
+  )
+max(gwf.data$year)
+
+us.deals.comp.autoc <- left_join(us.deals.comp.autoc, gwf.data)
+summary(us.deals.comp.autoc$gwf_autoc)
+table(us.deals.comp.autoc$gwf_autoc)
+
+
+pois.deals.gwf <- brm(bf(deals ~ 
+                           time_to_elec_0*gwf_autoc +
+                           time_to_elec_1*gwf_autoc +
+                           time_to_elec_2*gwf_autoc +
+                           cold_war + gwot + ally +
+                           rep_pres + 
+                           ln_petrol_rev + 
+                           ln_rgdp + cowmidongoing +
+                           ln_pop + ln_distw + 
+                           Comlang,
+                         hu ~ ally + gwf_autoc + cowmidongoing + ln_rgdp,
+                         center = FALSE),
+                      family = hurdle_poisson(),
+                      backend = "cmdstanr",
+                      prior = c(prior(normal(0, .5), class = "b")
+                      ),
+                      cores = 4,
+                      refresh = 500,
+                      data = us.deals.comp.autoc)
+summary(pois.deals.gwf)
+
+# predictions with GWF data
+pred.deals.gwf <- predictions(pois.deals.gwf, conf_level = .9,
+                              newdata = datagrid(model = pois.deals.gwf,
+                                                 ally = 1,
+                                                 time_to_elec_0 = c(0, 1),
+                                                 time_to_elec_1 = c(0, 1),
+                                                 time_to_elec_2 = c(0, 1),
+                                                 gwf_autoc = c(0, 1))) %>%
+  rowwise() %>%
+  mutate(
+    dum_sum = sum(time_to_elec_0, time_to_elec_1, time_to_elec_2)
+  ) %>%
+  filter(dum_sum <= 1) %>%
+  mutate(
+    time_to_elec = case_when(
+      time_to_elec_0 == 1 ~ 0,
+      time_to_elec_1 == 1 ~ 1,
+      time_to_elec_2 == 1 ~ 2,
+      (time_to_elec_0 == 0 &
+         time_to_elec_1 == 0 &
+         time_to_elec_2 == 0) ~ 3
+    )
+  )
+
+plot.gwf <- ggplot(pred.deals.gwf, aes(y = estimate, 
+                           x = time_to_elec)) +
+  facet_wrap(~ gwf_autoc, labeller = labeller(gwf_autoc = c(`1` = "Not Autocracy",
+                                                            `0` = "Autocracy")),
+             ncol = 5) +
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1),
+                  size = 1,
+                  linewidth = 2) +
+  labs(title = "GWF Autocracy List",
+       y = "Predicted Arms Deals",
+       x = "Years to Presidential Election")
+plot.gwf
+
+
+# combine and export to the appendix
+grid.arrange(plot.cgv, plot.gwf, ncol = 2)
+autoc.var.plot <- arrangeGrob(plot.cgv, plot.gwf, ncol = 2)
+ggsave("appendix/autoc-measure-check.png", autoc.var.plot,
+       height = 6, width = 8)
 
 
 ### run model with incumbency as additional modifier
 pois.deals.incum <- brm(bf(deals ~ 
-                             incumbent*time_to_elec_0*v2x_polyarchy +
-                             incumbent*time_to_elec_1*v2x_polyarchy +
-                             incumbent*time_to_elec_2*v2x_polyarchy +
+                             incumbent*time_to_elec_0*gwf_autoc +
+                             incumbent*time_to_elec_1*gwf_autoc +
+                             incumbent*time_to_elec_2*gwf_autoc +
                              # (1 + time_to_elec_0*v2x_polyarchy +
                              # time_to_elec_1*v2x_polyarchy +
                              # time_to_elec_2*v2x_polyarchy |
