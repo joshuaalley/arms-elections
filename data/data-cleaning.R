@@ -36,7 +36,7 @@ elections.data <- mutate(elections.data,
                    lead_election = lead(election))
 
 # Create a vector of presidential administrations
-elections.data$president <- pres.full(elections.data)
+elections.data <- pres.full(elections.data)
 
 # time to election
 elections.data$time_to_elec <- rep(seq(from = 3, to = 0, by = -1),
@@ -181,7 +181,7 @@ nelda <- read_dta("data/nelda.dta") %>%
   ) %>%
   mutate(
     election = 1,
-    incumbent = ifelse(nelda21 == "yes", 1, 0)
+    incumbent_nelda = ifelse(nelda21 == "yes", 1, 0)
   )
 
 
@@ -197,7 +197,7 @@ dyadic.trade.major <- left_join(dyadic.trade.major,
   left_join(archigos)
 # fill in elections w/ zeros
 dyadic.trade.major$election[is.na(dyadic.trade.major$election)] <- 0
-dyadic.trade.major$incumbent[is.na(dyadic.trade.major$incumbent)] <- 0
+dyadic.trade.major$incumbent_nelda[is.na(dyadic.trade.major$incumbent_nelda)] <- 0
 
 # dyadic.trade.major %>%
 dyadic.trade.major <- dyadic.trade.major %>% 
@@ -226,7 +226,7 @@ us.trade.ally <- filter(dyadic.trade.major,
     ccode = ccode2
   ) %>%
   left_join(vdem) %>%
-  right_join(select(elections.data, year, 
+  right_join(select(elections.data, year, incumbent,
                    president, time_to_elec)) %>%
   group_by(ccode) %>% 
   mutate(
