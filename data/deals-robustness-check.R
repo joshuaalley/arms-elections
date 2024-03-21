@@ -138,6 +138,21 @@ max(cgv.data$year)
 us.deals.comp.autoc <- left_join(us.deals.comp, cgv.data)
 summary(us.deals.comp.autoc$democracy)
 
+# load GWF data
+gwf.data <- read_dta("data/GWF_AllPoliticalRegimes.dta") %>%
+  mutate(
+    gwf_autoc = ifelse(
+      gwf_nonautocracy == "NA", 0, 1
+    )
+  ) %>%
+  rename(
+    ccode = cowcode
+  )
+max(gwf.data$year)
+
+us.deals.comp.autoc <- left_join(us.deals.comp.autoc, gwf.data)
+summary(us.deals.comp.autoc$gwf_autoc)
+table(us.deals.comp.autoc$gwf_autoc)
 
 # use cgv democracy dummy
 pois.deals.cgv <- brm(bf(deals ~ 
@@ -204,22 +219,6 @@ plot.cgv
 
 
 # model with geddes wright and franz data
-gwf.data <- read_dta("data/GWF_AllPoliticalRegimes.dta") %>%
-  mutate(
-    gwf_autoc = ifelse(
-      gwf_nonautocracy == "NA", 0, 1
-    )
-  ) %>%
-  rename(
-    ccode = cowcode
-  )
-max(gwf.data$year)
-
-us.deals.comp.autoc <- left_join(us.deals.comp.autoc, gwf.data)
-summary(us.deals.comp.autoc$gwf_autoc)
-table(us.deals.comp.autoc$gwf_autoc)
-
-
 pois.deals.gwf <- brm(bf(deals ~ 
                            time_to_elec_0*gwf_autoc +
                            time_to_elec_1*gwf_autoc +
@@ -295,26 +294,22 @@ pois.deals.incum <- brm(bf(deals ~
                              incumbent*time_to_elec_0*gwf_autoc +
                              incumbent*time_to_elec_1*gwf_autoc +
                              incumbent*time_to_elec_2*gwf_autoc +
-                             # (1 + time_to_elec_0*v2x_polyarchy +
-                             # time_to_elec_1*v2x_polyarchy +
-                             # time_to_elec_2*v2x_polyarchy |
-                             #  incumbent) +
                              cold_war + gwot + ally +
                              rep_pres + 
                              ln_petrol_rev + 
                              ln_rgdp + cowmidongoing +
                              ln_pop + ln_distw + 
                              Comlang,
-                           #hu ~ ally + v2x_polyarchy + cowmidongoing + ln_rgdp,
+                           hu ~ ally + gwf_autoc + cowmidongoing + ln_rgdp,
                            center = FALSE),
-                        family = poisson(),
+                        family = hurdle_poisson(),
                         backend = "cmdstanr",
                         prior = c(prior(normal(0, .5), class = "b")
                                   #prior(normal(0, 1), class = "sd")
                                   ),
                         cores = 4,
                         refresh = 500,
-                        data = us.deals.comp)
+                        data = us.deals.comp.autoc)
 summary(pois.deals.incum)
 
 
@@ -326,7 +321,8 @@ pred.incum <- predictions(pois.deals.incum, conf_level = .9,
                                time_to_elec_0 = c(0, 1),
                                time_to_elec_1 = c(0, 1),
                                time_to_elec_2 = c(0, 1),
-                               v2x_polyarchy = fivenum)) %>%
+                               #v2x_polyarchy = fivenum,
+                               gwf_autoc = c(0, 1))) %>%
   rowwise() %>%
   mutate(
     dum_sum = sum(time_to_elec_0, time_to_elec_1, time_to_elec_2)
@@ -349,18 +345,20 @@ pred.incum <- predictions(pois.deals.incum, conf_level = .9,
 
 
 ggplot(pred.incum, aes(y = estimate, 
-                       color = incumbent,
+                       #color = incumbent,
                             x = time_to_elec)) +
-  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs,
+  facet_wrap(~ gwf_autoc + incumbent, labeller = 
+               labeller(gwf_autoc = c(`1` = "Not Autocracy",
+                                      `0` = "Autocracy")),
              ncol = 5) +
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
   geom_line(linewidth = 1) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1),
+                  position = position_dodge(width = .25),
                   size = 1,
                   linewidth = 2) +
-  labs(title = "Elections, Democracy, and Arms Deals",
+  labs(title = "Elections, Democracy, and Arms Deals: Incumbent vs Lame Duck",
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election",
        color = "President")

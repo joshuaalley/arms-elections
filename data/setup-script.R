@@ -65,6 +65,7 @@ conflict_prefer("rhat", "bayesplot")
 
 # function to create presidential indicator
 pres.full <- function(data){
+
 data$president <- rep(NA, times = nrow(data))
 data$president[data$year >= 1945 & data$year < 1953] <- "Truman"
 data$president[data$year >= 1953 & data$year < 1961] <- "Eisenhower"
@@ -80,6 +81,27 @@ data$president[data$year >= 2001 & data$year < 2009] <- "W Bush"
 data$president[data$year >= 2009 & data$year < 2017] <- "Obama"
 data$president[data$year >= 2017] <- "Trump"
 data$president
+
+data <- data %>%
+        mutate(
+          incumbent = case_when(
+            year <= 1948 & president == "Truman" ~ 1,
+            year <= 1956 & president == "Eisenhower" ~ 1,
+            year <= 1967 & (president == "Johnson" | president == "Kennedy") ~ 1,
+            year <= 1972 & president == "Nixon" ~ 1,
+            year <= 1976 & president == "Ford" ~ 1,
+            year <= 1980 & president == "Carter" ~ 1,
+            year <= 1984 & president == "Reagan" ~ 1,
+            year <= 1992 & president == "HW Bush" ~ 1,
+            year <= 1996 & president == "Clinton" ~ 1,
+            year <= 2004 & president == "W Bush" ~ 1,
+            year <= 2012 & president == "Obama" ~ 1,
+            year <= 2020 & president == "Trump" ~ 1,
+            .default = 0
+          )
+        )
+data
+
 }
 
 # function to tidy dyad robust lists
