@@ -13,7 +13,7 @@ models.autoc.drop <- vector(mode = "list",
 
 # use this deals model
 # hurdle poisson model of deals: democracy and time to election
-# For loop over data
+# loop over data
 for(i in 1:length(ccode.autoc.drop)){
   
   models.autoc.drop[[i]] <- brm(bf(deals ~ 
@@ -290,6 +290,8 @@ ggsave("appendix/autoc-measure-check.png", autoc.var.plot,
 
 
 ### run model with incumbency as additional modifier
+table(us.deals.comp$incumbent)
+table(elections.data$incumbent)
 pois.deals.incum <- brm(bf(deals ~ 
                              incumbent*time_to_elec_0*gwf_autoc +
                              incumbent*time_to_elec_1*gwf_autoc +
@@ -305,7 +307,6 @@ pois.deals.incum <- brm(bf(deals ~
                         family = hurdle_poisson(),
                         backend = "cmdstanr",
                         prior = c(prior(normal(0, .5), class = "b")
-                                  #prior(normal(0, 1), class = "sd")
                                   ),
                         cores = 4,
                         refresh = 500,
@@ -360,6 +361,113 @@ ggplot(pred.incum, aes(y = estimate,
                   linewidth = 2) +
   labs(title = "Elections, Democracy, and Arms Deals: Incumbent vs Lame Duck",
        y = "Predicted Arms Deals",
-       x = "Years to Presidential Election",
-       color = "President")
+       x = "Years to Presidential Election")
 ggsave("appendix/incum-deals-pred.png", height = 6, width = 8)
+
+
+
+# Drop presidents
+presidents <- unique(us.deals.comp.autoc$president)
+# list of models
+models.pres.drop <- vector(mode = "list",
+                            length = length(presidents))
+
+# use this deals model
+# hurdle poisson model of deals: democracy and time to election
+# loop over data
+for(i in 1:length(presidents)){
+  
+  models.pres.drop[[i]] <- brm(bf(deals ~ 
+                                    incumbent*time_to_elec_0*gwf_autoc +
+                                    incumbent*time_to_elec_1*gwf_autoc +
+                                    incumbent*time_to_elec_2*gwf_autoc +
+                                     cold_war + gwot +
+                                     rep_pres + 
+                                     ln_petrol_rev + 
+                                     ln_rgdp + cowmidongoing +
+                                     ln_pop + ln_distw + 
+                                     Comlang,
+                                   hu ~ ally + gwf_autoc + cowmidongoing + ln_rgdp,
+                                   center = FALSE),
+                                family = hurdle_poisson(),
+                                backend = "cmdstanr",
+                                prior = c(prior(normal(0, .5), class = "b")),
+                                cores = 4,
+                                refresh = 500,
+                                data = filter(us.deals.comp.autoc,
+                                              president != presidents[i]))
+}
+
+# predictions for each 
+pred.pres.drop <- function(model){
+ pred.pres <- predictions(model, conf_level = .9,
+              newdata = datagrid(model = model,
+                                 ally = 1,
+                                 incumbent = c(0, 1),
+                                 time_to_elec_0 = c(0, 1),
+                                 time_to_elec_1 = c(0, 1),
+                                 time_to_elec_2 = c(0, 1),
+                                 v2x_polyarchy = .6,
+                                 gwf_autoc = c(0, 1))) %>%
+    rowwise() %>%
+    mutate(
+      dum_sum = sum(time_to_elec_0, time_to_elec_1, time_to_elec_2)
+    ) %>%
+    filter(dum_sum <= 1) %>%
+    mutate(
+      incumbent = case_when(
+        incumbent == 1 ~ "Incumbent",
+        incumbent == 0 ~ "Lame Duck"
+      ),
+      time_to_elec = case_when(
+        time_to_elec_0 == 1 ~ 0,
+        time_to_elec_1 == 1 ~ 1,
+        time_to_elec_2 == 1 ~ 2,
+        (time_to_elec_0 == 0 &
+           time_to_elec_1 == 0 &
+           time_to_elec_2 == 0) ~ 3
+      )
+    )
+ # output
+ pred.pres
+}
+
+
+# get all predictions
+pred.pres.drop <- lapply(models.pres.drop, pred.pres.drop)
+names(pred.pres.drop) <- presidents
+
+pres.drop.res <- bind_rows(pred.pres.drop,
+                            .id = "dropped") %>%
+                 mutate(
+                   dropped = factor(dropped,
+                                    ordered = TRUE,
+                                    levels = presidents)
+                 )
+
+
+ggplot(pres.drop.res, aes(y = estimate, 
+                       color = incumbent,
+                       x = time_to_elec)) +
+  facet_grid(gwf_autoc ~ dropped, labeller = 
+               labeller(gwf_autoc = c(`1` = "Not Autocracy",
+                                      `0` = "Autocracy"))) +
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .25),
+                  size = 1,
+                  linewidth = 2) +
+  labs(title = "Elections, Democracy, and Arms Deals: Incumbent vs Lame Duck",
+       subtitle = "Dropping Specific Presidents",
+       y = "Predicted Arms Deals",
+       x = "Years to Presidential Election",
+       color = "President\nStatus")
+ggsave("appendix/deals-pres-drop.png", height = 10, width = 15)
+
+
+# show deals by Eisenhower administration 
+ike.data <- filter(us.deals.comp.autoc,
+                                      president == presidents[2])
+arrange(ike.data, deals)

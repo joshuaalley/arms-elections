@@ -230,6 +230,7 @@ At the same time, deals with democracies are high but comparatively stable.
 This section of the appendix compares incumbent and lame-duck presidents. 
 Incumbent presidents who are seeking re-election may be more likely to engage in arms sales to autocracies to ensure they personally continue in office. 
 To check this, I added an binary indicator of whether the president was an incumbent or lame duck to the interaction between partner democracy and election proximity.\footnote{This measure treats Johnson as an incumbent until 1967, and a lame duck in 1968, as Johnson announced he would not seek re-election in March 1968.}
+For ease of interpretation and presentation, I use the autocracy list of \citet{Geddes2014} to measure recipient democracy.
 I plot the results in \autoref{fig:incum-deals-pred}.
 
 
@@ -238,6 +239,31 @@ I plot the results in \autoref{fig:incum-deals-pred}.
 		\includegraphics[width=0.95\textwidth]{incum-deals-pred.png}
 	\caption{Impact of election proximity on arms deals divided by whether the incumbent president is standing for re-election or is not running for office themselves.}
 	\label{fig:incum-deals-pred}
+\end{figure}
+
+While incumbent presidents behave as the theory predicts, with greater arms deals with autocracies in election years and no change in deals with democracies, arms deals under lame ducks are more volatile. 
+Autocratic arms deals under lame duck presidents do not rise in midterm election years, fall in the year before Presidential elections, and rise dramatically in election years. 
+Deals with democracies increase more in midterm elections than presidential elections. 
+
+
+One reason for this divergence may be that incumbent presidents are more common in the data. 
+Because incumbent presidents including Lyndon Johnson, Gerald Ford, Jimmy Carter and George H.W. Bush failed to secure re-election, incumbent presidents are present in 49 of the 76 years from 1945 to 2020. 
+As a result, slightly more than a third of all observations in the arms deal data have a lame duck U.S. president.
+These inferences may more sensitive to idiosyncratic fluctuations or lame duck leaders may attempt to sell more arms to autocrats at the end of their term to constrain potential successor and help the candidate from their party. 
+
+
+To further explore the sensitivity of results to president-specific dynamics, I fit models of arms deals that drop each president one by one. 
+Removing each administration shows that inferences about second-term incumbents are more sensitive to specific administrations, while the pattern among first-term incumbents is more stable.
+Specifically, dropping the Eisenhower administration eliminates the large increase in arms deals for lame duck presidents. 
+Eisenhower struck 24 arms deals with Greece's junta in 1960, and a further 16 with Peru. 
+Given that his vice-president was running for office, this is somewhat unsurprising. 
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{deals-pres-drop.png}
+	\caption{Impact of election proximity on arms deals divided by whether the incumbent president is standing for re-election or is not running for office themselves, after dropping individual presidential administrations. Facet columns mark which administration was removed from the data, and colors distinguish electoral cycles in arms deals .}
+	\label{fig:deals-pres-drop}
 \end{figure}
 
 
