@@ -114,7 +114,7 @@ ggplot(pois.democ.pred, aes(y = estimate,
   labs(title = "Elections, Democracy, and Arms Deals",
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election")
- ggsave("figures/democ-deals-pred.png", height = 6, width = 8)
+ ggsave("figures/democ-deals-pred.png", height = 4, width = 6)
 
  # posterior predictive check
  pp_check(pois.deals.democ, type = "rootogram", 
@@ -190,7 +190,7 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election") 
 pred.us.deals
-ggsave("figures/us-arms-plots.png", height = 6, width = 8)
+ggsave("figures/us-arms-plots.png", height = 4, width = 6)
 
 
 

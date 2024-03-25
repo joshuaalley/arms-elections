@@ -30,11 +30,11 @@ us.deals <- us.arms.cat %>%
     .groups = "keep"
   ) %>%
   right_join(select(us.trade.ally,
-                    ccode, year,
+                    ccode, year, president,
                     atop_defense, ally, 
                     cold_war, gwot, democ_bin,
                     v2x_polyarchy, cowmidongoing,
-                    rep_pres, time_to_elec, 
+                    rep_pres, time_to_elec, incumbent,
                     ln_petrol_rev,
                     eu_member, ln_rgdp,
                     ln_pop, ln_distw,
@@ -56,7 +56,8 @@ us.deals <- us.arms.cat %>%
         v2x_polyarchy > fivenum(us.deals$v2x_polyarchy)[4] ~ "4th Quartile"
         )
   ) %>% # pakistan/east pak duplicate gives warning- drop
-  distinct() 
+  distinct()
+
 # NA from right join- move to zero
 us.deals$deals[is.na(us.deals$deals)] <- 0
 us.deals$nz_deals[is.na(us.deals$nz_deals)] <- 0
@@ -329,7 +330,7 @@ ggplot(us.deals.democ.key, aes(x = time_to_elec,
        y = "Deals per Year",
        fill = "Regime",
        title = "Regime Changes and Arms Deal Timing")
-ggsave("figures/deals-regime-change.png", height = 6, width = 8)
+ggsave("figures/deals-regime-change.png", height = 4, width = 4)
 
 
 # summary table:
