@@ -296,7 +296,7 @@ plot.state.inter <- arrangeGrob(deals.inter.plot, slope.swing,
                                                        c(3, 3)),
                                 top = grid::textGrob("Arms Deals, Swing States, and Defense Contracts",
                                                      gp = grid::gpar(fontsize = 20)))
-ggsave("figures/deals-swing-me.png", plot.state.inter,
+ggsave("appendix/deals-swing-me.png", plot.state.inter,
        height = 6, width = 8)
 
 # state varying coefs
@@ -439,7 +439,9 @@ pred.08.key <- pred.08.draws %>%
                   ),
                 )
 
-ggplot(pred.08.key, aes(y = state, x = diff.median)) +
+
+
+ggplot(pred.08.key, aes(y = reorder(state, diff.median), x = diff.median)) +
   facet_wrap(~ comp, scales = "free_y",
              ncol = 1) +
   geom_vline(xintercept = 0) +
@@ -450,7 +452,7 @@ ggplot(pred.08.key, aes(y = state, x = diff.median)) +
     title = "Defense Contracting by State",
     subtitle = "2007-2008"
   )
-ggsave("appendix/est-08-cycle-facet.png", height = 8, width = 8)
+#ggsave("appendix/est-08-cycle-facet.png", height = 8, width = 8)
 
 # map 
 # Map of respondents
@@ -468,7 +470,7 @@ ggplot(data = states.08.data, aes(x = long, y=lat,
   geom_polygon(aes(group = group,
                   # color = comp
                    ),
-               color = "white",
+               color = "grey",
                linewidth = 1
                 ) +
   scale_fill_distiller(type = "seq",
@@ -488,7 +490,7 @@ ggplot(data = states.08.data, aes(x = long, y=lat,
   axis.title.y = element_blank(),
   axis.text.y = element_blank(),
   axis.ticks.y = element_blank())
-ggsave("appendix/est-08-cycle.png", height = 6, width = 8)
+#ggsave("appendix/est-08-cycle.png", height = 6, width = 8)
 
 # deals rise by 32
 table(state.data.08$year, state.data.08$deals)
@@ -506,7 +508,7 @@ ggplot(data = pred.state.08, aes(x = long, y=lat)) +
   facet_wrap(~ year) +
   geom_polygon(aes(group = group,
                    fill = estimate),
-               color="white", linewidth = 0.4) +
+               color="grey", linewidth = 0.4) +
   scale_fill_distiller(type = "seq",
                        direction = 1,
                        palette = "Greys") +
@@ -516,103 +518,61 @@ ggplot(data = pred.state.08, aes(x = long, y=lat)) +
   theme_minimal()
 
 
-
-
-
-### rough calculation of how arms deals feed defense contracts ### 
-
-# aggregate total deals by year, all else equal
-# different kinds of alliances- from prediction 
-
-pred.data.hyp <- pois.deals.est[[2]]
-glimpse(pred.data.hyp)
-
-pred.deals.elec <- pred.data.hyp %>%
-                    group_by(time_to_elec) %>% 
-                    summarize(
-                      total_deals = sum(estimate),
-                      total_low = sum(conf.low),
-                      total_high = sum(conf.high)
-                    )
-# implies one more deal across four hypothetical dyads- 
-# driven by allies with median polyarchy or less 
-pred.deals.elec
-
-# scale it for all states- 2001 on 
-us.deals.comp.2000 <- us.deals.comp %>% 
-                      filter(year >= 2001) %>%
-                      ungroup() %>%
-                        mutate(
-                          cycle = case_when(year <= 2000 ~ 2000,
-                                                     year <= 2004 ~ 2004,
-                                                     year <= 2008 ~ 2008,
-                                                     year <= 2012 ~ 2012,
-                                                     year <= 2016 ~ 2016,
-                                                     year > 2016 ~ 2020))
-glimpse(us.deals.comp.2000)
-
-# predictions from observed data
-pred.deals.all <- predictions(pois.deals.democ,
-                              newdata = us.deals.comp.2000) %>%
-  group_by(time_to_elec, cycle) %>% 
-  summarize(
-    year = mean(year), 
-    deals = sum(estimate),
-    deals_low = sum(conf.low),
-    deals_high = sum(conf.high),
-    .groups = "keep"
+# combine uncertainty and map
+interval.08.plot <- ggplot(pred.08.key, aes(y = reorder(state, diff.median), 
+                                            x = diff.median)) +
+  facet_wrap(~ comp, scales = "free_y",
+             ncol = 3) +
+  geom_vline(xintercept = 0) +
+  geom_pointrange(aes(xmin = diff.lower, xmax = diff.upper)) +
+  labs(
+    x = "Difference in Contracts",
+  ) +
+  theme(
+    axis.title.y = element_blank(),
   )
-pred.deals.all 
-
-ggplot(pred.deals.all, aes(x = time_to_elec, y = deals,
-                           color = factor(cycle))) +
-  geom_line(linewidth = 1) +
-  scale_x_reverse()
-
-# get data for states 
-swing.data.pdeals <- state.data.deals %>%
-                      filter(year >= 2005) %>%
-                      select(-deals) %>%
-                      left_join(pred.deals.all)
-
-# calculate predictions for observed swing states 
-pred.state <- predictions(deals.state,
-                              newdata = swing.data.pdeals) %>%
-                           mutate_at(
-                                c("estimate", "conf.low", "conf.high"),
-                                function(x) x * scale.factor 
-                              )
 
 
+base.map <- ggplot() +
+  geom_polygon(data = states, aes(x = long, y=lat,
+                                         group = group),
+  color = "black",
+  linewidth = .5,
+  fill = NA
+  ) 
 
-ggplot(pred.state, aes(x = time_to_elec, y = estimate,
-                          group = state,
-                          color = state)) +
-  facet_wrap(~ cycle, scales = "free_y") +
-  geom_line() +
-  scale_x_reverse()
+map.08.plot <- base.map + 
+  facet_wrap(~ comp, ncol = 3) +
+  geom_polygon(data = states.08.data, aes(x = long, y=lat,
+                                          fill = diff.median,
+                                          group = group),
+  color = "black",
+  linewidth = .5
+  ) +
+ # scale_fill_grey(start = .8, end = .2) +
+  scale_fill_gradient(low = "grey", high = "black") +
+    # scale_fill_distiller(type = "seq",
+    #                    direction = 1,
+    #                    palette = "Greys") +
+  labs(title = "Geogrpahy of Defense Contracting Changes",
+       subtitle = "2007-2008: 32 Additional Arms Deals",
+       #color = "Electoral\nCompetition"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+map.08.plot
 
-ggplot(pred.state.sw, aes(x = time_to_elec, y = estimate,
-                          color = factor(cycle))) +
-  facet_wrap(~ state, scales = "free_y") +
-  geom_pointrange(aes(ymin = conf.low,
-                      ymax = conf.high)) +
-  scale_x_reverse()
-
-# look at specific states
-example.pred <- filter(pred.state,
-                          state == "Florida" |
-                          state == "North Carolina" |
-                         state == "Pennsylvania")
-ggplot(example.pred, aes(x = year, y = estimate,
-                          color = factor(cycle))) +
-   facet_wrap(~ state, scales = "free_y") +
-  geom_point() +
-  geom_line()
-  
-
-
-
+grid.arrange(map.08.plot, interval.08.plot)
+map.08.full <- arrangeGrob(map.08.plot, interval.08.plot)
+ggsave("figures/map-08-full.png", map.08.full,
+       height = 6, width = 10)
 
 
 ### Robustness Checks ### 
