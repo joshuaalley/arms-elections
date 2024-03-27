@@ -158,8 +158,11 @@ hypothesis(deals.inter, c("b_deals:swing > b_deals"))
 hypothesis(deals.inter, c("b_deals:swing > 0"))
 hypothesis(deals.inter, c("b_deals > 0"))
 
+sum((deals.inter[, 10] * scale.factor) > 
+      (deals.inter[, 2] * scale.factor)) / nrow(deals.inter)
 
-deals.inter <- function(model, scale.factor){
+# function to plot positive posterior mass
+deals.inter.func <- function(model, scale.factor){
   
   # all draws 
   deals.draws <- prepare_predictions(model)
@@ -220,7 +223,7 @@ deals.inter <- function(model, scale.factor){
   
 }
 
-deals.inter.plot <- deals.inter(deals.state, scale.factor)
+deals.inter.plot <- deals.inter.func(deals.state, scale.factor)
 
 # with hypothetical data 
 pred.out.hyp <- prepare_predictions(deals.state, newdata = hyp.data)
@@ -378,7 +381,7 @@ ggsave("appendix/state-pars.png", height = 6, width = 8)
 
 
 
-### Predictions by state- take 2012
+### Predictions by state- take 2007 to 2008
 
 # state data from 2007/2008
 state.data.08 <- state.data.deals %>%
@@ -549,11 +552,7 @@ map.08.plot <- base.map +
   color = "black",
   linewidth = .5
   ) +
- # scale_fill_grey(start = .8, end = .2) +
   scale_fill_gradient(low = "grey", high = "black") +
-    # scale_fill_distiller(type = "seq",
-    #                    direction = 1,
-    #                    palette = "Greys") +
   labs(title = "Geogrpahy of Defense Contracting Changes",
        subtitle = "2007-2008: 32 Additional Arms Deals",
        #color = "Electoral\nCompetition"

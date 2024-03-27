@@ -592,7 +592,7 @@ Annual deals range from 75 to 160.
 
 The other key independent variable is a dummy indicator of swing state status based on \citet{KrinerReeves2015}.
 Swing states are states where the losing party won at least 45\% of the two-party vote in three straight elections.
-These states are thus more competitive than others in the core Democratic or Republican coalitions, and could determine the outcome of an election.\footnote{In the appendix, I list swing states and map the estimated consequences of a large increase in arms deals from 2007 to 2008.}
+These states are thus more competitive than others in the core Democratic or Republican coalitions, and could determine the outcome of an election.\footnote{In the appendix, I list swing states.}
 %\autoref{tab:swing-list} lists the set of swing states and the years they are swing states.
 %
 %
@@ -623,8 +623,9 @@ I therefore add a state-specific lagged dependent variable, which allows tempora
 
 
 To examine the arms deals and defense contracts hypothesis, I calculate the positive posterior mass of the interaction between arms deals and swing states. Because the hypothesis anticipates a positive association, posterior posterior mass gives corresponding evidence in the interaction term.\footnote{For the marginal effect of swing status and outcome predictions, I again use 90\% credible intervals.}
-As I show in the appendix, 98\% of the posterior mass of the deals and swing state interaction is positive, so the preponderance of evidence supports the deals and contracts hypothesis.
-Only 34\% of the posterior mass in the deals constituent term is positive, however, so there is little evidence that deals increase contract awards outside of swing states. 
+98\% of the posterior mass of the deals and swing state interaction is positive, so the preponderance of evidence supports the deals and contracts hypothesis.
+Only 34\% of the posterior mass in the deals constituent term is positive, however, so there is little evidence that deals increase contract awards outside of swing states.
+95\% of the posterior probability in the deals and swing state interaction coefficient is greater than the deals constituent term, so the interaction is also clearly larger. 
 
 
 In addition to the direction of the relationship between deals and swing state contracts matching the argument, the correlation is substantively meaningful. 
@@ -633,30 +634,30 @@ This is a meaningful shift in defense contracting.
 Greater deals are less connected to contract awards outside swing states because the share of contracts that go to swing states rises in election years. 
 
 
-To further illustrate what this means for defense contracting in practice, I plot the estimated changes in defense contracting from 2007 to 2008 in \autoref{fig:map-08-full}. 
-To do this, I take the posterior draws of predicted defense contracting in 2007 and 2008 across all states. 
-I then calculate the difference between these predicted values. 
-I examine 2007 and 2008 because total arms deals increased by 32, so the difference between these years matches the theory and should show the swing state contracting increase from deals. 
-
-
-The top panels of \autoref{fig:map-08-full} map the median difference in arms contracting awards across three groups of states- competitive swing states, core members of the Republican coalition, and states that were core parts of the Democratic coalition, making them neither swing nor core. 
-Texas, which was George Bush's home state and the cornerstone of the Republican coalition, saw a large increase in contracts, but the model also predicts more contracts for large swing states such as Virginia, Florida, Wisconsin and Pennsylvania. 
-These were the most important swing states, as they each carried at least 10 Electoral Votes. 
-
-
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{../figures/map-08-full.png}
-	\caption{Predicted changes in defense contracts during 2007/2008 presidential election, divided by electoral coalition status. Darker shading in the map indicates a larger increase in contracts. Estimates in millions of U.S. dollars.}
+	\caption{Predicted changes in defense contracts during 2007/2008 presidential election, divided by electoral coalition status. Darker shading in the map indicates a larger increase in contracts, and white states are not part of the respective group. Estimates in millions of U.S. dollars.}
 	\label{fig:map-08-full}
 \end{figure}
 
 
+To further illustrate what increasing arms deals mean for defense contracting, I plot the changes in predicted defense contracting from 2007 to 2008 in the lower 48 states in \autoref{fig:map-08-full}. 
+To do this, I take the posterior draws of predicted defense contracting in 2007 and 2008 across all states from the model, and then calculate the difference between these predicted values. 
+I examine 2007 and 2008 because total arms deals increased by 32, so the difference between the year before and year of a presidential election should show the swing state contracting increase from deals. 
+
+
+The top panels of \autoref{fig:map-08-full} map the median difference in arms contracting awards across three groups of states- competitive swing states, core members of the Republican coalition, and states that were core parts of the Democratic coalition, making them neither swing nor core. 
+Texas, which was George Bush's home state and the cornerstone of the Republican coalition, saw the greatest increase in contracts.
+Otherwise, the largest increases in contracts went to large swing states such as Virginia, Florida, Wisconsin and Pennsylvania. 
+These were the most important swing states, as they each carried at least 10 Electoral Votes. 
+
+
 The bottom row of \autoref{fig:map-08-full} presents the same estimates, but with uncertainty. 
-This shows that besides Texas, the largest increases in defense contracting went to swing states. 
+All swing states saw increased defense contracts in election years, with the most important states receiving a billion dollars more in contracts in 2008, than 2007.
 The model also picks up a large increase in contracts to Arizona, which was Republican nominee John McCain's home state.
 Arizona was therefore more competitive than the coding of \citet{KrinerReeves2015} suggests. 
-Some core Democratic states also received more contracts. 
+Some core Democratic states also received more contracts due to the substance of the arms deals. 
 
 
 These estimates are robust to a series of changes, including models with different control specifications, alternative estimators, and examining raw data.
