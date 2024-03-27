@@ -471,3 +471,47 @@ ggsave("appendix/deals-pres-drop.png", height = 10, width = 15)
 ike.data <- filter(us.deals.comp.autoc,
                                       president == presidents[2])
 arrange(ike.data, deals)
+
+
+
+# deals model without post-treatment variables:
+# assuming autoc is treatment, drop:
+
+pois.deals.ptdrop <- brm(bf(deals ~ 
+                             time_to_elec_0*v2x_polyarchy +
+                             time_to_elec_1*v2x_polyarchy +
+                             time_to_elec_2*v2x_polyarchy +
+                             cold_war + gwot +
+                             rep_pres + 
+                             ln_petrol_rev + 
+                             ln_rgdp + 
+                             ln_pop + ln_distw + 
+                             Comlang,
+                           hu ~ ally + v2x_polyarchy + ln_rgdp,
+                           center = FALSE),
+                        family = hurdle_poisson(),
+                        backend = "cmdstanr",
+                        prior = c(prior(normal(0, .5), class = "b")),
+                        cores = 4,
+                        refresh = 500,
+                        data = us.deals.comp)
+summary(pois.deals.ptdrop)
+
+pois.pt.pred <- year.dum.pred(pois.deals.ptdrop)
+
+ggplot(pois.pt.pred, aes(y = estimate, 
+                            x = time_to_elec)) +
+  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs,
+             ncol = 5) +
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1),
+                  size = 1,
+                  linewidth = 2) +
+  labs(title = "Elections, Democracy, and Arms Deals",
+       subtitle = "Drop Potential Posttreatment Controls",
+       y = "Predicted Arms Deals",
+       x = "Years to Presidential Election")
+ggsave("appendix/democ-deals-pred-pt.png", height = 6, width = 10)

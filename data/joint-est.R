@@ -841,3 +841,49 @@ ggplot(deals.me, aes(y = estimate,
        y = "Estimated Marginal Effect",
        x = "Years to Presidential Election")
 ggsave("appendix/deals-me-prox.png", height = 6, width = 8)
+
+
+
+# remove wealth and population controls- why not?
+
+# ordbeta reg for transformed outcomes
+formula.state.sparse <- bf(obligations_rs ~
+                      (lag_obligations_rs || state) +
+                      deals*swing + core +
+                      gwot + time_to_elec + 
+                      rep_pres,
+                    center = FALSE)
+deals.state.pt <- ordbetareg(formula.state.sparse,
+                          true_bounds = c(0, 1),
+                          data = state.data.deals,
+                          cores = 4,
+                          backend = "cmdstanr",
+                          refresh = 200
+) 
+summary(deals.state.pt)
+
+
+# results
+deals.me.pt <- slopes(deals.state.pt, variables = c("deals"),
+       conf_level = .9,
+       newdata = 
+         datagrid(model = deals.state.pt,
+                  swing = c(0, 1))) %>%
+       mutate(
+         estimate = estimate*scale.factor,
+         conf.low = conf.low*scale.factor,
+         conf.high = conf.high*scale.factor,
+       )
+
+ggplot(deals.me.pt, aes(y = estimate, 
+                     x = factor(swing))) +
+  geom_hline(yintercept = 0) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1),
+                  linewidth = 2, size = 1) +
+  scale_x_discrete(name = "Swing State", 
+                   labels = c(`0` = "No", `1` = "Yes")) +
+  labs(title = "Marginal Impact of Arms Deals by Swing State",
+       subtitle = "Removing Population and Wealth Controls",
+       y = "Estimated Marginal Effect")
+ggsave("appendix/me-deals-pt-check.png", height = 6, width = 8)

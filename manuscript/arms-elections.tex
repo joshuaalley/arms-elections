@@ -496,14 +496,6 @@ This figure plots predicted arms deals based on proximity to a presidential elec
 Each facet fixes recipient democracy at the minimum, first quartile, median, third quartile and maximum, and holds all other factors constant.
 
 
-\begin{figure}[htpb]
-	\centering
-		\includegraphics[width=0.95\textwidth]{../figures/democ-deals-pred.png}
-	\caption{Predicted arms deals between the United States and five hypothetical states 1950 to 2014 based on presidential election proximity and partner democracy. Estimates derived from a hurdle Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}
-	\label{fig:democ-deals-pred}
-\end{figure}
-
-
 \autoref{fig:democ-deals-pred} indicates that autocracies who clear the hurdle of buying any U.S. arms make more arms deals with the United States in election years.
 During Congressional elections, which happen two years from presidential elections, arms deals rise slightly. 
 Autocrats buy far more arms in presidential election years, as predicted deals for a hypothetical state with minimum polyarchy rise from 1.5 to 2.25. 
@@ -516,6 +508,14 @@ The arms deal cycle diminishes as democracy increases, so states with a polyarch
 As a result, autocracies buy more arms during U.S. elections, especially presidential elections.
 
 
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{../figures/democ-deals-pred.png}
+	\caption{Predicted arms deals between the United States and five hypothetical states 1950 to 2014 based on presidential election proximity and partner democracy. Estimates derived from a hurdle Poisson model. Points mark the estimates and error bars summarize the 90\% credible interval.}
+	\label{fig:democ-deals-pred}
+\end{figure}
+
+
 Whether autocracies make more or less arms deals than democracies depends on the presidential election cycle. 
 Early in presidential terms, democracies make more arms deals. 
 Democratic deals remain roughly constant across the electoral calendar because democracies engage in more peacetime defense cooperation. 
@@ -526,7 +526,7 @@ Thus, the political composition of U.S. arms deals depends on elections.
 These results are robust to a variety of checks. 
 I show in the appendix that raw data as well as Poisson and zero-inflated Poisson models give similar inferences. 
 I also fit a series of models that drop individual autocracies such as Saudi Arabia that bought many arms from the United States to ensure that a few states do not drive the results. 
-Results are also robust to fitting a Poisson model without any hurdle or controls, using a linear measure of election proximity, other interaction estimators, and removing potential post-treatment variables such as conflict involvement. 
+Results are also robust to fitting a Poisson model without any hurdle or controls, using a linear measure of election proximity, other interaction estimators, and removing MID involvement as a potential post-treatment variable. 
 
 
 In presidential and congressional election years, U.S. arms deals with autocracies rise.
@@ -625,7 +625,7 @@ I therefore add a state-specific lagged dependent variable, which allows tempora
 To examine the arms deals and defense contracts hypothesis, I calculate the positive posterior mass of the interaction between arms deals and swing states. Because the hypothesis anticipates a positive association, posterior posterior mass gives corresponding evidence in the interaction term.\footnote{For the marginal effect of swing status and outcome predictions, I again use 90\% credible intervals.}
 98\% of the posterior mass of the deals and swing state interaction is positive, so the preponderance of evidence supports the deals and contracts hypothesis.
 Only 34\% of the posterior mass in the deals constituent term is positive, however, so there is little evidence that deals increase contract awards outside of swing states.
-95\% of the posterior probability in the deals and swing state interaction coefficient is greater than the deals constituent term, so the interaction is also clearly larger. 
+95\% of the posterior probability in the deals and swing state interaction coefficient is greater than the deals constituent term, so deals have a larger impact on swing states. 
 
 
 In addition to the direction of the relationship between deals and swing state contracts matching the argument, the correlation is substantively meaningful. 

@@ -105,6 +105,22 @@ The presidential election year increase in deals is slightly smaller when I remo
 \end{figure}
 
 
+\subsection{Removing Conflict Control}
+
+A further possibility is that the deals results are biased by the inclusion of controls that are post-treatment indicators of autocracy. 
+If autocracy causes conflict with the United States, for instance, then conflict might be a post-treatment variable and introduce bias \citep{Montgomeryetal2018}. 
+To check this, I refit the hurdle poisson model and remove the MID involvement variable from the hurdle and outcome equations. 
+As \autoref{fig:democ-deals-pred-pt} shows, this does not change the results. 
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{democ-deals-pred-pt.png}
+	\caption{Predicted arms deals by the United States across the presidential election cycle in a model that drops ongoing militarized disputes as a potential post-treatment variable of democracy. Estimates from a hurdle Poisson model of arms deals between 1950 and 2014.}
+	\label{fig:democ-deals-pred-pt}
+\end{figure}
+
+
 \subsection{Linear Estimate of Time to Election}
 
 In the manuscript, I use dummy variables marking years to a presidential election to capture election proximity. 
@@ -377,6 +393,20 @@ While 92\% of the posterior mass in the deals term is positive, which suggests i
 As a result, arms deals increase changes in defense contracts more in swing states than in other states. 
 
 
+\subsection{Alternative Control Specifications}
+
+This section checks the robustness of the deals and contracts results to alternative control specifications.
+Specifically, I remove the indicators of state population and wealth to generate a more sparse model specification.
+\autoref{fig:me-deals-pt-check} shows that inferences about the association between deals and swing state contracts are very similar in this model- the marginal effect of deals remains positive for swing states and close to zero for non-swing states.
+
+
+\begin{figure}[htpb]
+	\centering
+		\includegraphics[width=0.95\textwidth]{me-deals-pt-check.png}
+	\caption{Marginal effect of increasing arms deals on defense contracts in swing and non-swing states. Estimates in millions of U.S. dollars.}
+	\label{fig:me-deals-pt-check}
+\end{figure}
+
 %\subsection{Electoral Geography: 2008 Presidential Election}
 
 %\begin{figure}[htpb]
@@ -410,7 +440,7 @@ I then present the marginal effect of deals on defense contracts in \autoref{fig
 \begin{figure}[htpb]
 	\centering
 		\includegraphics[width=0.95\textwidth]{deals-me-prox.png}
-	\caption{Marginal effect of arms deals on defense contract awards based on swing state status and presidential election proximity. Estimates in millions of dollars.}
+	\caption{Marginal effect of arms deals on defense contract awards based on swing state status and presidential election proximity. Estimates in millions of U.S. dollars.}
 	\label{fig:deals-me-prox}
 \end{figure}
 
