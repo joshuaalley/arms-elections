@@ -180,8 +180,8 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
   geom_line(linewidth = 1) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
                   position = position_dodge(width = .1),
-                  size = 1,
-                  linewidth = 2) +
+                  size = .75,
+                  linewidth = 1.5) +
   scale_color_grey("US Ally", 
                    start = 0.7,
                    end = 0.1,
@@ -190,7 +190,7 @@ pred.us.deals <- ggplot(pois.deals.est[[2]], aes(y = estimate,
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election") 
 pred.us.deals
-ggsave("figures/us-arms-plots.png", height = 4, width = 6)
+ggsave("figures/us-arms-plots.png", height = 4, width = 8)
 
 
 

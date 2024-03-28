@@ -187,10 +187,10 @@ present.sector.cont <- function(model, sector, scale.factor){
   
   grid.arrange(deals.swing.dens, deals.dens, 
                             top = grid::textGrob(sector.nice,
-                                  gp = grid::gpar(col = "black", fontsize = 20)))
+                                  gp = grid::gpar(col = "black", fontsize = 18)))
   deals.inter.plot <- arrangeGrob(deals.swing.dens, deals.dens, 
                                   top = grid::textGrob(sector.nice, 
-                                  gp = grid::gpar(col = "black", fontsize = 20)))
+                                  gp = grid::gpar(col = "black", fontsize = 18)))
   
 
   # marginal effect of swing
@@ -244,15 +244,15 @@ ggplot(margins.deals.sector, aes(x = factor(swing), y = estimate)) +
 
 
 # combine the different sector plots
-grid.arrange(res.sector.cont$aircraft[[5]], res.sector.cont$arms[[5]],
-             res.sector.cont$electronics[[5]], res.sector.cont$missile_space[[5]],
-             res.sector.cont$ships[[5]], res.sector.cont$vehicles[[5]],
+grid.arrange(res.sector.cont[["Aircraft"]][[5]], res.sector.cont[["Arms"]][[5]],
+             res.sector.cont[["Electronics"]][[5]], res.sector.cont[["Missile and Space"]][[5]],
+             res.sector.cont[["Ships"]][[5]], res.sector.cont[["Vehicles"]][[5]],
              ncol = 3)
-me.deals.sector <- arrangeGrob(res.sector.cont$aircraft[[5]], res.sector.cont$arms[[5]],
-                               res.sector.cont$electronics[[5]], res.sector.cont$missile_space[[5]],
-                               res.sector.cont$ships[[5]], res.sector.cont$vehicles[[5]],
+me.deals.sector <- arrangeGrob(res.sector.cont[["Aircraft"]][[5]], res.sector.cont[["Arms"]][[5]],
+                               res.sector.cont[["Electronics"]][[5]], res.sector.cont[["Missile and Space"]][[5]],
+                               res.sector.cont[["Ships"]][[5]], res.sector.cont[["Vehicles"]][[5]],
                                ncol = 3)
-ggsave("figures/me-deals-sector.png", me.deals.sector, height = 4, width = 6)
+ggsave("figures/me-deals-sector.png", me.deals.sector, height = 6, width = 10)
 
 
 # swing state ME
@@ -446,9 +446,9 @@ ggplot(pred.inter.sector, aes(y = estimate,
   geom_hline(yintercept = 0) +
   geom_line(linewidth = 1) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1),
-                  size = 1,
-                  linewidth = 2) +
+                  position = position_dodge(width = .25),
+                  size = .75,
+                  linewidth = 1.5) +
   scale_color_grey("Regime",
                    start = 0.7,
                    end = 0.1) +
@@ -456,7 +456,7 @@ ggplot(pred.inter.sector, aes(y = estimate,
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election") +
   theme(legend.position = "bottom")
-ggsave("figures/deals-sector.png", height = 4, width = 7)
+ggsave("figures/deals-sector.png", height = 5, width = 10)
 
 
 

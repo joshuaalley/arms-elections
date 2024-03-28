@@ -774,3 +774,79 @@ arms.cat.all <- arms.cat.all %>%
     deals_aircraft = nall_aircraft + all_aircraft
   )
 
+
+
+# everything for deals analysis
+# total deals- summarize at country-year level and add covariates
+us.deals <- us.arms.cat %>%
+  group_by(ccode, year) %>%
+  select(
+    country, ccode, year, deals, aid, ordered,
+  ) %>%
+  summarize(
+    deals = sum(deals, na.rm = TRUE),
+    .groups = "keep"
+  ) %>%
+  right_join(select(us.trade.ally,
+                    ccode, year, president,
+                    atop_defense, ally, 
+                    cold_war, gwot, democ_bin,
+                    v2x_polyarchy, cowmidongoing,
+                    rep_pres, time_to_elec, incumbent,
+                    ln_petrol_rev,
+                    eu_member, ln_rgdp,
+                    ln_pop, ln_distw,
+                    Comlang,
+                    Contig, Evercol)) %>%
+  filter(year >= 1949) %>%
+  group_by(ccode) %>%
+  mutate(
+    var_democ = sd(v2x_polyarchy, na.rm = TRUE),
+    nz_deals = ifelse(deals > 0, 1, 0),
+    democ_grp = case_when(
+      v2x_polyarchy <= fivenum(us.deals$v2x_polyarchy)[2] ~
+        "1st Quartile",
+      v2x_polyarchy > fivenum(us.deals$v2x_polyarchy)[2] &
+        v2x_polyarchy <= fivenum(us.deals$v2x_polyarchy)[3] ~ 
+        "2nd Quartile",
+      v2x_polyarchy > fivenum(us.deals$v2x_polyarchy)[3] &
+        v2x_polyarchy <= fivenum(us.deals$v2x_polyarchy)[4] ~ "3rd Quartile",
+      v2x_polyarchy > fivenum(us.deals$v2x_polyarchy)[4] ~ "4th Quartile"
+    )
+  ) %>% # pakistan/east pak duplicate gives warning- drop
+  distinct()
+
+# NA from right join- move to zero
+us.deals$deals[is.na(us.deals$deals)] <- 0
+us.deals$nz_deals[is.na(us.deals$nz_deals)] <- 0
+
+us.deals$country <- countrycode(sourcevar = us.deals$ccode,
+                                origin = "cown",
+                                destination = "country.name")
+# complete cases
+us.deals.comp <- drop_na(us.deals) %>%
+  group_by(ccode) %>%
+  mutate(
+    lag_deals = lag(deals),
+    change_deals = deals - lag(deals),
+  )
+
+# create dummies for years to election
+us.deals.comp <- us.deals.comp %>%
+  mutate(
+    time_to_elec_0 = ifelse(time_to_elec == 0, 1, 0),
+    time_to_elec_1 = ifelse(time_to_elec == 1, 1, 0),
+    time_to_elec_2 = ifelse(time_to_elec == 2, 1, 0)
+  )
+
+# check for labels
+fivenum(us.deals.comp$v2x_polyarchy)
+
+# nice labeller
+democ.all.labs <- labeller(democ_bin = c(`1` = "Democracy", `0` = "Nondemocracy"),
+                           v2x_polyarchy = c(`0.012` = "Minimum\nDemocracy",
+                                             `0.176` = "1st Quartile\nDemocracy",
+                                             `0.36` = "Median\nDemocracy",
+                                             `0.734` = "3rd Quartile\nDemocracy",
+                                             `0.926` = "Maximum\nDemocracy"),
+                           ally = c(`1` = "US Ally", `0` = "Not Ally"))
