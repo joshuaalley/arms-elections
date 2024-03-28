@@ -24,13 +24,15 @@ pois.deals.cycle <- brm(bf(deals ~
                        data = us.deals.comp)
 summary(pois.deals.cycle)
 
-pois.cycle.pred <- year.pred.dum(pois.deals.cycle)
+pois.cycle.pred <- year.dum.pred(pois.deals.cycle) %>%
+                     filter(v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[[3]])
 ggplot(pois.cycle.pred, aes(y = estimate, 
                            x = time_to_elec)) +
   scale_x_reverse() + # decreasing time to election
-  geom_line() +
+  geom_line(linewidth = 1) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
+                  position = position_dodge(width = .1),
+                  size = 1, linewidth = 2) +
   labs(title = "Elections and Arms Deals",
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election") 
