@@ -831,7 +831,7 @@ ggplot(deals.me, aes(y = estimate,
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1),
+                  position = position_dodge(width = .25),
                   linewidth = 2, size = 1) +
   scale_color_grey("Swing\nState", 
                    start = 0.7,

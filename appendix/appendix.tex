@@ -52,7 +52,7 @@
 
 In this section, I check the hurdle Poisson models of U.S. arms deals. 
 First, I show similar patterns in raw data and general arms deal cycles. 
-Second, I demonstrate that two different Poisson model specifications and a zero-inflated Poisson model give similar inferences to the hurdle Poisson models in the manuscript. 
+Second, I demonstrate that different data and model specifications, Poisson models and a zero-inflated Poisson model give similar inferences to the hurdle Poisson models in the manuscript. 
 Finally, I use posterior predictive checks to show that a hurdle Poisson outcome likelihood fits the observed data best. 
 
 
@@ -125,7 +125,7 @@ As \autoref{fig:democ-deals-pred-pt} shows, this does not change the results.
 
 In the manuscript, I use dummy variables marking years to a presidential election to capture election proximity. 
 As I show here, using a single indicator of years to an election gives similar inferences. 
-The downside of this measure is that it smooths over the fall in autocratic deals in years between Congressional and Presidential elections, as \autoref{fig:democ-deals-pred-lin} makes clear. 
+The downside of this measure is that it obfuscates the fall in autocratic deals in the year between Congressional and Presidential elections, as \autoref{fig:democ-deals-pred-lin} makes clear. 
 
 
 \begin{figure}[htpb]
@@ -259,20 +259,24 @@ I plot the results in \autoref{fig:incum-deals-pred}.
 
 While incumbent presidents behave as the theory predicts, with greater arms deals with autocracies in election years and no change in deals with democracies, arms deals under lame ducks are more volatile. 
 Autocratic arms deals under lame duck presidents do not rise in midterm election years, fall in the year before Presidential elections, and rise dramatically in election years. 
-Deals with democracies increase more in midterm elections than presidential elections. 
+Second term incumbents also make more deals with democracies in midterm elections.
 
 
-One reason for this divergence may be that incumbent presidents are more common in the data. 
+One reason for that lame ducks behave in ways that are inconsistent with the argument may be that incumbent presidents are more common in the data, so there is more noise in the second-term incumbent estimates. 
 Because incumbent presidents including Lyndon Johnson, Gerald Ford, Jimmy Carter and George H.W. Bush failed to secure re-election, incumbent presidents are present in 49 of the 76 years from 1945 to 2020. 
 As a result, roughly one third of all observations in the arms deal data have a lame duck U.S. president.
-These inferences may more sensitive to idiosyncratic fluctuations or lame duck leaders may attempt to sell more arms to autocrats at the end of their term to constrain potential successor and help the candidate from their party. 
+These inferences may more sensitive to idiosyncratic fluctuations. 
+Lame duck leaders may also attempt to sell more arms to autocrats at the end of their term to constrain potential successor and help the candidate from their party. 
 
 
 To further explore the sensitivity of results to president-specific dynamics, I fit models of arms deals that drop each president one by one. 
 Removing each administration shows that inferences about second-term incumbents are more sensitive to specific administrations, while the pattern among first-term incumbents is more stable.
-Specifically, dropping the Eisenhower administration eliminates the massive increase in arms deals for lame duck presidents. 
-Eisenhower struck 24 arms deals with Greece's junta in 1960, and a further 16 with Peru. 
+
+
+Specifically, dropping the Eisenhower administration attenuates the massive increase in arms deals for lame duck presidents. 
+In his final year in office, Eisenhower struck 24 arms deals with Greece's junta and a further 16 with Peru. 
 Given that his vice-president was running for office, this is somewhat unsurprising. 
+Similarly, removing Truman eliminates the midterm elections democratic deals spike among lame duck presidents, likely due to extensive U.S. arms sales to allies in the early years of the Cold War. 
 
 
 \begin{figure}[htpb]
@@ -293,7 +297,7 @@ Given that his vice-president was running for office, this is somewhat unsurpris
 
 \section{Contracts Model Checks} 
 
-This section checks the second analysis, which examines the interaction between arms deals and contract awards in the 50 U.S. states. 
+This section checks the second analysis of arms deals and contract awards in the 50 U.S. states. 
 First, I present some raw data. 
 After that, I present additional estimates from the ordered beta regression, including the interaction of deals and swing status, the state varying intercepts and lagged dependent variables. 
 I then show that student-t and hurdle log-normal models of defense contract changes and levels also suggest that arms deals increase contract awards to swing states. 
@@ -314,7 +318,7 @@ Finally, I check whether changing the control variable specification alters the 
 \subsection{Additional Estimates}
 
 
-Here, I present some key interaction estimates underlying the results in the manuscript. 
+Here, I present some key estimates underlying the results in the manuscript. 
 First, \autoref{fig:deals-swing-me} presents the interaction coefficient for deals and swing status, the marginal impact of swing state competition as arms deals vary, and predicted defense contracts for hypothetical swing and non-swing states. 
 All these estimates suggest that deals increase defense contracting awards to swing states. 
 In fact, swing states receive fewer contracts than other states in years with low arms deals. 
@@ -353,7 +357,7 @@ As a result, in years with more arms deals, swing states receive similar contrac
 
 
 
-\autoref{fig:state-pars} presents estimates from the ordered beta regression with transformed contracts. 
+\autoref{fig:state-pars} presents state-specific parameter estimates from the ordered beta regression with transformed contracts. 
 There is wide variation in contracting levels and temporal dependence across states. 
 States with higher contracting levels also have more consistent temporal autocorrelation in contracts, while states such as North Dakota receive occasional arms contracts and thus have little temporal dependence. 
 
@@ -428,10 +432,10 @@ Specifically, I remove the indicators of state population and wealth to generate
 
 \section{Election Proximity, Swing States, and Arms Deals}
 
-Here, I check the connection between deals and swing state contracts. 
+Here, I examine how electoral proximity modifies the connection between deals and swing state contracts. 
 The arms deals models show that deals with autocracies increase as presidential elections approach. 
 The defense contracting models show that swing states receive more defense contracts as arms deals rise.
-If increasing deals go to swing state contracts, then the marginal impact of deals on contracts in swing states should increase as presidential elections approach. 
+If increasing deals go to swing state contracts, then the marginal impact of deals on contracts in swing states should increase around presidential elections. 
 
 
 To check this, I alter the model of defense contracts in the manuscript by interacting the time to election indicator with swing state dummy and arms deals. 
@@ -456,7 +460,7 @@ This further supports my argument that arms deals with autocracies near election
 
 \section{Interaction Robustness}
 
-The models in the manuscript use interactions that assume a linear functional form. 
+Some models in the manuscript use interactions that assume a linear functional form. 
 Violations of linearity and other issues can generate misleading inferences \citep{Hainmuelleretal2019}. 
 Here, I show that more flexible function forms give similar inferences about marginal effects. 
 I do this by using binning estimators to examine the marginal impact of election proximity on arms deals and the marginal impact of swing state status on contracts.
@@ -496,15 +500,14 @@ Each bin deviates minimally from the linear relationship.
 
 \section{Other Democratic Arms Exporters}
 
-Here, I check whether the argument applies to other democratic major powers that also export arms to many other states. 
+In this section, I check whether the argument applies to other democratic major powers that also export arms to many other states. 
 Specifically, I examine whether France, the United Kingdom and Germany sell more arms to autocrats during or near elections.
 I selected these three countries due to the size of their arms industries, varied electoral systems, and major power status. 
-I find little evidence that these states sell arms to autocrats in the same way as the United States. 
+I find little evidence that these states sell more arms to autocrats around elections. 
 
 
-For all three countries together and each country separately, I fit the same hurdle poisson model as in the United States analyses. 
-The key difference was the measure of election proximity. 
-While French election timing is fixed, Germany and the United Kingdom have variable election timing. 
+For all three countries together and each country separately, I fit the same hurdle poisson model as in the manuscript, save for a different measure of election proximity. 
+While French presidential election timing is fixed, Germany and the United Kingdom have variable election timing. 
 Therefore, I interact dummies indicators of the year before and year of an election with the potential arms recipient's polyarchy score. 
 I also use data from the ATOP project \citep{Leedsetal2002} to measure whether recipients are allies of the seller, and use that variable in the hurdle equation.  
 
@@ -526,7 +529,7 @@ For France and Germany, the election year indicators are more uncertain because 
 
 This suggests that among democracies, the United States is unusual in selling arms to autocratic security prot{\'e}g{\'e}s around elections. 
 In addition to a wide array of allies and security partners, the Electoral College may explain this difference. 
-Arms sales provide benefits to specific constituencies in every country, but the Electoral College raises the stakes of this process by giving some constituencies greater importance than others. 
+Arms sales provide benefits to specific constituencies in every country, but the Electoral College raises the stakes of this process by giving some constituencies exceptional influence. 
 Winning a few thousand more votes in a swing state could turn the election, so U.S. leaders are willing to use every tool at their disposal. 
 
 
