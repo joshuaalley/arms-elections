@@ -207,89 +207,6 @@ key.pois.draws <- as.data.frame(pois.deals.est[[4]][, pois.comp.dmin$rowid])
 colnames(key.pois.draws) <- c("a", "b", "c", "d")
 hypothesis(key.pois.draws, c("b > a", "b > c", "d > c"), alpha = .1)
 
-# democracy at 1st q  
-pois.comp.d1q <- pois.deals.est[[2]] %>%
-  filter(
-    ally == 1 & 
-      v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[2])
-
-key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.d1q$rowid])
-colnames(key.pois.draws) <- c("a", "b", "c", "d")
-hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
-hypothesis(key.pois.draws, c("a > d"), alpha = .1)
-
-
-# democracy at 1st q: not allies
-pois.comp.d1q <- pois.deals.est[[2]] %>%
-  filter(
-    ally == 0 & 
-      v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[2])
-
-key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.d1q$rowid])
-colnames(key.pois.draws) <- c("a", "b", "c", "d")
-hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
-hypothesis(key.pois.draws, c("a > d"), alpha = .1)
-
-
-
-# democracy at median  
-pois.comp.dmed <- pois.deals.est[[2]] %>%
-  filter(
-    ally == 1 & 
-      v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[3]) 
-
-key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.dmed$rowid])
-colnames(key.pois.draws) <- c("a", "b", "c", "d")
-hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
-hypothesis(key.pois.draws, c("a > d"), alpha = .1)
-
-
-
-# democracy at 3rd quartile: this is where it stops
-pois.comp.d3q <- pois.deals.est[[2]] %>%
-  filter(
-    ally == 1 & 
-      v2x_polyarchy == fivenum(us.deals.comp$v2x_polyarchy)[4])
-
-key.pois.draws <- as.data.frame(pois.deals.est[[3]][, pois.comp.d3q$rowid])
-colnames(key.pois.draws) <- c("a", "b", "c", "d")
-hypothesis(key.pois.draws, c("a > b", "b > c", "c > d"), alpha = .1)
-hypothesis(key.pois.draws, c("a > d"), alpha = .1)
- 
-
-
-
-# marginal effects w/ same style- less helpful
-# don't need a line and points- need a grid of democ/time to elec, 
-# split by ally/not
-ggplot(pois.deals.est[[1]], 
-                              aes(x = time_to_elec, 
-                                y = v2x_polyarchy,
-                                fill = estimate)) +
-  scale_x_reverse() + # decreasing time to election +
-  geom_tile() + 
-  scale_fill_viridis_b() +
-  labs(title = "Marginal Impact of Alliance on Arms Deals",
-       y = "Partner Democracy",
-       x = "Years to Presidential Election")
-
-
-me.us.deals <- ggplot(pois.deals.est[[1]], aes(y = estimate, 
-                                x = time_to_elec)) +
-  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs) + 
-  scale_x_reverse() + # decreasing time to election
-  geom_hline(yintercept = 0) +
-  geom_line() +
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
-                  position = position_dodge(width = .1)) +
-  labs(title = "Marginal Effect of Alliance",
-       y = "Marginal Effect of Alliance",
-       x = "Years to Presidential Election") 
-me.us.deals
-
-# combine and export
-grid.arrange(pred.us.deals, me.us.deals, nrow = 1)
-
 
 # poisson 
 pc.deals <- brm(deals ~  
@@ -476,10 +393,6 @@ pois.mod.tab <- modelsummary(pois.models,
 pois.mod.tab
 save_kable(pois.mod.tab, "appendix/deals-reg-tabs.tex")
 
-# robustness check models
-modelsummary(list(ols.deals, pois.deals, zip.deals),
-             gof_map = "none")
-
 
 
 # model of change in regime type and deal timing within states 
@@ -529,6 +442,6 @@ ggplot(pred.reg.change.deals, aes(y = estimate,
   geom_line() +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
                   position = position_dodge(width = .1)) +
-  labs(title = "Elections and Arms Deals: Poisson",
+  labs(title = "Elections and Arms Deals",
        y = "Predicted Arms Deals",
        x = "Years to Presidential Election")

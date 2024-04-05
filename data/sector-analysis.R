@@ -244,15 +244,15 @@ ggplot(margins.deals.sector, aes(x = factor(swing), y = estimate)) +
 
 
 # combine the different sector plots
-grid.arrange(res.sector.cont[["Aircraft"]][[5]], res.sector.cont[["Arms"]][[5]],
-             res.sector.cont[["Electronics"]][[5]], res.sector.cont[["Missile and Space"]][[5]],
-             res.sector.cont[["Ships"]][[5]], res.sector.cont[["Vehicles"]][[5]],
+grid.arrange(res.sector.cont[["aircraft"]][[5]], res.sector.cont[["arms"]][[5]],
+             res.sector.cont[["electronics"]][[5]], res.sector.cont[["missile_space"]][[5]],
+             res.sector.cont[["ships"]][[5]], res.sector.cont[["vehicles"]][[5]],
              ncol = 3)
-me.deals.sector <- arrangeGrob(res.sector.cont[["Aircraft"]][[5]], res.sector.cont[["Arms"]][[5]],
-                               res.sector.cont[["Electronics"]][[5]], res.sector.cont[["Missile and Space"]][[5]],
-                               res.sector.cont[["Ships"]][[5]], res.sector.cont[["Vehicles"]][[5]],
+me.deals.sector <- arrangeGrob(res.sector.cont[["aircraft"]][[5]], res.sector.cont[["arms"]][[5]],
+                               res.sector.cont[["electronics"]][[5]], res.sector.cont[["missile_space"]][[5]],
+                               res.sector.cont[["ships"]][[5]], res.sector.cont[["vehicles"]][[5]],
                                ncol = 3)
-ggsave("figures/me-deals-sector.png", me.deals.sector, height = 6, width = 10)
+ggsave("figures/me-deals-sector.png", me.deals.sector, height = 7, width = 10)
 
 
 # swing state ME

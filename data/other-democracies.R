@@ -47,8 +47,8 @@ names(dem.data.clean) <- c("United Kingdom", "France", "Germany")
 deals.dem <- bind_rows(dem.data.clean,
                             .id = "seller")
 # check German ccodes- FRG
-deals.dem$ccode1[dem.data.deals$seller == "Germany" &
-                        dem.data.deals$year < 1990] <- 260
+deals.dem$ccode1[deals.dem$seller == "Germany" &
+                        deals.dem$year < 1990] <- 260
 
 
 # grab dyadic controls from relevant data 

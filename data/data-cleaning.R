@@ -393,7 +393,6 @@ contracts.data.clean <- contracts.data.wide %>%
   ungroup() %>%
   left_join(us.arms.year) %>%
   left_join(elections.data) %>%
-  left_join(us.trade.year) %>%
   mutate(
     aircraft = air_engines + airframes + other_air,
     lag_aircraft = lag(aircraft),
@@ -729,6 +728,20 @@ us.arms.cat.wide <- pivot_wider(us.arms.cat,
            ships_dl = ships,
            missile_space_dl = missile_space)
 
+
+# summarize by year for use with state data
+us.arms.cat.yr <- us.arms.cat.wide %>%
+                    group_by(year) %>%
+                    summarize(
+                      deals_aircraft = sum(aircraft_dl, na.rm = TRUE),
+                      deals_vehicles = sum(vehicles_dl, na.rm = TRUE),
+                      deals_arms = sum(arms_dl, na.rm = TRUE),
+                      deals_electronics = sum(electronics_dl, na.rm = TRUE),
+                      deals_ships = sum(ships_dl, na.rm = TRUE),
+                      deals_missile_space = sum(missile_space_dl, na.rm = TRUE)
+                    )
+                    
+
 # add other variables
 us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
                                   ccode, year,
@@ -743,36 +756,6 @@ us.arms.cat <- left_join(us.arms.cat, select(us.trade.ally,
 ggplot(us.arms.cat, aes(x = deals)) + geom_histogram()
 ggplot(us.arms.cat, aes(x = aid)) + geom_histogram()
 ggplot(us.arms.cat, aes(x = second.hand)) + geom_histogram()
-
-
-# wide formatted data 
-arms.cat.all <- pivot_wider(us.arms.cat.all,
-                           id_cols = "year",
-                           names_from = c("ally", "weapon.type"),
-                           values_from = c("deals"))
-arms.cat.all[is.na(arms.cat.all)] <- 0
-colnames(arms.cat.all) <- str_replace(colnames(arms.cat.all), "0", "nall")
-colnames(arms.cat.all) <- str_replace(colnames(arms.cat.all), "1", "all")
-
-arms.cat.all <- arms.cat.all %>%
-  ungroup() %>%
-  mutate_at(c("nall_aircraft", "nall_arms", "nall_electronics", "nall_missile_space",
-              "nall_ships", "nall_vehicles"), 
-            .funs = list(lag = lag,
-                         change = function(x) x - lag(x))) %>%
-  mutate_at(c("all_aircraft", "all_arms", "all_electronics", 
-              "all_missile_space",
-              "all_ships", "all_vehicles"), 
-            .funs = list(lag = lag,
-                         change = function(x) x - lag(x))) %>%
-  mutate(
-    deals_vehicles = nall_vehicles + all_vehicles,
-    deals_ships = nall_ships + all_ships,
-    deals_missile_space = nall_missile_space + all_missile_space,
-    deals_electronics = nall_electronics + all_electronics,
-    deals_arms = nall_arms + all_arms,
-    deals_aircraft = nall_aircraft + all_aircraft
-  )
 
 
 
@@ -798,7 +781,9 @@ us.deals <- us.arms.cat %>%
                     ln_pop, ln_distw,
                     Comlang,
                     Contig, Evercol)) %>%
-  filter(year >= 1949) %>%
+  filter(year >= 1949) 
+
+us.deals <- us.deals %>%
   group_by(ccode) %>%
   mutate(
     var_democ = sd(v2x_polyarchy, na.rm = TRUE),
@@ -845,8 +830,9 @@ fivenum(us.deals.comp$v2x_polyarchy)
 # nice labeller
 democ.all.labs <- labeller(democ_bin = c(`1` = "Democracy", `0` = "Nondemocracy"),
                            v2x_polyarchy = c(`0.012` = "Minimum\nDemocracy",
-                                             `0.176` = "1st Quartile\nDemocracy",
-                                             `0.36` = "Median\nDemocracy",
-                                             `0.734` = "3rd Quartile\nDemocracy",
-                                             `0.926` = "Maximum\nDemocracy"),
+                                             `0.177` = "1st Quartile\nDemocracy",
+                                             `0.361` = "Median\nDemocracy",
+                                             `0.731` = "3rd Quartile\nDemocracy",
+                                             `0.924` = "Maximum\nDemocracy"),
                            ally = c(`1` = "US Ally", `0` = "Not Ally"))
+

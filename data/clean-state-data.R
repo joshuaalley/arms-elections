@@ -369,7 +369,7 @@ state.data <- state.data %>%
 
 
 # State data w/ contracts by type
-state.data.ord <- left_join(state.data, arms.cat.all) %>%
+state.data.ord <- left_join(state.data, us.arms.cat.yr) %>%
   group_by(state) %>%
   mutate_at(c("aircraft", "arms", "electronics", "missile_space",
               "other", "ships", "vehicles"), 

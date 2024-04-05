@@ -2,26 +2,6 @@
 # Raw data for contracts
 
 
-# generate a list of swing states
-swing.list <- select(state.data, state, swing, year) %>%
-  filter(swing == 1) %>%
-  group_by(state) %>%
-  summarize(
-    Start = min(year),
-    End = max(year)
-  ) %>%
-  rename(State = state)
-
-
-swing.list.tab <- datasummary_df(swing.list, fmt = 0,
-                                 output = "flextable")
-swing.list.tab
-flextable::save_as_image(swing.list.tab, "appendix/swing-list.png")
-
-
-
-
-
 ### state data with arms deals
 state.data.deals <- left_join(state.data, 
                               select(arms.deals.year,
