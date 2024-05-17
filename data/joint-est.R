@@ -570,8 +570,9 @@ map.08.plot
 
 grid.arrange(map.08.plot, interval.08.plot)
 map.08.full <- arrangeGrob(map.08.plot, interval.08.plot)
-ggsave("figures/map-08-full.png", map.08.full,
-       height = 6, width = 10)
+ggsave("figures/fg2-map-08-full.png", map.08.full,
+       height = 6, width = 10,
+       dpi = 800)
 
 
 ### Robustness Checks ### 

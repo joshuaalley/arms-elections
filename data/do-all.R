@@ -11,7 +11,7 @@ source("data/clean-state-data.R", echo = TRUE)
 # analysis of arms deals 
 source("data/us-arms-deals-raw.R", echo = TRUE)
 source("data/us-arms-deals.R", echo = TRUE)
-source("data/deals-robustness-checks.R", echo = TRUE)
+source("data/deals-robustness-check.R", echo = TRUE)
 # analysis of contracting
 source("data/joint-est-raw.R", echo = TRUE)
 source("data/joint-est.R", echo = TRUE)

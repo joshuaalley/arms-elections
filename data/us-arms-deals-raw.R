@@ -252,7 +252,8 @@ ggplot(us.deals.democ.key, aes(x = time_to_elec,
        y = "Deals per Year",
        fill = "Regime",
        title = "Regime Changes and Arms Deal Timing")
-ggsave("figures/deals-regime-change.png", height = 4, width = 8)
+ggsave("figures/fg3-deals-regime-change.png", height = 4, width = 8,
+       dpi = 800)
 
 
 # summary table:

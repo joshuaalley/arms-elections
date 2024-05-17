@@ -75,5 +75,8 @@ vignettes/*.pdf
 *.rds
 *.exe
 
+# EPS images for production
+*eps*
+
 # don't ignore the .gitignore file
 !.gitignore
