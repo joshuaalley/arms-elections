@@ -4,129 +4,83 @@
 library(ggcarly)
 
 # first cycles figure
-ggplot(us.trade.total, aes(x = factor(time_to_elec,
-                                      ordered = TRUE,
-                                      levels = c("3", "2",
-                                                 "1", "0")), y = value)) +
-  facet_wrap(~ trade,
-             labeller = labeller(trade = c("total_exports_change" = "Exports",
-                                           "total_imports_change" = "Imports",
-                                           "total_trade_change" = "Total Trade"))) +
-  geom_boxplot(outlier.shape = NA) +
-  ylim(-10, 10) +
-  labs(y = "Annual\n Trade\n Change",
-       x = "Years to Presidential Election") +
-  theme_carly_presents()
-ggsave("presentation/us-trade-cycles.png", height = 6, width = 8)
-
-
-# second cycles figure
-ggplot(filter(drop_na(us.trade.total.all, atop_defense),
-              trade == "total_exports_change" |
-              trade == "total_imports_change"), aes(x = factor(time_to_elec,
-                                                                 ordered = TRUE,
-                                                                 levels = c("3", "2",
-                                                                            "1", "0")), 
-                                                      y = value, 
-                                                      fill = factor(atop_defense))) +
-  facet_wrap(~ trade,
-             labeller = labeller(trade = c("total_exports_change" = "Exports",
-                                           "total_imports_change" = "Imports",
-                                           "total_trade_change" = "Total Trade"))) +
-  geom_boxplot(outlier.shape = NA) +
-  #scale_color_grey(start = .8, end = .4) +
-  ylim(-6, 6) +
-  labs(y = "Annual\n Trade\n Change",
-       x = "Years to Presidential Election",
-       fill = "Defensive\n Alliance") +
-  scale_fill_brewer(palette = "Dark2") +
-  theme_carly_presents()
-ggsave("presentation/us-trade-cycles-all.png", height = 6, width = 8)
-
-
-# predicted impact of alliances
-ggplot(filter(us.elec.pred, outcome == "Change Exports" | 
-                outcome == "Change Imports"), 
-              aes(y = fit, 
-                         x = time_to_elec,
-                         group = factor(atop_defense),
-                         color = factor(atop_defense))) +
-  facet_wrap(~ outcome, nrow  = 2) +
+ggplot(filter(pois.democ.pred,
+              v2x_polyarchy == min(pois.democ.pred$v2x_polyarchy) |
+                v2x_polyarchy == median(pois.democ.pred$v2x_polyarchy) |
+                v2x_polyarchy == max(pois.democ.pred$v2x_polyarchy) ),
+       aes(y = estimate, 
+                            x = time_to_elec)) +
+  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs,
+             ncol = 5) +
   scale_x_reverse() + # decreasing time to election
   geom_hline(yintercept = 0) +
-  geom_line() +
-  geom_pointrange(aes(ymin = lwr, ymax = upr),
+  geom_line(linewidth = 1) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
                   position = position_dodge(width = .1),
-                  size = .8) +
-  scale_color_brewer("Defense Pact", palette = "Dark2",
+                  size = 1,
+                  linewidth = 2) +
+  labs(title = "Elections, Democracy, and Arms Deals",
+       y = "Arms Deals",
+       x = "Years to Presidential Election") +
+  theme_carly_presents()
+ggsave("presentation/democ-deals-pred.png", height = 6, width = 8)
+
+
+# Drive by allies
+ggplot(filter(pois.deals.est[[2]],
+              v2x_polyarchy == min(pois.deals.est[[2]]$v2x_polyarchy) |
+                v2x_polyarchy == median(pois.deals.est[[2]]$v2x_polyarchy) |
+                v2x_polyarchy == max(pois.deals.est[[2]]$v2x_polyarchy)), 
+                 aes(y = estimate, 
+                                x = time_to_elec,
+                                group = factor(ally),
+                                color = factor(ally))) +
+  facet_wrap(~ v2x_polyarchy, labeller = democ.all.labs,
+             ncol = 5) + 
+  scale_x_reverse() + # decreasing time to election
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = .1),
+                  size = .75,
+                  linewidth = 1.5) +
+  scale_color_grey("US Ally", 
+                   start = 0.7,
+                   end = 0.1,
                    labels = c(`0` = "No", `1` = "Yes")) +
-  labs(y = "Predicted\n Outcome",
+  labs(y = "Arms Deals",
        x = "Years to Presidential Election") +
-  theme_carly_presents()
-ggsave("presentation/us-elec-pred-exim.png", height = 8, width = 10)
+  theme_carly_presents() +
+  theme(legend.position = "bottom")
+ggsave("presentation/democ-deals-ally.png", height = 6, width = 8,
+       dpi = 800)
 
 
-# predicted impact of alliances
-ggplot(filter(us.elec.pred, outcome == "Change Trade" | 
-                outcome == "Trade Balance"), 
-       aes(y = fit, 
-           x = time_to_elec,
-           group = factor(atop_defense),
-           color = factor(atop_defense))) +
-  facet_wrap(~ outcome, nrow  = 2) +
-  scale_x_reverse() + # decreasing time to election
-  geom_hline(yintercept = 0) +
-  geom_line() +
-  geom_pointrange(aes(ymin = lwr, ymax = upr),
-                  position = position_dodge(width = .1),
-                  size = .8) +
-  scale_color_brewer("Defense Pact", palette = "Dark2",
-                     labels = c(`0` = "No", `1` = "Yes")) +
-  labs(y = "Predicted\n Outcome",
-       x = "Years to Presidential Election") +
-  theme_carly_presents()
-ggsave("presentation/us-elec-pred-net.png", height = 8, width = 10)
+# look at regime change
+us.deals.democ.key <- filter(us.deals.democ.change,
+                             str_detect(country, 
+                                        "Greece|Portugal"
+                             ))
+ggplot(us.deals.democ.key, aes(x = time_to_elec,
+                               y = deals.year,
+                               group = democ_bin,
+                               fill = democ_bin)) +
+  facet_wrap(~ country) +
+  scale_x_reverse() +
+  geom_bar(stat = "identity",
+           position = "dodge") +
+  scale_fill_grey(start = .5, end = .2) +
+  labs(x = "Years to Election",
+       y = "Deals\nper Year",
+       fill = "Regime",
+       title = "Regime Changes and Arms Deal Timing") +
+  theme_carly_presents() +
+  theme(legend.position = "bottom") 
+ggsave("presentation/deals-regime-change.png", height = 6, width = 8,
+       dpi = 800)
 
 
-
-# arms figure
-ggplot(filter(us.arms.comp, nz_us_arms == 1), 
-       aes(x = factor(time_to_elec,
-                  ordered = TRUE,
-                  levels = c("3", "2",
-                             "1", "0")),
-                      y = us_arms, 
-          fill = factor(atop_defense))) +
-  geom_boxplot(outlier.shape = NA) +
-  #scale_color_grey(start = .8, end = .4) +
-  ylim(0, 4) +
-  labs(y = "Annual\n Arms\n Change",
-       x = "Years to Presidential Election",
-       fill = "Defensive\n Alliance") +
-  scale_fill_brewer(palette = "Dark2") +
-  theme_carly_presents()
-
-
-# arms predictions
-ggplot(us.arms.res[[2]], aes(y = fit, 
-                             x = time_to_elec,
-                             group = factor(atop_defense),
-                             color = factor(atop_defense))) +
-  scale_x_reverse() + # decreasing time to election
-  geom_line() +
-  geom_pointrange(aes(ymin = lwr, ymax = upr),
-                  position = position_dodge(width = .1),
-                  size = .8) +
-  scale_color_brewer("Defense Pact", palette = "Dark2",
-                     labels = c(`0` = "No", `1` = "Yes")) +
-  labs(title = "Predicted Arms Exports",
-       y = "Log Arms\n Exports",
-       x = "Years to Presidential Election") + 
-  theme_carly_presents()
-ggsave("presentation/us-arms-pred.png", height = 8, width = 10)
-
-
-
+### contracts
 # total defense contracts
 ggplot(contracts.data.clean, aes(x =  factor(time_to_elec,
                                              ordered = TRUE,
@@ -141,84 +95,66 @@ ggplot(contracts.data.clean, aes(x =  factor(time_to_elec,
 ggsave("presentation/contract-cycles.png", height = 8, width = 10)
 
 
-
-# defense sectors: appendix
-ggplot(contracts.data.key, aes(x =  factor(time_to_elec,
-                                           ordered = TRUE,
-                                           levels = c("3", "2",
-                                                      "1", "0")),
-                               y = value)) +
-  facet_wrap(~ allocation, scales = "free_y",
-             labeller = labeller(allocation = 
-                                   c("air" = "Aircraft",
-                                     "missile_space" = "Missiles & Space",
-                                     "electronics" = "Electronics",
-                                     "ships" = "Ships",
-                                     "vehicles" = "Vehicles",
-                                     "weapons_ammo"= "Weapons & Ammo"))
+# Arms deals ME
+ggplot(deals.est, aes(x = factor(swing), y = estimate)) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  size = 1, linewidth = 2) +
+  geom_hline(yintercept = 0) +
+  scale_x_discrete(labels = c(`0` = "No", `1` = "Yes")) +
+  labs(
+    title = "Marginal Impact of Arms Deals",
+    x = "Swing State",
+    y = "Impact of\nArms Deals"
   ) +
-  geom_boxplot(outlier.shape = NA) +
-  labs(y = "Total\n Prime \n Contracts",
-       x = "Years to Presidential Election",
-       title = "Sectoral Defense Contracting") +
   theme_carly_presents()
-ggsave("presentation/contract-cycles-sector.png", height = 8, width = 10)
+ggsave("presentation/deals-me.png", height = 6, width = 8)
 
-
-# interaction terms- appendix
-# interaction terms only
-ggplot(filter(us.coef.est, variable == "Years to Election" | 
-                variable == "Defense Pact" |
-                variable == "Defense Pact x Years to Election"),
-       aes(y = variable, x = coef)) +
-  facet_grid(~ model, scales = "free_x") +
+# plot intervals 
+ggplot(pred.08.key, aes(y = reorder(state, diff.median), 
+                                            x = diff.median)) +
+  facet_wrap(~ comp, scales = "free_y",
+             ncol = 1) +
   geom_vline(xintercept = 0) +
-  geom_pointrange(aes(
-    xmin = coef - 1.96*se,
-    xmax = coef + 1.96*se),
-    position = position_dodge(width = 1)
+  geom_pointrange(aes(xmin = diff.lower, xmax = diff.upper)) +
+  labs(
+    x = "Difference in Contracts",
   ) +
-  scale_color_grey() +
-  labs(x = "Estimate",
-       y = "Term",
-       color = "Model") +
-  theme_carly_presents()
-ggsave("presentation/trade-inter-terms.png", height = 8, width = 14)
+  theme_carly_presents() +
+  theme(
+    axis.title.y = element_blank(),
+  ) 
+ggsave("presentation/state-08-est.png",
+       height = 12, width = 10)
 
+base.map <- ggplot() +
+  geom_polygon(data = states, aes(x = long, y=lat,
+                                  group = group),
+               color = "black",
+               linewidth = .5,
+               fill = NA
+  ) 
 
-# marginal effects of trade: appendix
-# plot
-ggplot(us.elec.me, aes(y = dydx, 
-                       x = time_to_elec)) +
-  facet_wrap(~ outcome) +
-  scale_x_reverse() +
-  geom_hline(yintercept = 0) +
-  geom_line(size = .8) +
-  geom_pointrange(aes(
-    ymin = dydx - 1.96*std.error,
-    ymax = dydx + 1.96*std.error),
-    position = position_dodge(width = .1),
-    size = .8) +
-  labs(y = "Estimated\n Marginal\n Effect of\n Alliance",
-       x = "Years to Presidential Election") +
-  theme_carly_presents()
-ggsave("presentation/us-defense-me.png", height = 6, width = 8)
-
-
-# marginal effects for alliances: arms 
-ggplot(us.arms.res[[1]], aes(y = dydx, 
-                             x = time_to_elec)) +
-  scale_x_reverse() +
-  geom_hline(yintercept = 0) +
-  geom_line(size = .8) +
-  geom_pointrange(aes(
-    ymin = dydx - 1.96*std.error,
-    ymax = dydx + 1.96*std.error),
-    position = position_dodge(width = .1),
-    size = .8
+ggplot(data = states.08.data, aes(x = long, y=lat,
+                                  fill = diff.median,
+                                  group = group)) +
+  facet_wrap(~ comp, ncol = 2) +
+  geom_polygon(aes(group = group
+  ),
+  color = "grey",
+  linewidth = 1
   ) +
-  labs(title = "Marginal Impact of Alliance on Arms Transfers",
-       y = "Estimated\n Marginal Effect\n of Alliance",
-       x = "Years to Presidential Election") +
-  theme_carly_presents()
-ggsave("presentation/us-defense-me-arms.png", height = 6, width = 8)
+  scale_fill_viridis_c() +
+  labs(title = "2007-2008: 32 Additional Arms Deals",
+       fill = "Posterior\nMedian\nDifference") +
+  theme_carly_presents() +
+  theme(
+    legend.position = c(0.75, 0.3),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank())
+ggsave("presentation/state-08-map.png",
+       height = 6, width = 8)
+
